@@ -23,12 +23,17 @@ class AssertionsTest < Minitest::Spec
   it do
     test =
       Class.new(Test) do
+        let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
+
+        #:exp-eq
         it do
-          assert_exposes( { a:1, b:2, c:3 }, a: 11, b: 22)
+          assert_exposes model, title: "Timebomb", band: "Rancid"
         end
+        #:exp-eq end
       end.
       new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
+      #spec_class.instance_methods.sort.grep(/test/).first
 
-    assert_equal [[1, 11], [2, 22]], test.()
+    assert_equal [["Timebomb", "__Timebomb__"], ["Rancid", "__Rancid__"]], test.()
   end
 end

@@ -12,7 +12,7 @@ module Trailblazer::Test
       tuples.each do |k, v|
         actual = reader ? result.send(reader, k) : result.send(k)
 
-        assert_equal(actual, v)
+        assert_equal(v, actual)
       end
     end
   end

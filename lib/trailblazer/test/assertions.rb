@@ -12,7 +12,7 @@ module Trailblazer::Test
       tuples.each do |k, v|
         actual = reader ? result.send(reader, k) : result.send(k)
 
-        assert( actual == v, %{Expected actual result["#{k}"] `#{actual.inspect}` == `#{v.inspect}`} )
+        assert_equal(actual, v)
       end
     end
   end

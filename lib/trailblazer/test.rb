@@ -5,3 +5,6 @@ module Trailblazer
     # Your code goes here...
   end
 end
+
+require "trailblazer/test/assertions"
+require "trailblazer/test/operation/assertions"

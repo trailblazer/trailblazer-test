@@ -2,15 +2,6 @@
 module Trailblazer::Test
   module Assertions
     module_function
-
-    def assert_result_matches(result, defaults, overrides)
-      tuples = defaults.merge(overrides)
-
-      tuples.each do |k, v|
-        assert( result[k] == v, %{Expected result["#{k.inspect}"] to == `#{v.inspect}`} )
-      end
-    end
-
       # tuples = defaults.merge(overrides) # FIXME: merge with above!
 
     # Test if all `tuples` values on `result` match the expected values.

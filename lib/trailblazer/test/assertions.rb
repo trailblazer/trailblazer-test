@@ -9,7 +9,8 @@ module Trailblazer
 
     # Read the actual value from the asserted object (e.g. a model).
     def self.actual(asserted, reader, name)
-       reader ? asserted.send(reader, name) : result.send(name)
+       v=reader ? asserted.send(reader, name) : asserted.send(name)
+       v
     end
 
     module Assertions

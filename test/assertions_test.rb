@@ -55,7 +55,7 @@ class AssertionsTest < Minitest::Spec
         it do
           assert_exposes model,
             title: "Timebomb",
-            band:  ->(actual) { actual.size > 3 }
+            band:  ->(actual:, **) { actual.size > 3 }
         end
         #:exp-proc end
       end.

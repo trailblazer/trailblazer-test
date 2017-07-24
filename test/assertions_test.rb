@@ -8,7 +8,7 @@ class AssertionsTest < Minitest::Spec
     end
 
     def assert_equal(a, b, msg)
-      @_assertions << [a, b]
+      @_assertions << [a, b, msg]
     end
 
     def assert(a, msg)
@@ -38,7 +38,7 @@ class AssertionsTest < Minitest::Spec
       end.
       new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
-    assert_equal [["Timebomb", "__Timebomb__"], ["Rancid", "__Rancid__"]], test.()
+    assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], ["Rancid", "__Rancid__", "Property [band] mismatch"]], test.()
   end
 
   it do
@@ -56,7 +56,7 @@ class AssertionsTest < Minitest::Spec
       end.
       new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
-    assert_equal [["Timebomb", "__Timebomb__"], [true, "Actual: \"__Rancid__\"."]], test.()
+    assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], [true, "Actual: \"__Rancid__\"."]], test.()
   end
 
   class Song
@@ -77,7 +77,7 @@ class AssertionsTest < Minitest::Spec
       end.
       new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
-    assert_equal [["Timebomb", "__Timebomb__"], ["Rancid", "__Rancid__"]], test.()
+    assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], ["Rancid", "__Rancid__", "Property [band] mismatch"]], test.()
   end
 
   it do
@@ -97,6 +97,6 @@ class AssertionsTest < Minitest::Spec
       end.
       new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
-    assert_equal [["Timebomb", "__Timebomb__"], ["Rancid", "__Rancid__"]], test.()
+    assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], ["Rancid", "__Rancid__", "Property [band] mismatch"]], test.()
   end
 end

@@ -8,7 +8,7 @@ class HelperTest < Minitest::Spec
     include Trailblazer::Test::Helper::Operation
 
     it do
-      @result = call HelperTest::Operation, {}
+      result = call HelperTest::Operation, {}
     end
 
     it do
@@ -16,6 +16,8 @@ class HelperTest < Minitest::Spec
     end
   end
 
-  test = Test.new(:a).test_0001_anonymous.input.must_equal [{}]
-  test = Test.new(:a).test_0002_anonymous.input.must_equal [{:a=>1}, {:b=>2}]
+  it { assert_equal [{}], Test.new(:a).test_0001_anonymous.input }
+  it { assert_equal [{:a=>1}, {:b=>2}], Test.new(:a).test_0002_anonymous.input }
+
+
 end

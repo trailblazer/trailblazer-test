@@ -28,7 +28,7 @@ module Trailblazer
 
           is_eq ? assert_equal( expected, actual, "Property [#{k}] mismatch" ) : assert(expected, "Actual: #{actual.inspect}.")
         end
-      end
+      end # TODO: test err msgs!
     end
   end
 end

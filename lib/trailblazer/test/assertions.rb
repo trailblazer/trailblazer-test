@@ -9,8 +9,7 @@ module Trailblazer
 
     # Read the actual value from the asserted object (e.g. a model).
     def self.actual(asserted, reader, name)
-       v=reader ? asserted.send(reader, name) : asserted.send(name)
-       v
+       reader ? asserted.send(reader, name) : asserted.send(name)
     end
 
     module Assertions
@@ -20,8 +19,8 @@ module Trailblazer
       # Test if all `tuples` values on `result` match the expected values.
       # @param result Object Object that exposes attributes to test
       # @param tuples Hash Key/value attribute pairs to test
-      # @param options Hash Default :reader is `#[]`,
-      def assert_exposes(result, tuples, reader: :[])
+      # @param options Hash Default :reader is `asserted.{name}`,
+      def assert_exposes(result, tuples, reader: nil)
         tuples.each do |k, v|
           actual          = Test.actual(result, reader, k)
           expected, is_eq = Test.expected(v, actual)

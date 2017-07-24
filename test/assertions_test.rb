@@ -32,7 +32,7 @@ class AssertionsTest < Minitest::Spec
 
         #:exp-eq
         it do
-          assert_exposes model, title: "Timebomb", band:  "Rancid"
+          assert_exposes model, title: "Timebomb", band: "Rancid"
         end
         #:exp-eq end
       end.
@@ -41,10 +41,15 @@ class AssertionsTest < Minitest::Spec
     assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], ["Rancid", "__Rancid__", "Property [band] mismatch"]], test.()
   end
 
+  class Song
+    def title; "__Timebomb__" end
+    def band;  "__Rancid__" end
+  end
+
   it do
     test =
       Class.new(Test) do
-        let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
+        let(:model) { Song.new }
 
         #:exp-proc
         it do
@@ -59,21 +64,17 @@ class AssertionsTest < Minitest::Spec
     assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], [true, "Actual: \"__Rancid__\"."]], test.()
   end
 
-  class Song
-    def title; "__Timebomb__" end
-    def band;  "__Rancid__" end
-  end
-
+  # reader: :[]
   it do
     test =
       Class.new(Test) do
-        let(:model) { Song.new }
+        let(:model) { { title: "__Timebomb__", band: "__Rancid__" } }
 
-        #:exp-reader-false
+        #:exp-reader-hash
         it do
-          assert_exposes model, { title: "Timebomb", band:  "Rancid" }, reader: false
+          assert_exposes model, { title: "Timebomb", band:  "Rancid" }, reader: :[]
         end
-        #:exp-reader-false end
+        #:exp-reader-hash end
       end.
       new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 

@@ -26,7 +26,7 @@ module Trailblazer
           actual          = Test.actual(result, reader, k)
           expected, is_eq = Test.expected(v, actual)
 
-          is_eq ? assert_equal( expected, actual ) : assert(expected, "Actual: #{actual.inspect}.")
+          is_eq ? assert_equal( expected, actual, "Property [#{k}] mismatch" ) : assert(expected, "Actual: #{actual.inspect}.")
         end
       end
     end

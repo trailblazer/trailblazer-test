@@ -7,7 +7,7 @@ class AssertionsTest < Minitest::Spec
       @_assertions = []
     end
 
-    def assert_equal(a, b)
+    def assert_equal(a, b, msg)
       @_assertions << [a, b]
     end
 

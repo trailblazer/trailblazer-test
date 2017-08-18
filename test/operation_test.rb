@@ -50,6 +50,12 @@ class OperationTest < Minitest::Spec
     let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
 
     it { assert_pass Create, { title: "  Ruby Soho " }, { title: "Ruby Soho" } }
+
+    it do
+      assert_pass Create, { title: " Ruby Soho" }, {} do |result|
+        assert_equal "Ruby Soho", result["model"].title
+      end
+    end
   end
 
 end

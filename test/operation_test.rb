@@ -2,17 +2,28 @@ require "test_helper"
 
 class OperationTest < Minitest::Spec
   class Result
-    def initialize(success, model)
+    def initialize(success, model, errors)
       @success = success
       @model = model
+      @errors = errors
     end
 
     def success?
       @success
     end
+    def failure?
+      ! @success
+    end
 
     def [](name)
-      @model
+      return @model if name == "model"
+      return @errors if name == "contract.default"
+    end
+  end
+
+  Errors = Struct.new(:messages) do
+    def errors
+      self
     end
   end
 
@@ -20,7 +31,10 @@ class OperationTest < Minitest::Spec
     def self.call(params)
       if params[:band] == "Rancid"
         model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
-        Result.new(true, model)
+        Result.new(true, model, nil)
+      else
+
+        Result.new( false, nil, Errors.new({band: ["must be Rancid"] }) )
       end
     end
   end
@@ -49,11 +63,28 @@ class OperationTest < Minitest::Spec
     let(:params_pass) { { band: "Rancid" } }
     let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
 
+    #- simple: actual input vs. expected
     it { assert_pass Create, { title: "  Ruby Soho " }, { title: "Ruby Soho" } }
 
+    #- with block
     it do
       assert_pass Create, { title: " Ruby Soho" }, {} do |result|
         assert_equal "Ruby Soho", result["model"].title
+      end
+    end
+  end
+
+  describe "Create with invalid data" do
+    let(:params_pass) { { band: "Rancid" } }
+    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+
+    #- simple: actual input vs. expected
+    it { assert_fail Create, { band: "Adolescents" }, { title: "Ruby Soho" } }
+
+    #- with block
+    it do
+      assert_fail Create, { band: " Adolescents" }, {} do |result|
+        assert_equal({:band=>["must be Rancid"]}, result["contract.default"].errors.messages)
       end
     end
   end

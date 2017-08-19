@@ -59,20 +59,31 @@ class OperationTest < Minitest::Spec
 
   #-
   # params is sub-set, expected is sub-set and both get merged with *_valid.
+    #- simple: actual input vs. expected
+  #:pass
   describe "Create with sane data" do
     let(:params_pass) { { band: "Rancid" } }
     let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
 
-    #- simple: actual input vs. expected
+    # just works
+    it { assert_pass Create, { title: "Ruby Soho" }, { title: "Ruby Soho" } }
+    # trimming works
     it { assert_pass Create, { title: "  Ruby Soho " }, { title: "Ruby Soho" } }
+  end
+  #:pass end
 
-    #- with block
+  #:pass-block
+  describe "Create with sane data" do
+    let(:params_pass) { { band: "Rancid" } }
+    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+
     it do
       assert_pass Create, { title: " Ruby Soho" }, {} do |result|
         assert_equal "Ruby Soho", result["model"].title
       end
     end
   end
+  #:pass-block end
 
   describe "Create with invalid data" do
     let(:params_pass) { { band: "Rancid" } }

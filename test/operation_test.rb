@@ -85,19 +85,27 @@ class OperationTest < Minitest::Spec
   end
   #:pass-block end
 
+    #- simple: actual input vs. expected
+  #:fail
   describe "Create with invalid data" do
     let(:params_pass) { { band: "Rancid" } }
     let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
 
-    #- simple: actual input vs. expected
-    it { assert_fail Create, { band: "Adolescents" }, { title: "Ruby Soho" } }
+    it { assert_fail Create, { band: "Adolescents" }, [:band] }
+  end
+  #:fail end
 
     #- with block
+  #:fail-block
+  describe "Create with invalid data" do
+    let(:params_pass) { { band: "Rancid" } }
+    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+
     it do
       assert_fail Create, { band: " Adolescents" }, {} do |result|
-        assert_equal({:band=>["must be Rancid"]}, result["contract.default"].errors.messages)
+        assert_equal( {:band=>["must be Rancid"]}, result["contract.default"].errors.messages )
       end
     end
   end
-
+  #:fail-block end
 end

@@ -34,6 +34,8 @@ module Trailblazer::Test::Operation
           errors = result["contract.default"].errors.messages # TODO: this will soon change with the operation Errors object.
 
           assert_equal expected_errors.sort, errors.keys.sort
+        else
+          raise "not implemented, yet"
         end
       end
     end

@@ -99,7 +99,6 @@ class OperationTest < Minitest::Spec
   #:fail-block
   describe "Create with invalid data" do
     let(:params_pass) { { band: "Rancid" } }
-    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
 
     it do
       assert_fail Create, { band: " Adolescents" }, {} do |result|

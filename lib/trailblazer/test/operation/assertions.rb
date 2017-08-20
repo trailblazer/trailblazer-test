@@ -9,7 +9,7 @@ module Trailblazer::Test::Operation
       assert_pass_with_model(operation_class, input_params, expected_model_attributes: expected_attributes, &block)
     end
 
-    def assert_fail(operation_class, params, expected_errors, default_params: params_pass, default_attributes: attrs_pass, &block)
+    def assert_fail(operation_class, params, expected_errors, default_params: params_pass, default_attributes: {}, &block)
       input_params        = default_params.merge( params )
       # expected_attributes = default_attributes.merge( expected_attributes )
 

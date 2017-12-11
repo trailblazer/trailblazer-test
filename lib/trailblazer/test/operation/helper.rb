@@ -1,6 +1,6 @@
 module Trailblazer::Test
-  module Helper
-    module Operation
+  module Operation
+    module Helper
       def call(operation_class, *args)
         call!(operation_class, args)
       end
@@ -17,7 +17,7 @@ module Trailblazer::Test
       def factory(operation_class, *args, &block)
         call!(operation_class, args, raise_on_failure: true, &block)
       end
-    end # Operation
+    end # Helper
   end
 
   class OperationFailedError < RuntimeError

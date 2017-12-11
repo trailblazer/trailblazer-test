@@ -10,7 +10,7 @@ class HelperTest < Minitest::Spec
   end
 
   class Test < Minitest::Spec
-    include Trailblazer::Test::Helper::Operation
+    include Trailblazer::Test::Operation::Helper
 
     #:call
     it do

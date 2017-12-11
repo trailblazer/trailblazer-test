@@ -7,5 +7,5 @@ module Trailblazer
 end
 
 require "trailblazer/test/assertions"
-require "trailblazer/test/helper"
+require "trailblazer/test/operation/helper"
 require "trailblazer/test/operation/assertions"

@@ -45,40 +45,27 @@ class OperationTest < Minitest::Spec
 
   let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
 
-  #:exp-eq
-  it do
-    exp = assert_raises do
-      input_params = { title: "Timebomb", band: "Rancid" }
-
-      assert_pass Create, input_params, input_params
-    end
-
-    exp.inspect.must_match %{NameError: undefined local variable or method `params_pass'}
-  end
-  #:exp-eq end
-
   #-
   # params is sub-set, expected is sub-set and both get merged with *_valid.
     #- simple: actual input vs. expected
   #:pass
   describe "Create with sane data" do
-    let(:params_pass) { { band: "Rancid" } }
-    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+    let(:params) { { band: "Rancid", title: "Ruby Soho" } }
+    let(:default_params) { { band: "Rancid" } }
 
     # just works
-    it { assert_pass Create, { title: "Ruby Soho" }, { title: "Ruby Soho" } }
+    it { assert_pass Create, params, params }
     # trimming works
-    it { assert_pass Create, { title: "  Ruby Soho " }, { title: "Ruby Soho" } }
+    it { assert_pass Create, { title: "  Ruby Soho " }, params, default_params: default_params }
   end
   #:pass end
 
   #:pass-block
   describe "Create with sane data" do
-    let(:params_pass) { { band: "Rancid" } }
-    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+    let(:params) { { band: "Rancid", title: "Ruby Soho" } }
 
     it do
-      assert_pass Create, { title: " Ruby Soho" }, {} do |result|
+      assert_pass Create, params, {} do |result|
         assert_equal "Ruby Soho", result["model"].title
       end
     end
@@ -88,17 +75,15 @@ class OperationTest < Minitest::Spec
     #- simple: actual input vs. expected
   #:fail
   describe "Create with invalid data" do
-    let(:params_pass) { { band: "Rancid" } }
+    let(:params) { { band: "Adolescents" } }
 
-    it { assert_fail Create, { band: "Adolescents" }, [:band] }
+    it { assert_fail Create, params, [:band] }
   end
   #:fail end
 
     #- with block
   #:fail-block
   describe "Create with invalid data" do
-    let(:params_pass) { { band: "Rancid" } }
-
     it do
       assert_fail Create, { band: " Adolescents" }, {} do |result|
         assert_equal( {:band=>["must be Rancid"]}, result["contract.default"].errors.messages )

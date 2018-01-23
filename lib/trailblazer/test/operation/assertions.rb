@@ -33,7 +33,12 @@ module Trailblazer::Test::Operation
         if expected_errors.is_a?(Array) # only test _if_ errors are present, not the content.
           errors = result["contract.default"].errors.messages # TODO: this will soon change with the operation Errors object.
 
-          assert_equal expected_errors.sort, errors.keys.sort
+          if expected_errors.include?(:policy)
+            assert_equal true, result['result.policy.default']&.failure?
+            expected_errors.delete(:policy)
+          end
+
+          assert_equal expected_errors.sort, errors.keys.sort if expected_errors.count.positive?
         end
       end
     end

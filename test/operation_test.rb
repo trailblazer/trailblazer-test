@@ -11,6 +11,7 @@ class OperationTest < Minitest::Spec
     def success?
       @success
     end
+
     def failure?
       ! @success
     end
@@ -18,22 +19,40 @@ class OperationTest < Minitest::Spec
     def [](name)
       return @model if name == "model"
       return @errors if name == "contract.default"
+      return @errors.policy if name == "result.policy.default"
     end
   end
 
-  Errors = Struct.new(:messages) do
+  class Policy
+    def initialize(success)
+      @success = success
+    end
+
+    def success?
+      @success
+    end
+
+    def failure?
+      ! @success
+    end
+  end
+
+  Errors = Struct.new(:messages, :policy) do
     def errors
       self
     end
   end
 
   class Create
-    def self.call(params)
+    def self.call(params, context)
+      if context['current_user'].name != 'allowed'
+        return Result.new( false, nil, Errors.new(nil, Policy.new(false)) )
+      end
+
       if params[:band] == "Rancid"
         model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
         Result.new(true, model, nil)
       else
-
         Result.new( false, nil, Errors.new({band: ["must be Rancid"] }) )
       end
     end
@@ -44,13 +63,15 @@ class OperationTest < Minitest::Spec
 
 
   let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
+  let(:user) { Struct.new(:name).new("allowed") }
+  let(:context) { { 'current_user' => user } }
 
   #:exp-eq
   it do
     exp = assert_raises do
       input_params = { title: "Timebomb", band: "Rancid" }
 
-      assert_pass Create, input_params, input_params
+      assert_pass Create, input_params, input_params, context: context
     end
 
     exp.inspect.must_match %{NameError: undefined local variable or method `params_pass'}
@@ -66,9 +87,9 @@ class OperationTest < Minitest::Spec
     let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
 
     # just works
-    it { assert_pass Create, { title: "Ruby Soho" }, { title: "Ruby Soho" } }
+    it { assert_pass Create, { title: "Ruby Soho" }, { title: "Ruby Soho" }, context: context }
     # trimming works
-    it { assert_pass Create, { title: "  Ruby Soho " }, { title: "Ruby Soho" } }
+    it { assert_pass Create, { title: "  Ruby Soho " }, { title: "Ruby Soho" }, context: context }
   end
   #:pass end
 
@@ -78,7 +99,7 @@ class OperationTest < Minitest::Spec
     let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
 
     it do
-      assert_pass Create, { title: " Ruby Soho" }, {} do |result|
+      assert_pass Create, { title: " Ruby Soho" }, {}, context: context do |result|
         assert_equal "Ruby Soho", result["model"].title
       end
     end
@@ -90,9 +111,19 @@ class OperationTest < Minitest::Spec
   describe "Create with invalid data" do
     let(:params_pass) { { band: "Rancid" } }
 
-    it { assert_fail Create, { band: "Adolescents" }, [:band] }
+    it { assert_fail Create, { band: "Adolescents" }, expected_errors: [:band], context: context }
   end
   #:fail end
+
+  #:policy-fail
+  describe "Create with invalid user" do
+    let(:params_pass) { { band: "Rancid" } }
+    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+    let(:user) { Struct.new(:name).new('not_allowed') }
+
+    it { assert_fail Create, { title: "Ruby Soho" }, expected_errors: [:policy], context: context }
+  end
+  #:policy-fail end
 
     #- with block
   #:fail-block
@@ -100,7 +131,7 @@ class OperationTest < Minitest::Spec
     let(:params_pass) { { band: "Rancid" } }
 
     it do
-      assert_fail Create, { band: " Adolescents" }, {} do |result|
+      assert_fail Create, { band: " Adolescents" }, context: context do |result|
         assert_equal( {:band=>["must be Rancid"]}, result["contract.default"].errors.messages )
       end
     end

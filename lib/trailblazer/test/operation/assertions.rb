@@ -21,7 +21,7 @@ module Trailblazer::Test::Operation
     def assert_pass_with_model(operation_class, params, expected_model_attributes:{}, &user_block) # TODO: test expected_attributes default param and explicit!
       _assert_call( operation_class, params: params, user_block: user_block ) do |result|
         assert_equal true, result.success?
-        assert_exposes( result["model"], expected_model_attributes )
+        assert_exposes( _model(result), expected_model_attributes )
       end
     end
 
@@ -42,13 +42,23 @@ module Trailblazer::Test::Operation
 
     # @private
     def _assert_call(operation_class, params:raise, user_block:raise, &block)
-      result = operation_class.( params )
+      result = _call_operation(operation_class, params)
 
       return user_block.call(result) if user_block  # DISCUSS: result or model?
 
       yield(result)
 
       result
+    end
+
+    # @private
+    def _call_operation(operation_class, params)
+      operation_class.( params: params )
+    end
+
+    # @private
+    def _model(result)
+      result[:model]
     end
   end
 end

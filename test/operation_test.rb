@@ -1,35 +1,24 @@
 require "test_helper"
 
 class OperationTest < Minitest::Spec
-  class Result
-    def initialize(success, model, errors)
-      @success = success
-      @model = model
-      @errors = errors
-    end
-
-    def success?
-      @success
-    end
-
-    def failure?
-      !@success
-    end
-
-    def [](name)
-      return @model if name == "model"
-      return @errors if name == "contract.default"
-    end
-  end
-
-  Errors = Struct.new(:messages) do
-    def errors
-      self
-    end
-  end
-
   class Create
-    def self.call(params)
+    def self.call(params:)
+      if params[:band] == "Rancid"
+        model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
+        Result.new(true, model, nil)
+      else
+
+        Result.new(false, nil, Errors.new({ band: ["must be Rancid"] }))
+      end
+    end
+  end
+
+  class Update
+    def self.call(params:, current_user:)
+      if current_user.name != 'allowed'
+        return Result.new(false, nil, Errors.new(nil, Policy.new(false)))
+      end
+
       if params[:band] == "Rancid"
         model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
         Result.new(true, model, nil)
@@ -44,13 +33,15 @@ class OperationTest < Minitest::Spec
   include Trailblazer::Test::Operation::Assertions
 
   let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
+  let(:user)    { Struct.new(:name).new("allowed") }
+  let(:default_options) { { current_user: user } }
 
   #:exp-eq
   it do
     exp = assert_raises do
       input_params = { title: "Timebomb", band: "Rancid" }
 
-      assert_pass Create, input_params, input_params
+      assert_pass Update, input_params, input_params
     end
 
     exp.inspect.include? %{NameError: undefined method `default_params'}
@@ -60,26 +51,39 @@ class OperationTest < Minitest::Spec
   #-
   # params is sub-set, expected is sub-set and both get merged with *_valid.
     #- simple: actual input vs. expected
-  #:pass
+
+  #:pass with params
   describe "Create with sane data" do
     let(:default_params) { { band: "Rancid" } }
     let(:expected_attrs) { { band: "Rancid", title: "Timebomb" } }
 
     # just works
-    it { assert_pass Create, { title: "Ruby Soho" }, { title: "Ruby Soho" } }
+    it { assert_pass Create, params(title: "Ruby Soho"), { title: "Ruby Soho" } }
     # trimming works
-    it { assert_pass Create, { title: "  Ruby Soho " }, { title: "Ruby Soho" } }
+    it { assert_pass Create, params(title: "  Ruby Soho "), { title: "Ruby Soho" } }
   end
-  #:pass end
+  #:pass with params end
+
+  #:pass with ctx
+  describe "Update with sane data" do
+    let(:default_params) { { band: "Rancid" } }
+    let(:expected_attrs) { { band: "Rancid", title: "Timebomb" } }
+
+    # just works
+    it { assert_pass Update, ctx(title: "Ruby Soho"), { title: "Ruby Soho" } }
+    # trimming works
+    it { assert_pass Update, ctx(title: "  Ruby Soho "), { title: "Ruby Soho" } }
+  end
+  #:pass with ctx end
 
   #:pass-block
-  describe "Create with sane data" do
+  describe "Update with sane data" do
     let(:default_params) { { band: "Rancid" } }
     let(:expected_attrs) { { band: "Rancid", title: "Timebomb" } }
 
     it do
-      assert_pass Create, { title: " Ruby Soho" }, {} do |result|
-        assert_equal "Ruby Soho", result["model"].title
+      assert_pass Update, ctx(title: " Ruby Soho"), {} do |result|
+        assert_equal "Ruby Soho", result[:model].title
       end
     end
   end
@@ -87,20 +91,20 @@ class OperationTest < Minitest::Spec
 
     #- simple: actual input vs. expected
   #:fail
-  describe "Create with invalid data" do
+  describe "Update with invalid data" do
     let(:default_params) { { band: "Rancid" } }
 
-    it { assert_fail Create, { band: "Adolescents" }, [:band] }
+    it { assert_fail Update, ctx(band: "Adolescents"), [:band] }
   end
   #:fail end
 
     #- with block
   #:fail-block
-  describe "Create with invalid data" do
+  describe "Update with invalid data" do
     let(:default_params) { { band: "Rancid" } }
 
     it do
-      assert_fail Create, { band: " Adolescents" }, {} do |result|
+      assert_fail Update, ctx(band: " Adolescents") do |result|
         assert_equal({ :band => ["must be Rancid"] }, result["contract.default"].errors.messages)
       end
     end
@@ -108,7 +112,7 @@ class OperationTest < Minitest::Spec
   #:fail-block end
 
   class CreateNestedParams
-    def self.call(params)
+    def self.call(params:)
       if params[:form][:band] == "Rancid"
         model = Struct.new(:title, :band).new(params[:form][:title].strip, params[:form][:band])
         Result.new(true, model, nil)
@@ -119,20 +123,32 @@ class OperationTest < Minitest::Spec
     end
   end
 
-  describe "Update with valid data" do
+  describe "With nested params" do
     let(:default_params) { { form: { band: "Rancid" } } }
     let(:expected_attrs) { { band: "Rancid", title: "Timebomb" } }
 
-    it { assert_pass CreateNestedParams, { form: { title: "Ruby Soho" } }, { title: "Ruby Soho" } }
-    it { assert_fail CreateNestedParams, { form: { band: nil } }, [:band] }
-    it { assert_fail CreateNestedParams, { form: { band: "NOFX" } }, [:band], deep_merge: false }
+    it { assert_pass CreateNestedParams, params(form: { title: "Ruby Soho" }), { title: "Ruby Soho" } }
+    it { assert_fail CreateNestedParams, params(form: { band: nil }), [:band] }
+    it { assert_fail CreateNestedParams, params(form: { band: "NOFX" }, deep_merge: false), [:band] }
 
     it "raise an error because params[:form] is nil" do
       exp = assert_raises do
-        assert_fail CreateNestedParams, { band: "NOFX" }, [:band], deep_merge: false
+        assert_fail CreateNestedParams, params(band: "NOFX", deep_merge: false), [:band]
       end
 
       exp.inspect.must_match %{NoMethodError: undefined method `strip' for nil:NilClass}
     end
   end
+
+  include Trailblazer::Test::Operation::PolicyAssertions
+
+  #:policy_fail-block
+  describe "Update with failing policy" do
+    let(:default_params) { { band: "Rancid" } }
+
+    it do
+      assert_policy_fail Update, ctx({ title: "Ruby Soho" }, current_user: Struct.new(:name).new('not_allowed'))
+    end
+  end
+  #:policy_fail-block end
 end

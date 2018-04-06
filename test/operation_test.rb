@@ -11,8 +11,9 @@ class OperationTest < Minitest::Spec
     def success?
       @success
     end
+
     def failure?
-      ! @success
+      !@success
     end
 
     def [](name)
@@ -34,14 +35,13 @@ class OperationTest < Minitest::Spec
         Result.new(true, model, nil)
       else
 
-        Result.new( false, nil, Errors.new({band: ["must be Rancid"] }) )
+        Result.new(false, nil, Errors.new({ band: ["must be Rancid"] }))
       end
     end
   end
 
   include Trailblazer::Test::Assertions
   include Trailblazer::Test::Operation::Assertions
-
 
   let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
 
@@ -101,7 +101,7 @@ class OperationTest < Minitest::Spec
 
     it do
       assert_fail Create, { band: " Adolescents" }, {} do |result|
-        assert_equal( {:band=>["must be Rancid"]}, result["contract.default"].errors.messages )
+        assert_equal({ :band => ["must be Rancid"] }, result["contract.default"].errors.messages)
       end
     end
   end

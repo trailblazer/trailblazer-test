@@ -106,4 +106,33 @@ class OperationTest < Minitest::Spec
     end
   end
   #:fail-block end
+
+  class CreateNestedParams
+    def self.call(params)
+      if params[:form][:band] == "Rancid"
+        model = Struct.new(:title, :band).new(params[:form][:title].strip, params[:form][:band])
+        Result.new(true, model, nil)
+      else
+
+        Result.new(false, nil, Errors.new({ band: ["must be Rancid"] }))
+      end
+    end
+  end
+
+  describe "Update with valid data" do
+    let(:params_pass) { { form: { band: "Rancid" } } }
+    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+
+    it { assert_pass CreateNestedParams, { form: { title: "Ruby Soho" } }, { title: "Ruby Soho" } }
+    it { assert_fail CreateNestedParams, { form: { band: nil } }, [:band] }
+    it { assert_fail CreateNestedParams, { form: { band: "NOFX" } }, [:band], deep_merge: false }
+
+    it "raise an error because params[:form] is nil" do
+      exp = assert_raises do
+        assert_fail CreateNestedParams, { band: "NOFX" }, [:band], deep_merge: false
+      end
+
+      exp.inspect.must_match %{NoMethodError: undefined method `strip' for nil:NilClass}
+    end
+  end
 end

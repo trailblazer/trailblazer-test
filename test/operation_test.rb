@@ -53,7 +53,7 @@ class OperationTest < Minitest::Spec
       assert_pass Create, input_params, input_params
     end
 
-    exp.inspect.must_match %{NameError: undefined local variable or method `params_pass'}
+    exp.inspect.include? %{NameError: undefined method `default_params'}
   end
   #:exp-eq end
 
@@ -62,8 +62,8 @@ class OperationTest < Minitest::Spec
     #- simple: actual input vs. expected
   #:pass
   describe "Create with sane data" do
-    let(:params_pass) { { band: "Rancid" } }
-    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+    let(:default_params) { { band: "Rancid" } }
+    let(:expected_attrs) { { band: "Rancid", title: "Timebomb" } }
 
     # just works
     it { assert_pass Create, { title: "Ruby Soho" }, { title: "Ruby Soho" } }
@@ -74,8 +74,8 @@ class OperationTest < Minitest::Spec
 
   #:pass-block
   describe "Create with sane data" do
-    let(:params_pass) { { band: "Rancid" } }
-    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+    let(:default_params) { { band: "Rancid" } }
+    let(:expected_attrs) { { band: "Rancid", title: "Timebomb" } }
 
     it do
       assert_pass Create, { title: " Ruby Soho" }, {} do |result|
@@ -88,7 +88,7 @@ class OperationTest < Minitest::Spec
     #- simple: actual input vs. expected
   #:fail
   describe "Create with invalid data" do
-    let(:params_pass) { { band: "Rancid" } }
+    let(:default_params) { { band: "Rancid" } }
 
     it { assert_fail Create, { band: "Adolescents" }, [:band] }
   end
@@ -97,7 +97,7 @@ class OperationTest < Minitest::Spec
     #- with block
   #:fail-block
   describe "Create with invalid data" do
-    let(:params_pass) { { band: "Rancid" } }
+    let(:default_params) { { band: "Rancid" } }
 
     it do
       assert_fail Create, { band: " Adolescents" }, {} do |result|
@@ -120,8 +120,8 @@ class OperationTest < Minitest::Spec
   end
 
   describe "Update with valid data" do
-    let(:params_pass) { { form: { band: "Rancid" } } }
-    let(:attrs_pass)  { { band: "Rancid", title: "Timebomb" } }
+    let(:default_params) { { form: { band: "Rancid" } } }
+    let(:expected_attrs) { { band: "Rancid", title: "Timebomb" } }
 
     it { assert_pass CreateNestedParams, { form: { title: "Ruby Soho" } }, { title: "Ruby Soho" } }
     it { assert_fail CreateNestedParams, { form: { band: nil } }, [:band] }

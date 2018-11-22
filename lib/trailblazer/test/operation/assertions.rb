@@ -2,16 +2,17 @@ require "hashie"
 
 module Trailblazer::Test::Operation
   module Assertions
-    # @needs params_pass
-    # @needs attributes_pass
-    def assert_pass(operation_class, params, expected_attributes, default_params: params_pass, default_attributes: attrs_pass, deep_merge: true, &block)
+    # @needs default_params
+    # @needs expected_attrs
+
+    def assert_pass(operation_class, params, expected_attributes, default_params: self.default_params, default_attributes: expected_attrs, deep_merge: true, &block)
       input_params        = merge(default_params, params, deep_merge)
       expected_attributes = merge(default_attributes, expected_attributes, deep_merge)
 
       assert_pass_with_model(operation_class, input_params, expected_model_attributes: expected_attributes, &block)
     end
 
-    def assert_fail(operation_class, params, expected_errors, default_params: params_pass, default_attributes: {}, deep_merge: true, &block)
+    def assert_fail(operation_class, params, expected_errors, default_params: self.default_params, default_attributes: {}, deep_merge: true, &block)
       input_params = merge(default_params, params, deep_merge)
       # expected_attributes = default_attributes.merge( expected_attributes )
 
@@ -55,7 +56,7 @@ module Trailblazer::Test::Operation
     end
 
     # @private
-    class TrbHash < Hash
+    class CtxHash < Hash
       include Hashie::Extensions::DeepMerge
     end
 
@@ -63,7 +64,7 @@ module Trailblazer::Test::Operation
     def merge(dest, source, deep_merge)
       return dest.merge(source) unless deep_merge
 
-      TrbHash[dest].deep_merge(TrbHash[source])
+      CtxHash[dest].deep_merge(CtxHash[source])
     end
   end
 end

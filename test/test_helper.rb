@@ -1,4 +1,4 @@
-$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "trailblazer/test"
 
 require "minitest/autorun"
@@ -17,8 +17,9 @@ Minitest::Spec.class_eval do
     def success?
       @success
     end
+
     def failure?
-      ! @success
+      !@success
     end
 
     def [](name)
@@ -44,7 +45,7 @@ Minitest::Spec.class_eval do
     end
 
     def failure?
-      ! @success
+      !@success
     end
   end
 end

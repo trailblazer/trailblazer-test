@@ -5,9 +5,9 @@ module Trailblazer::Test
         call!(operation_class, args)
       end
 
-      def call!(operation_class, args, raise_on_failure:false, &block)
+      def call!(operation_class, args, raise_on_failure: false, &block)
         operation_class.(*args).tap do |result|
-          if !result.success?
+          unless result.success?
             yield result if block_given?
             raise OperationFailedError, "factory( #{operation_class} ) failed." if raise_on_failure
           end

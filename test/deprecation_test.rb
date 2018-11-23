@@ -17,16 +17,14 @@ class DeprecationTest < Minitest::Spec
         Result.new(true, model, nil)
       else
 
-        Result.new(false, nil, Errors.new({ band: ["must be Rancid"] }))
+        Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
       end
     end
   end
 
   class Update
     def self.call(params, options)
-      if options["current_user"].name != "allowed"
-        return Result.new(false, nil, Errors.new(nil, Policy.new(false)))
-      end
+      return Result.new(false, nil, Errors.new(nil, Policy.new(false))) if options["current_user"].name != "allowed"
 
       if params[:band] == "Rancid"
         model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
@@ -41,26 +39,26 @@ class DeprecationTest < Minitest::Spec
 
   let(:model)        { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
   let(:user)         { Struct.new(:name).new("allowed") }
-  let(:default_options) { { "current_user" => user } }
+  let(:default_options) { {"current_user" => user} }
 
   describe "Create with sane data" do
-    let(:default_params) { { band: "Rancid" } }
-    let(:expected_attrs)  { { band: "Rancid", title: "Timebomb" } }
+    let(:default_params) { {band: "Rancid"} }
+    let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
 
-    it { assert_pass Create, params(title: "Ruby Soho"), { title: "Ruby Soho" } }
-    it { assert_pass Create, params(title: "  Ruby Soho "), { title: "Ruby Soho" } }
+    it { assert_pass Create, params(title: "Ruby Soho"), title: "Ruby Soho" }
+    it { assert_pass Create, params(title: "  Ruby Soho "), title: "Ruby Soho" }
   end
 
   describe "Update with sane data" do
-    let(:default_params) { { band: "Rancid" } }
-    let(:expected_attrs)  { { band: "Rancid", title: "Timebomb" } }
+    let(:default_params) { {band: "Rancid"} }
+    let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
 
-    it { assert_pass Update, ctx(title: "Ruby Soho"), { title: "Ruby Soho" } }
+    it { assert_pass Update, ctx(title: "Ruby Soho"), title: "Ruby Soho" }
   end
 
   describe "Update with sane data and block" do
-    let(:default_params) { { band: "Rancid" } }
-    let(:expected_attrs)  { { band: "Rancid", title: "Timebomb" } }
+    let(:default_params) { {band: "Rancid"} }
+    let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
 
     it do
       assert_pass Update, ctx(title: " Ruby Soho"), {} do |result|
@@ -70,7 +68,7 @@ class DeprecationTest < Minitest::Spec
   end
 
   describe "Update with invalid data" do
-    let(:default_params) { { band: "Rancid" } }
+    let(:default_params) { {band: "Rancid"} }
 
     it { assert_fail Update, ctx(band: "Adolescents"), [:band] }
   end
@@ -78,10 +76,10 @@ class DeprecationTest < Minitest::Spec
   include Trailblazer::Test::Operation::PolicyAssertions
 
   describe "Update with failing policy" do
-    let(:default_params) { { band: "Rancid" } }
+    let(:default_params) { {band: "Rancid"} }
 
     it do
-      assert_policy_fail Update, ctx({title: "Ruby Soho" }, "current_user" => Struct.new(:name).new("not_allowed"))
+      assert_policy_fail Update, ctx({title: "Ruby Soho"}, "current_user" => Struct.new(:name).new("not_allowed"))
     end
   end
 end

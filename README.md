@@ -1,8 +1,7 @@
 # Trailblazer::Test
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/trailblazer/test`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+[![Build Status](https://travis-ci.org/trailblazer/trailblazer-test.svg)](https://travis-ci.org/trailblazer/trailblazer-test)
+[![Gem Version](https://badge.fury.io/rb/trailblazer-test.svg)](http://badge.fury.io/rb/trailblazer-test)
 
 ## Installation
 
@@ -22,42 +21,57 @@ Or install it yourself as:
 
 ## Usage
 
-### `default_params`, `default_options` and `expected_attrs`
+Add in your test `_helper` the following modules:
 
-* `default_params` - **required**: hash of params which will be always passed to the operation unless overriden by `params` or `ctx`
-* `expected_attrs` - **required**: hash always used to assert model attributes
-* `default_options` - **required if using `ctx`**: hash of options which will be always passed to the operation unless overriden by `ctx`
+```ruby
+include Trailblazer::Test::Assertions
+include Trailblazer::Test::Operation::Assertions
+```
 
-### `ctx` and `params`
+If you are using Trailblazer v2.0 you need to add also:
 
-They can be used to pass inputs to the operation under testing. `params` is used when operation does not have any options to pass instead `ctx` is used when operation needs params and options as inputs.
+```ruby
+require "trailblazer/test/deprecation/operation/assertions"
 
-Same API for TRB 2.0 and TRB 2.1 (just make sure to pass the correct format symbol/string - no magic applied here!).
+include Trailblazer::Test::Deprecation::Operation::Assertions # in your test class
+```
 
-The only different between 2.0 and 2.1 that params is nested into `params:` for 2.1 automatically.
+To be able to test an operation we need 3 auxiliary methods which have to be defined at the start of your tests:
+* `default_params` (**required**): hash of params which will be always passed to the operation unless overriden by `params` or `ctx`
+* `expected_attrs` (**required**): hash always used to assert model attributes
+* `default_options` (**required if using `ctx`**): hash of options which will be always passed to the operation unless overriden by `ctx`
 
-Use the key `deep_merge` to disable the default deep_merging of params and options.
+We are also providing 2 helper methods:
+* `params(new_params)`
+* `ctx(new_params, options)`
 
-#### `params`
+Those will merge params and options for you and return the final inputs which then can be passed to the operation under testing.
+
+Pass `deep_merge: false` to the helper methods to disable the default deep merging of params and options.
+
+*Same API for Trailblazer v2.0 and v2.1.*
+
+Finally, using the built-in assertions you are able to test your operations in a fast and easy way:
+* `assert_pass` -> your operation is successful and model has the correct attributes
+* `assert_fail` -> your operation fails and returns some specific errors
+* `assert_policy_fail` -> your operation fails because policy fails
+
+#### params
 
 `params` accepts one argument which is merged into `default_params`.
 
-Example (TRB 2.1):
-
-```
+```ruby
 let(:default_params) { { title: 'My title' } }
 
 params(artist: 'My Artist') -> { params: { title: 'My title', artist: 'My Artist' } }
 params(title: 'Other one') -> { params: { title: 'Other one' } }
 ```
 
-#### `ctx`
+#### ctx
 
-`ctx` accepts 2 arguments, first one will be merged into the `params` and the second one will be merged into `default_options`
+`ctx` accepts 2 arguments, first one will be merged into the `default_params` and the second one will be merged into `default_options`
 
-Example (TRB 2.1):
-
-```
+```ruby
 let(:default_params)  { { title: 'My title' } }
 let(:default_options) { { current_user: 'me' } }
 
@@ -65,12 +79,81 @@ ctx(artist: 'My Artist') -> { params: { title: 'My title', artist: 'My Artist' }
 ctx({title: 'Other one'}, current_user: 'you') -> { params: { title: 'Other one' }, current_user: 'you' }
 ```
 
-## Development
+### assert_pass
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+```ruby
+assert_pass(operation, ctx, expected_attributes)
+```
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+Example:
+```ruby
+let(:default_params) { { band: 'The Chats'} }
+let(:default_options) { { current_user: user} }
+let(:expected_attrs) { { band: 'The Chats'} }
 
-## Contributing
+it { assert_pass MyOp, ctx(title: 'Smoko'), title: 'Smoko' }
+```
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/trailblazer-test.
+Pass `deep_merge: false` to disable the deep merging of the third argument `expected_attributes` and the auxiliary method `expected_attrs`.
+
+It's also possible to test in a more detailed way using a block:
+
+```ruby
+assert_pass MyOp, ctx(title: 'Smoko'), {} do |result|
+  assert_equal "Smoko", result[:model].title
+end
+```
+
+### assert_fail
+
+```ruby
+assert_fail(operation, ctx)
+```
+
+Example:
+```ruby
+let(:default_params) { { band: 'The Chats'} }
+let(:default_options) { { current_user: user} }
+let(:expected_attrs) { { band: 'The Chats'} }
+
+it { assert_fail MyOp, ctx(title: 'Smoko') }
+```
+
+This will just test that the operation fails instead passing as third argument an array of symbols will also test that specific attribute has an error:
+
+```ruby
+assert_fail MyOp, ctx(band: 'Justing Beaver'), [:band] # definitely wrong!!!!
+```
+
+Using the block here will allow to test the error message:
+
+```ruby
+assert_fail MyOp, ctx(band: 'Justing Beaver') do |result|
+  assert_equal 'You cannot listen Justing Beaver', result['contract.default'].errors.messages[:band]
+end
+```
+
+*We will improve this part and allowing to the test message directly without using a block*
+
+
+### assert_policy_fail
+
+Add this in your test file to be able to use it:
+```ruby
+include Trailblazer::Test::Operation::PolicyAssertions
+```
+
+```ruby
+assert_policy_fail(operation, ctx)
+```
+
+This will test that the operation fails due to a policy failure
+
+Example:
+```ruby
+let(:default_params) { { band: 'The Chats'} }
+let(:default_options) { { current_user: user} }
+let(:expected_attrs) { { band: 'The Chats'} }
+
+it { assert_policy_fail MyOp, ctx({title: 'Smoko'}, current_user: another) }
+```

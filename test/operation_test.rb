@@ -1,32 +1,6 @@
 require "test_helper"
 
 class OperationTest < Minitest::Spec
-  class Create
-    def self.call(params:)
-      if params[:band] == "Rancid"
-        model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
-        Result.new(true, model, nil)
-      else
-
-        Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
-      end
-    end
-  end
-
-  class Update
-    def self.call(params:, current_user:)
-      return Result.new(false, nil, Errors.new(nil, Policy.new(false))) if current_user.name != "allowed"
-
-      if params[:band] == "Rancid"
-        model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
-        Result.new(true, model, nil)
-      else
-
-        Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
-      end
-    end
-  end
-
   include Trailblazer::Test::Assertions
   include Trailblazer::Test::Operation::Assertions
 
@@ -109,15 +83,13 @@ class OperationTest < Minitest::Spec
   end
   #:fail-block end
 
-  class CreateNestedParams
-    def self.call(params:)
-      if params[:form][:band] == "Rancid"
-        model = Struct.new(:title, :band).new(params[:form][:title].strip, params[:form][:band])
-        Result.new(true, model, nil)
-      else
-
-        Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
+  describe "Passing the wrong expected_attrs type" do
+    it "raises a ExpectedErrorsTypeError" do
+      exp = assert_raises do
+        assert_fail Update, ctx(band: "Something"), "band"
       end
+
+      exp.inspect.include? %(ExpectedErrorsTypeError: expected_errors has to be an Array)
     end
   end
 

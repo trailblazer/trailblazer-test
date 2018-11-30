@@ -4,6 +4,7 @@ inherit_from:
 Style/SignalException:
   Exclude:
     - lib/trailblazer/test/operation/assertions.rb
+    - lib/trailblazer/test/operation/helper.rb
 
 Metrics/ParameterLists:
   Exclude:

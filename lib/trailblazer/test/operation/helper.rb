@@ -9,7 +9,7 @@ module Trailblazer::Test
         operation_class.(*args).tap do |result|
           unless result.success?
             yield result if block_given?
-            fail OperationFailedError, "factory( #{operation_class} ) failed." if raise_on_failure
+            raise OperationFailedError, "factory( #{operation_class} ) failed." if raise_on_failure
           end
         end
       end
@@ -20,6 +20,5 @@ module Trailblazer::Test
     end
   end
 
-  class OperationFailedError < RuntimeError
-  end
+  class OperationFailedError < RuntimeError; end
 end

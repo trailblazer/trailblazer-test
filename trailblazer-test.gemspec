@@ -8,15 +8,15 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Nick Sutterer"]
   spec.email         = ["apotonick@gmail.com"]
 
-  spec.summary       = %q{Assertions, matchers, and helpers to test Trailblazer code.}
-  spec.description   = %q{Assertions, matchers, and helpers to test Trailblazer code.}
+  spec.summary       = "Assertions, matchers, and helpers to test Trailblazer code."
+  spec.description   = "Assertions, matchers, and helpers to test Trailblazer code."
   spec.homepage      = "http://trailblazer.to"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
   end
   spec.bindir        = "exe"
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.executables   = spec.files.grep(%r(^exe/)) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
   spec.add_dependency "hashie"

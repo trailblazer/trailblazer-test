@@ -16,7 +16,7 @@ class HelperTest < Minitest::Spec
 
     #:call
     it do
-      result = call Song::Update, title: "Shipwreck"
+      call Song::Update, title: "Shipwreck"
     end
     #:call end
 
@@ -25,13 +25,13 @@ class HelperTest < Minitest::Spec
     end
 
     it do
-      model = factory(Song::Update, {})
+      factory(Song::Update, {})
     end
 
     it do
       assert_raises Trailblazer::Test::OperationFailedError do
         #:factory
-        model = factory(Song::Create, title: "Shipwreck")["model"]
+        factory(Song::Create, title: "Shipwreck")["model"]
         #:factory end
       end
     end
@@ -41,9 +41,9 @@ class HelperTest < Minitest::Spec
 
       assert_raises Trailblazer::Test::OperationFailedError do
         #:factory-block
-        model = factory(Song::Create, title: "Shipwreck") do |result|
+        factory(Song::Create, title: "Shipwreck") do |result|
           value = result
-        end["model"]
+        end
         #:factory-block end
       end
 
@@ -59,5 +59,8 @@ class HelperTest < Minitest::Spec
   # raises error
   it { assert_instance_of Trailblazer::Test::OperationFailedError, Test.new(:a).test_0004_anonymous }
 
-  it { assert_equal %(#<struct HelperTest::Song::Result input=[{:title=>"Shipwreck"}], success=false>), Test.new(:a).test_0005_anonymous.inspect }
+  it do
+    assert_equal %(#<struct HelperTest::Song::Result input=[{:title=>"Shipwreck"}], success=false>),
+                 Test.new(:a).test_0005_anonymous.inspect
+  end
 end

@@ -36,7 +36,10 @@ class AssertionsTest < Minitest::Spec
         #:exp-eq end
       }.new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
-    assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], ["Rancid", "__Rancid__", "Property [band] mismatch"]], test.()
+    assert_equal [
+      ["Timebomb", "__Timebomb__", "Property [title] mismatch"],
+      ["Rancid", "__Rancid__", "Property [band] mismatch"]
+    ], test.()
   end
 
   class Song
@@ -77,7 +80,10 @@ class AssertionsTest < Minitest::Spec
         #:exp-reader-hash end
       }.new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
-    assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], ["Rancid", "__Rancid__", "Property [band] mismatch"]], test.()
+    assert_equal [
+      ["Timebomb", "__Timebomb__", "Property [title] mismatch"],
+      ["Rancid", "__Rancid__", "Property [band] mismatch"]
+    ], test.()
   end
 
   it do
@@ -98,6 +104,9 @@ class AssertionsTest < Minitest::Spec
         #:exp-reader-get end
       }.new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
-    assert_equal [["Timebomb", "__Timebomb__", "Property [title] mismatch"], ["Rancid", "__Rancid__", "Property [band] mismatch"]], test.()
+    assert_equal [
+      ["Timebomb", "__Timebomb__", "Property [title] mismatch"],
+      ["Rancid", "__Rancid__", "Property [band] mismatch"]
+    ], test.()
   end
 end

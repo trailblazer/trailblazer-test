@@ -119,10 +119,10 @@ let(:expected_attrs) { { band: 'The Chats'} }
 it { assert_fail MyOp, ctx(title: 'Smoko') }
 ```
 
-This will just test that the operation fails instead passing as third argument an array of symbols will also test that specific attribute has an error:
+This will just test that the operation fails instead passing `expected_errors` as an array of symbols will also test that specific attribute has an error:
 
 ```ruby
-assert_fail MyOp, ctx(band: 'Justing Beaver'), [:band] # definitely wrong!!!!
+assert_fail MyOp, ctx(band: 'Justing Beaver'), expected_errors: [:band] # definitely wrong!!!!
 ```
 
 Using the block here will allow to test the error message:
@@ -132,6 +132,8 @@ assert_fail MyOp, ctx(band: 'Justing Beaver') do |result|
   assert_equal 'You cannot listen Justing Beaver', result['contract.default'].errors.messages[:band]
 end
 ```
+
+Change contract name using `contract_name`.
 
 *We will improve this part and allowing to the test message directly without using a block*
 
@@ -147,16 +149,16 @@ include Trailblazer::Test::Operation::PolicyAssertions
 assert_policy_fail(operation, ctx)
 ```
 
-This will test that the operation fails due to a policy failure
+This will test that the operation fails due to a policy failure.
 
 Example:
 ```ruby
 let(:default_params) { { band: 'The Chats'} }
 let(:default_options) { { current_user: user} }
-let(:expected_attrs) { { band: 'The Chats'} }
 
 it { assert_policy_fail MyOp, ctx({title: 'Smoko'}, current_user: another) }
 ```
+Change policy name using `policy_name`.
 
 ## Test Setup
 

@@ -42,6 +42,14 @@ Minitest::Spec.class_eval do
     end
   end
 
+  class CustomResult < Result
+    def [](name)
+      return @model if name == :model
+      return @errors if name == "contract.custom"
+      return @errors.policy if name == "result.policy.custom"
+    end
+  end
+
   Errors = Struct.new(:messages, :policy) do
     def errors
       self
@@ -100,6 +108,20 @@ Minitest::Spec.class_eval do
       else
 
         Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
+      end
+    end
+  end
+
+  class CustomUpdate
+    def self.call(params:, current_user:)
+      return CustomResult.new(false, nil, Errors.new(nil, Policy.new(false))) if current_user.name != "allowed"
+
+      if params[:band] == "Rancid"
+        model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
+        CustomResult.new(true, model, nil)
+      else
+
+        CustomResult.new(false, nil, Errors.new(band: ["must be Rancid"]))
       end
     end
   end

@@ -23,8 +23,8 @@ module Trailblazer::Test::Operation
       assert_pass_with_model(operation_class, operation_inputs, expected_model_attributes: expected_attributes, &block)
     end
 
-    def assert_fail(operation_class, operation_inputs, expected_errors = nil, &block)
-      assert_fail_with_model(operation_class, operation_inputs, expected_errors: expected_errors, &block)
+    def assert_fail(operation_class, operation_inputs, expected_errors: nil, contract_name: "default", &block)
+      assert_fail_with_model(operation_class, operation_inputs, expected_errors: expected_errors, contract_name: contract_name, &block)
     end
 
     # @private
@@ -37,14 +37,14 @@ module Trailblazer::Test::Operation
     end
 
     # @private
-    def assert_fail_with_model(operation_class, operation_inputs, expected_errors: nil, &user_block)
+    def assert_fail_with_model(operation_class, operation_inputs, expected_errors: nil, contract_name: raise, &user_block)
       _assert_call(operation_class, operation_inputs, user_block: user_block) do |result|
         assert_equal true, result.failure?
 
         raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array)
 
         # only test _if_ errors are present, not the content.
-        errors = result["contract.default"].errors.messages # TODO: this will soon change with the operation Errors object.
+        errors = result["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
 
         assert_equal expected_errors.sort, errors.keys.sort
       end

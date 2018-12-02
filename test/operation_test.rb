@@ -66,7 +66,7 @@ class OperationTest < Minitest::Spec
   describe "Update with invalid data" do
     let(:default_params) { {band: "Rancid"} }
 
-    it { assert_fail Update, ctx(band: "Adolescents"), [:band] }
+    it { assert_fail Update, ctx(band: "Adolescents"), expected_errors: [:band] }
   end
   #:fail end
 
@@ -93,17 +93,25 @@ class OperationTest < Minitest::Spec
     end
   end
 
+  describe "with different contract name" do
+    let(:default_params) { {band: "Rancid"} }
+
+    it "assert a different contract" do
+      assert_fail CustomUpdate, ctx(band: "Adolescents"), expected_errors: [:band], contract_name: "custom"
+    end
+  end
+
   describe "With nested params" do
     let(:default_params) { {form: {band: "Rancid"}} }
     let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
 
     it { assert_pass CreateNestedParams, params(form: {title: "Ruby Soho"}), title: "Ruby Soho" }
-    it { assert_fail CreateNestedParams, params(form: {band: nil}), [:band] }
-    it { assert_fail CreateNestedParams, params(form: {band: "NOFX"}, deep_merge: false), [:band] }
+    it { assert_fail CreateNestedParams, params(form: {band: nil}), expected_errors: [:band] }
+    it { assert_fail CreateNestedParams, params(form: {band: "NOFX"}, deep_merge: false), expected_errors: [:band] }
 
     it "raise an error because params[:form] is nil" do
       exp = assert_raises do
-        assert_fail CreateNestedParams, params(band: "NOFX", deep_merge: false), [:band]
+        assert_fail CreateNestedParams, params(band: "NOFX", deep_merge: false), expected_errors: [:band]
       end
 
       exp.inspect.must_match %(NoMethodError: undefined method `strip' for nil:NilClass)
@@ -115,10 +123,20 @@ class OperationTest < Minitest::Spec
   #:policy_fail-block
   describe "Update with failing policy" do
     let(:default_params) { {band: "Rancid"} }
+    let(:not_allowed_user) { Struct.new(:name).new("not_allowed") }
 
     it do
-      assert_policy_fail Update, ctx({title: "Ruby Soho"}, current_user: Struct.new(:name).new("not_allowed"))
+      assert_policy_fail Update, ctx({title: "Ruby Soho"}, current_user: not_allowed_user)
     end
   end
   #:policy_fail-block end
+
+  describe "Update failing with custom policy" do
+    let(:default_params) { {band: "Rancid"} }
+    let(:not_allowed_user) { Struct.new(:name).new("not_allowed") }
+
+    it do
+      assert_policy_fail CustomUpdate, ctx({title: "Ruby Soho"}, current_user: not_allowed_user), policy_name: "custom"
+    end
+  end
 end

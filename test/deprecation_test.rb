@@ -70,7 +70,7 @@ class DeprecationTest < Minitest::Spec
   describe "Update with invalid data" do
     let(:default_params) { {band: "Rancid"} }
 
-    it { assert_fail Update, ctx(band: "Adolescents"), [:band] }
+    it { assert_fail Update, ctx(band: "Adolescents"), expected_errors: [:band] }
   end
 
   include Trailblazer::Test::Operation::PolicyAssertions

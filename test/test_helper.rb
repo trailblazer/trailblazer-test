@@ -21,6 +21,8 @@ Minitest::Spec.class_eval do
       @errors = errors
     end
 
+    attr_reader :errors
+
     def success?
       @success
     end
@@ -33,6 +35,10 @@ Minitest::Spec.class_eval do
       return @model if name == :model
       return @errors if name == "contract.default"
       return @errors.policy if name == "result.policy.default"
+    end
+
+    def wtf?
+      puts "Operation trace"
     end
   end
 
@@ -65,6 +71,10 @@ Minitest::Spec.class_eval do
 
         Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
       end
+    end
+
+    def self.trace(params:)
+      call(params: params)
     end
   end
 

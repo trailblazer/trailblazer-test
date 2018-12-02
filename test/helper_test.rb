@@ -1,66 +1,72 @@
 require "test_helper"
 
 class HelperTest < Minitest::Spec
-  module Song
-    Result = Struct.new(:input, :success) do
-      def success?;
-        success;
-      end
-    end
-    Update = ->(*args) { Result.new(args, true) }
-    Create = ->(*args) { Result.new(args, false) }
-  end
+  include Trailblazer::Test::Operation::Helper
 
-  class Test < Minitest::Spec
-    include Trailblazer::Test::Operation::Helper
-
+  describe "#call" do
     #:call
-    it do
-      call Song::Update, title: "Shipwreck"
+    it "calls the operation" do
+      result = call Create, params: {title: "Shipwreck", band: "Rancid"}
+
+      assert_equal true, result.success?
     end
     #:call end
 
-    it do
-      call Song::Update, {a: 1}, b: 2
+    it "calls the operation and does not raise an error when fails" do
+      result = call Create, params: {title: "Shipwreck", band: "The Chats"}
+
+      assert_equal true, result.failure?
     end
 
-    it do
-      factory(Song::Update, {})
-    end
-
-    it do
-      assert_raises Trailblazer::Test::OperationFailedError do
-        #:factory
-        factory(Song::Create, title: "Shipwreck")["model"]
-        #:factory end
-      end
-    end
-
-    it do
-      value = nil
-
-      assert_raises Trailblazer::Test::OperationFailedError do
-        #:factory-block
-        factory(Song::Create, title: "Shipwreck") do |result|
-          value = result
+    describe "with a block" do
+      it "calls the operation" do
+        model = nil
+        call Create, params: {title: "Shipwreck", band: "Rancid"} do |result|
+          model = result[:model]
         end
-        #:factory-block end
+
+        assert_equal model.title, "Shipwreck"
+        assert_equal model.band, "Rancid"
       end
 
-      value
+      it "calls the operation and does not raise an error when fails" do
+        errors = nil
+        call Create, params: {title: "Shipwreck", band: "The Chats"} do |result|
+          errors = result["contract.default"].errors
+        end
+
+        assert_equal errors.messages, band: ["must be Rancid"]
+      end
     end
   end
 
-  it { assert_equal [{title: "Shipwreck"}], Test.new(:a).test_0001_anonymous.input }
-  it { assert_equal [{a: 1}, {b: 2}], Test.new(:a).test_0002_anonymous.input }
+  describe "#factory" do
+    it "calls the operation" do
+      result = factory Create, params: {title: "Shipwreck", band: "Rancid"}
 
-  # returns result.
-  it { assert_equal %(#<struct HelperTest::Song::Result input=[{}], success=true>), Test.new(:a).test_0003_anonymous.inspect }
-  # raises error
-  it { assert_instance_of Trailblazer::Test::OperationFailedError, Test.new(:a).test_0004_anonymous }
+      assert_equal true, result.success?
+    end
 
-  it do
-    assert_equal %(#<struct HelperTest::Song::Result input=[{:title=>"Shipwreck"}], success=false>),
-                 Test.new(:a).test_0005_anonymous.inspect
+    it "calls the operation and raises an error and prints trace when fails" do
+      exp = assert_raises do
+        factory Create, params: {title: "Shipwreck", band: "The Chats"}
+      end
+
+      exp.inspect.include? %(Operation trace)
+      exp.inspect.include? "OperationFailedError: factory(Create) has failed due to validation "\
+                           "errors: {:band=>['must be Rancid']}"
+    end
+
+    describe "with a block" do
+      it "calls the operation" do
+        model = nil
+        factory Create, params: {title: "Shipwreck", band: "Rancid"} do |result|
+          model = result[:model]
+        end
+
+        assert_equal model.title, "Shipwreck"
+        assert_equal model.band, "Rancid"
+      end
+    end
   end
 end

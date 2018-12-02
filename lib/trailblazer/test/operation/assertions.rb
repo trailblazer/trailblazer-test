@@ -41,18 +41,17 @@ module Trailblazer::Test::Operation
       _assert_call(operation_class, operation_inputs, user_block: user_block) do |result|
         assert_equal true, result.failure?
 
-        if expected_errors.is_a?(Array) # only test _if_ errors are present, not the content.
-          errors = result["contract.default"].errors.messages # TODO: this will soon change with the operation Errors object.
+        raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array)
 
-          assert_equal expected_errors.sort, errors.keys.sort
-        else
-          raise "not implemented, yet"
-        end
+        # only test _if_ errors are present, not the content.
+        errors = result["contract.default"].errors.messages # TODO: this will soon change with the operation Errors object.
+
+        assert_equal expected_errors.sort, errors.keys.sort
       end
     end
 
     # @private
-    def _assert_call(operation_class, operation_inputs, user_block: raise, &block)
+    def _assert_call(operation_class, operation_inputs, user_block: raise)
       result = _call_operation(operation_class, operation_inputs)
 
       return user_block.call(result) if user_block # DISCUSS: result or model?
@@ -61,6 +60,9 @@ module Trailblazer::Test::Operation
 
       result
     end
+
+    # @private
+    class ExpectedErrorsTypeError < RuntimeError; end
 
     # @private
     class CtxHash < Hash

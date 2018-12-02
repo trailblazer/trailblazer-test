@@ -1,3 +1,16 @@
 inherit_from:
   - https://raw.githubusercontent.com/trailblazer/meta/master/rubocop.yml
-  - .rubocop_todo.yml
+
+Style/SignalException:
+  Exclude:
+    - lib/trailblazer/test/operation/assertions.rb
+    - lib/trailblazer/test/operation/helper.rb
+
+Metrics/ParameterLists:
+  Exclude:
+    - lib/trailblazer/test/operation/assertions.rb
+
+Metrics/LineLength:
+  Exclude:
+    - lib/trailblazer/test/operation/assertions.rb
+

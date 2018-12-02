@@ -157,3 +157,53 @@ let(:expected_attrs) { { band: 'The Chats'} }
 
 it { assert_policy_fail MyOp, ctx({title: 'Smoko'}, current_user: another) }
 ```
+
+## Test Setup
+
+It is obviously crucial to test your operation in the correct test enviroment calling operation instead of using `FactoryBot` or simply `Model.create`.
+
+To do so we provide 2 helper methods:
+* `call`: will call the operation and **will not raise** an error in case of failure
+* `factory`: will call the operation and **will raise** an error in case of failure returning also the trace and a validate error message in case exists
+
+### Usage
+
+Add this in your test `_helper.rb`:
+
+```ruby
+include Trailblazer::Test::Operation::Helper
+```
+
+In case you use are Trailblazer v2.0, you need to add this instead:
+
+```ruby
+require "trailblazer/test/deprecation/operation/helper"
+
+include Trailblazer::Test::Deprecation::Operation::Helper
+```
+
+*Same API for both Trailblazer v2.0 and v2.1*
+
+Examples:
+```ruby
+# call
+let(:user) { call(User::Create, params: params)[:model] }
+
+# call with block
+let(:user) do
+  call User::Create, params: params do |result|
+    # run some code to reproduce some async jobs (for example)
+  end[:model]
+end
+
+# factory - this will raise an error if User::Create fails
+let(:user) { factory(User::Create, params: params)[:model] }
+
+# factory - this will raise an error if User::Create fails
+let(:user) do
+  factory User::Create, params: params do |result|
+    # this block will be yield only if User::Create is successful
+    # run some code to reproduce some async jobs (for example)
+  end[:model]
+end
+```

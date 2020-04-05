@@ -1,6 +1,5 @@
 language: ruby
-before_install:
-  - gem install bundler
+cache: bundler
 matrix:
   include:
     - rvm: 2.1
@@ -13,4 +12,3 @@ matrix:
       gemfile: Gemfile
     - rvm: 2.5.0
       gemfile: Gemfile
-      script: bundle exec rake test && rake rubocop

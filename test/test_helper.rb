@@ -10,6 +10,12 @@ require "trailblazer/test"
 
 require "minitest/autorun"
 
+require "trailblazer/activity/dsl/linear"
+require "trailblazer/activity/testing"
+
+Activity  = Trailblazer::Activity
+Testing   = Trailblazer::Activity::Testing
+
 Minitest::Spec.class_eval do
   include Trailblazer::Test::Assertions
   include Trailblazer::Test::Operation::Assertions

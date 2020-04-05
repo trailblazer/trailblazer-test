@@ -21,9 +21,12 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "hashie"
 
-  spec.add_development_dependency "bundler", "~> 1.15"
+  spec.add_development_dependency "bundler"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rubocop"
   spec.add_development_dependency "simplecov"
+
+  spec.add_dependency "trailblazer-activity", ">= 0.10.0"
+  spec.add_dependency "trailblazer-activity-dsl-linear", ">= 0.2.5"
 end

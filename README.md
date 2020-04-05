@@ -209,3 +209,76 @@ let(:user) do
   end[:model]
 end
 ```
+
+
+### mock_step
+This helper allows you to mock any step within given activity or deeply nested activities. For example,
+
+```ruby
+class Show < Trailblazer::Operation
+  step :load_user
+  # Some logic to load user
+end
+
+new_activity = mock_step(Show, id: :load_user) do |ctx|
+  ctx[:user] = double(:user, name: 'Mocky')
+end
+
+assert_pass new_activity, {}, {}, do |ctx|
+  assert_equal ctx[:user].name, 'Mocky'
+end
+```
+
+Internally, it creates and returns a fresh activity by replacing the step for given `:id`, without making any patches to original activity.
+
+You can also mock any nested activity (aka `Subprocess`) which does any heavy computations or I/O calls.
+
+```ruby
+class Create < Trailblazer::operation
+  class Complexity < Trailblazer::Operation
+    step :some_complex_task
+  end
+
+  step Subprocess(Complexity)
+  # ...
+end
+
+new_activity = mock_step(Create, id: Create::Complexity) do
+  true # no-op to avoid any Complexity
+end
+```
+
+In case you want to mock only single step from the nested activity, you can do so by passing it as a `subprocess`.
+
+```ruby
+new_activity = mock_step(Create, id: :some_complex_task, subprocess: Complexity) do
+  # Mock only single step from nested activity to do nothing
+  true
+end
+```
+
+It'll search the `:id` to be mocked within nested activity instead of top-level activity.
+
+
+In addition, if you want to mock any deeply nested step in `subprocess's` activity, it can be done via passing `subprocess_path`.
+
+```ruby
+class Create < Trailblazer::operation
+  class Complexity < Trailblazer::Operation
+    class ExternalApi < Trailblazer::Operation
+      step :make_call
+    end
+
+    step Subprocess(ExternalApi)
+  end
+
+  step Subprocess(Complexity)
+  # ...
+end
+
+new_activity = mock_step(Create, id: :make_call, subprocess: Create::Complexity, subprocess_path: [Create::Complexity::ExternalApi]) do
+  # Some JSON response
+end
+```
+
+`subprocess_path` should list n-level of nested activities in the order they are nested. Internally, it uses [patching](https://2019.trailblazer.to/2.1/docs/activity.html#activity-dsl-options-patching) API supported by `Subprocess` helper.

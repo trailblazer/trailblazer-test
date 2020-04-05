@@ -212,7 +212,7 @@ end
 
 
 ### mock_step
-This helper allows you to mock any step within given activity or deeply nested activities. For example,
+This helper allows you to mock any step within a given or deeply nested activities. For example,
 
 ```ruby
 class Show < Trailblazer::Operation
@@ -229,7 +229,7 @@ assert_pass new_activity, {}, {}, do |ctx|
 end
 ```
 
-Internally, it creates and returns a fresh activity by replacing the step for given `:id`, without making any patches to original activity.
+Internally, it creates and returns a fresh, *subclassed* activity (via "patching") whilst replacing the step for given `:id`. Be advised that this does *not change* the original activity class.
 
 You can also mock any nested activity (aka `Subprocess`) which does any heavy computations or I/O calls.
 

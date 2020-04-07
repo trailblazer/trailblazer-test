@@ -3,6 +3,126 @@
 [![Build Status](https://travis-ci.org/trailblazer/trailblazer-test.svg)](https://travis-ci.org/trailblazer/trailblazer-test)
 [![Gem Version](https://badge.fury.io/rb/trailblazer-test.svg)](http://badge.fury.io/rb/trailblazer-test)
 
+## Usage
+
+Testing Trailblazer applications usually involves the following tests.
+
+1. **Unit tests for operations**: They test all edge cases in a nice, fast unit test environment without any HTTP involved.
+2. **Integration tests for controllers**: These Smoke tests only test the wiring between controller, operation and presentation   layer. Usually, a coded click path simulates you manually clicking through your app and testing if it works. The preferred way    here is using Rack-test and Capybara.
+3. **Unit tests for cells** By invoking your cells with arbitrary data you functionally test the rendered markup using Capybara.
+
+All the up to date details on the available assertions and helpers is available at [official documentation](http://2019.trailblazer.to/2.1/docs/trailblazer.html#trailblazer-test).
+
+### Assertions
+
+To use available assertions, add in your test `_helper` the following modules:
+
+```ruby
+include Trailblazer::Test::Assertions
+include Trailblazer::Test::Operation::Assertions
+```
+
+If you are using Trailblazer v2.0 you need to add also:
+
+```ruby
+require "trailblazer/test/deprecation/operation/assertions"
+
+include Trailblazer::Test::Deprecation::Operation::Assertions # in your test class
+```
+
+[Learn more](http://2019.trailblazer.to/2.1/docs/trailblazer.html#trailblazer-test-assertions)
+
+#### assert_pass
+
+Use `assert_pass` to run an operation and assert it was successful, while checking if the attributes of the operation's `model` are what you're expecting.
+
+```ruby
+it { assert_pass Blog::Operation::Create, { params: { title: "Ruby Soho" } }, title: "Ruby Soho" }
+```
+
+#### assert_fail
+
+To test an unsuccessful outcome of an operation, use `assert_fail`. This is used for testing all kinds of validations. By passing insufficient or wrong data to the operation, it will fail and mark errors on the errors object.
+
+```ruby
+it { assert_fail Blog::Operation::Update, { params: { band: nil } }, expected_errors: [:band] }
+```
+
+#### assert_policy_fail
+
+This will test that the operation fails due to a policy failure.
+
+```ruby
+it { assert_policy_fail Blog::Operation::Delete, ctx({title: "Ruby Soho"}, current_user: not_allowed_user) }
+```
+
+#### assert_exposes
+
+Test attributes of an arbitrary object.
+
+```ruby
+it { assert_exposes model, title: "Timebomb", band: "Rancid" }
+```
+
+### Helpers
+
+There are several helpers to deal with operation tests and operations used as factories.
+Add this in your `_helper.rb` file to use all available helpers.
+
+```ruby
+include Trailblazer::Test::Operation::Helper
+```
+
+[Learn more](http://2019.trailblazer.to/2.1/docs/trailblazer.html#trailblazer-test-helpers)
+
+#### call
+
+Instead of manually invoking an operation, you can use the `call` helper.
+
+```ruby
+it do
+  result = call Blog::Operation::Create, params: {title: "Shipwreck", band: "Rancid"}
+  # use `result` object however you want
+end
+```
+
+#### factory
+
+The `factory` method calls the operation and raises an error should the operation have failed. If successful, it will do the exact same thing `call` does.
+
+```ruby
+it do
+  assert_raises do
+    factory Blog::Operation::Create, params: {title: "Shipwreck", band: "The Chats"}
+  end
+end
+```
+
+#### mock_step
+
+This helper allows you to mock any step within a given or deeply nested activities. For example,
+
+```ruby
+class Show < Trailblazer::Operation
+  step :load_user
+  ...
+end
+```
+
+To skip processing inside `:load_user` and use a mock instead, use `mock_step`.
+
+```ruby
+it do
+  new_activity = mock_step(Show, id: :load_user) do |ctx|
+    ctx[:user] = Struct.new(:name).new('Mocky')
+  end
+
+  assert_pass new_activity, {}, {} do |ctx|
+    assert_equal ctx[:user].name, 'Mocky'
+  end
+end
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -18,267 +138,3 @@ And then execute:
 Or install it yourself as:
 
     $ gem install trailblazer-test
-
-## Usage
-
-Add in your test `_helper` the following modules:
-
-```ruby
-include Trailblazer::Test::Assertions
-include Trailblazer::Test::Operation::Assertions
-```
-
-If you are using Trailblazer v2.0 you need to add also:
-
-```ruby
-require "trailblazer/test/deprecation/operation/assertions"
-
-include Trailblazer::Test::Deprecation::Operation::Assertions # in your test class
-```
-
-To be able to test an operation we need 3 auxiliary methods which have to be defined at the start of your tests:
-* `default_params` (**required**): hash of params which will be always passed to the operation unless overriden by `params` or `ctx`
-* `expected_attrs` (**required**): hash always used to assert model attributes
-* `default_options` (**required if using `ctx`**): hash of options which will be always passed to the operation unless overriden by `ctx`
-
-We are also providing 2 helper methods:
-* `params(new_params)`
-* `ctx(new_params, options)`
-
-Those will merge params and options for you and return the final inputs which then can be passed to the operation under testing.
-
-Pass `deep_merge: false` to the helper methods to disable the default deep merging of params and options.
-
-*Same API for Trailblazer v2.0 and v2.1.*
-
-Finally, using the built-in assertions you are able to test your operations in a fast and easy way:
-* `assert_pass` -> your operation is successful and model has the correct attributes
-* `assert_fail` -> your operation fails and returns some specific errors
-* `assert_policy_fail` -> your operation fails because policy fails
-
-#### params
-
-`params` accepts one argument which is merged into `default_params`.
-
-```ruby
-let(:default_params) { { title: 'My title' } }
-
-params(artist: 'My Artist') -> { params: { title: 'My title', artist: 'My Artist' } }
-params(title: 'Other one') -> { params: { title: 'Other one' } }
-```
-
-#### ctx
-
-`ctx` accepts 2 arguments, first one will be merged into the `default_params` and the second one will be merged into `default_options`
-
-```ruby
-let(:default_params)  { { title: 'My title' } }
-let(:default_options) { { current_user: 'me' } }
-
-ctx(artist: 'My Artist') -> { params: { title: 'My title', artist: 'My Artist' }, current_user: 'me' }
-ctx({title: 'Other one'}, current_user: 'you') -> { params: { title: 'Other one' }, current_user: 'you' }
-```
-
-### assert_pass
-
-```ruby
-assert_pass(operation, ctx, expected_attributes)
-```
-
-Example:
-```ruby
-let(:default_params) { { band: 'The Chats'} }
-let(:default_options) { { current_user: user} }
-let(:expected_attrs) { { band: 'The Chats'} }
-
-it { assert_pass MyOp, ctx(title: 'Smoko'), title: 'Smoko' }
-```
-
-Pass `deep_merge: false` to disable the deep merging of the third argument `expected_attributes` and the auxiliary method `expected_attrs`.
-
-It's also possible to test in a more detailed way using a block:
-
-```ruby
-assert_pass MyOp, ctx(title: 'Smoko'), {} do |result|
-  assert_equal "Smoko", result[:model].title
-end
-```
-
-### assert_fail
-
-```ruby
-assert_fail(operation, ctx)
-```
-
-Example:
-```ruby
-let(:default_params) { { band: 'The Chats'} }
-let(:default_options) { { current_user: user} }
-let(:expected_attrs) { { band: 'The Chats'} }
-
-it { assert_fail MyOp, ctx(title: 'Smoko') }
-```
-
-This will just test that the operation fails instead passing `expected_errors` as an array of symbols will also test that specific attribute has an error:
-
-```ruby
-assert_fail MyOp, ctx(band: 'Justing Beaver'), expected_errors: [:band] # definitely wrong!!!!
-```
-
-Using the block here will allow to test the error message:
-
-```ruby
-assert_fail MyOp, ctx(band: 'Justing Beaver') do |result|
-  assert_equal 'You cannot listen Justing Beaver', result['contract.default'].errors.messages[:band]
-end
-```
-
-Change contract name using `contract_name`.
-
-*We will improve this part and allowing to the test message directly without using a block*
-
-
-### assert_policy_fail
-
-Add this in your test file to be able to use it:
-```ruby
-include Trailblazer::Test::Operation::PolicyAssertions
-```
-
-```ruby
-assert_policy_fail(operation, ctx)
-```
-
-This will test that the operation fails due to a policy failure.
-
-Example:
-```ruby
-let(:default_params) { { band: 'The Chats'} }
-let(:default_options) { { current_user: user} }
-
-it { assert_policy_fail MyOp, ctx({title: 'Smoko'}, current_user: another) }
-```
-Change policy name using `policy_name`.
-
-## Test Setup
-
-It is obviously crucial to test your operation in the correct test enviroment calling operation instead of using `FactoryBot` or simply `Model.create`.
-
-To do so we provide 2 helper methods:
-* `call`: will call the operation and **will not raise** an error in case of failure
-* `factory`: will call the operation and **will raise** an error in case of failure returning also the trace and a validate error message in case exists
-
-### Usage
-
-Add this in your test `_helper.rb`:
-
-```ruby
-include Trailblazer::Test::Operation::Helper
-```
-
-In case you use are Trailblazer v2.0, you need to add this instead:
-
-```ruby
-require "trailblazer/test/deprecation/operation/helper"
-
-include Trailblazer::Test::Deprecation::Operation::Helper
-```
-
-*Same API for both Trailblazer v2.0 and v2.1*
-
-Examples:
-```ruby
-# call
-let(:user) { call(User::Create, params: params)[:model] }
-
-# call with block
-let(:user) do
-  call User::Create, params: params do |result|
-    # run some code to reproduce some async jobs (for example)
-  end[:model]
-end
-
-# factory - this will raise an error if User::Create fails
-let(:user) { factory(User::Create, params: params)[:model] }
-
-# factory - this will raise an error if User::Create fails
-let(:user) do
-  factory User::Create, params: params do |result|
-    # this block will be yield only if User::Create is successful
-    # run some code to reproduce some async jobs (for example)
-  end[:model]
-end
-```
-
-
-### mock_step
-This helper allows you to mock any step within a given or deeply nested activities. For example,
-
-```ruby
-class Show < Trailblazer::Operation
-  step :load_user
-  # Some logic to load user
-end
-
-new_activity = mock_step(Show, id: :load_user) do |ctx|
-  ctx[:user] = double(:user, name: 'Mocky')
-end
-
-assert_pass new_activity, {}, {}, do |ctx|
-  assert_equal ctx[:user].name, 'Mocky'
-end
-```
-
-Internally, it creates and returns a fresh, *subclassed* activity (via "patching") whilst replacing the step for given `:id`. Be advised that this does *not change* the original activity class.
-
-You can also mock any nested activity (aka `Subprocess`) which does any heavy computations or I/O calls.
-
-```ruby
-class Create < Trailblazer::operation
-  class Complexity < Trailblazer::Operation
-    step :some_complex_task
-  end
-
-  step Subprocess(Complexity)
-  # ...
-end
-
-new_activity = mock_step(Create, id: Create::Complexity) do
-  true # no-op to avoid any Complexity
-end
-```
-
-In case you want to mock only single step from the nested activity, you can do so by passing it as a `subprocess`.
-
-```ruby
-new_activity = mock_step(Create, id: :some_complex_task, subprocess: Complexity) do
-  # Mock only single step from nested activity to do nothing
-  true
-end
-```
-
-It'll search the `:id` to be mocked within nested activity instead of top-level activity.
-
-
-In addition, if you want to mock any deeply nested step in `subprocess's` activity, it can be done via passing `subprocess_path`.
-
-```ruby
-class Create < Trailblazer::operation
-  class Complexity < Trailblazer::Operation
-    class ExternalApi < Trailblazer::Operation
-      step :make_call
-    end
-
-    step Subprocess(ExternalApi)
-  end
-
-  step Subprocess(Complexity)
-  # ...
-end
-
-new_activity = mock_step(Create, id: :make_call, subprocess: Create::Complexity, subprocess_path: [Create::Complexity::ExternalApi]) do
-  # Some JSON response
-end
-```
-
-`subprocess_path` should list n-level of nested activities in the order they are nested. Internally, it uses [patching](https://2019.trailblazer.to/2.1/docs/activity.html#activity-dsl-options-patching) API supported by `Subprocess` helper.

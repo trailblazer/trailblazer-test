@@ -1,6 +1,6 @@
 require "test_helper"
 
-class AssertionsTest < Minitest::Spec
+class DocsExposeTest < Minitest::Spec
   class Test < Minitest::Spec
     def initialize(*)
       super

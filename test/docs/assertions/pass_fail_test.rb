@@ -121,6 +121,19 @@ class DocsPassFailAssertionsTest < OperationSpec
 
         # Assertion fails because validation error.
         it { assert_pass( {band: ""}, {title: "Ruby Soho"} ) }
+
+        # Test if block is called
+        it do #4
+          assert_pass( {band: "Millencolin"}, {band: "Millencolin"} ) do |result|
+            @_m = result[:model].inspect
+          end
+        end
+
+        it do #5
+          assert_fail( {band: ""}, {band: "Millencolin"} ) do |result|
+            @_m = result[:"contract.default"].errors.messages.inspect
+          end
+        end
       }
 
       test_1 = test.new(:test_0001_anonymous)
@@ -161,7 +174,19 @@ test_3 = test.new(:test_0003_anonymous)
 Expected: true
   Actual: false>}
 
-      assert_equal 1, failures.size
+
+
+test_4 = test.new(:test_0004_anonymous)
+      failures = test_4.()
+
+      failures[0].must_equal nil
+      test_4.instance_variable_get(:@_m).must_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"Millencolin\", title=\"Timebomb\">}
+
+test_5 = test.new(:test_0005_anonymous)
+      failures = test_5.()
+
+      failures[0].must_equal nil
+      test_5.instance_variable_get(:@_m).must_equal %{{:band=>[\"must be filled\"]}}
   end
 end
 

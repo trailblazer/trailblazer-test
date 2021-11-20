@@ -120,6 +120,7 @@ class DocsPassFailAssertionsTest < OperationSpec
         it { assert_pass( {title: "Ruby Soho"}, {title: "ruby soho"} ) }
 
         # Assertion fails because validation error.
+        it { assert_pass( {band: ""}, {title: "Ruby Soho"} ) }
       }
 
       test_1 = test.new(:test_0001_anonymous)
@@ -156,9 +157,9 @@ test_3 = test.new(:test_0003_anonymous)
       failures = test_3.()
 
       # {assert_pass} complains because {title} doesn't match
-      failures[0].inspect.must_equal %{#<Minitest::Assertion: Property [title] mismatch.
-Expected: "ruby soho"
-  Actual: "Ruby Soho">}
+      failures[0].inspect.must_equal %{#<Minitest::Assertion: {DocsPassFailAssertionsTest::Song::Operation::Create} failed: \e[33m{:band=>[\"must be filled\"]}\e[0m.
+Expected: true
+  Actual: false>}
 
       assert_equal 1, failures.size
   end

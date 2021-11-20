@@ -5,16 +5,16 @@ module Trailblazer::Test::Operation
 
     # Defaults so tests run without tweaking (almost).
     def self.included(includer)
-      includer.let(:operation)     { raise "`let(:operation) { ... }` is missing" }
-      includer.let(:key_in_params) { false }
+      includer.let(:operation)            { raise "Trailblazer::Test: `let(:operation) { ... }` is missing" }
+      includer.let(:key_in_params)        { false }
+      includer.let(:expected_attributes)  { {} } # You need to override this in your tests.
     end
 
-    def assert_pass(params_fragment, expected_attributes, use_wtf=false, default_attributes: expected_attrs, deep_merge: true, **kws, &block)
-      expected_attributes = merge_for(default_attributes, expected_attributes, deep_merge)
-
+    def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, **kws, &block)
       kws = _normalize_kws(use_wtf, block, **kws)
       ctx = _ctx_for_params_fragment(params_fragment, **kws)
 
+      expected_attributes = merge_for(kws[:expected_attributes], expected_attributes_to_merge, deep_merge)
 
       assert_pass_with_model(ctx, expected_model_attributes: expected_attributes, **kws)
     end
@@ -33,12 +33,14 @@ module Trailblazer::Test::Operation
       ctx = merge_for(default_ctx, merge_with_ctx, true)
     end
 
-    private def _normalize_kws(use_wtf, block, operation: self.operation, key_in_params: self.key_in_params, default_ctx: self.default_ctx)
+    # Gather all test case configuration. This involves reading all test `let` directives.
+    private def _normalize_kws(use_wtf, block, operation: self.operation, key_in_params: self.key_in_params, default_ctx: self.default_ctx, expected_attributes: self.expected_attributes)
       kws = {
-        user_block:     block,
-        operation:      operation,
-        default_ctx:    default_ctx,
-        key_in_params:  key_in_params,
+        user_block:           block,
+        operation:            operation,
+        default_ctx:          default_ctx,
+        key_in_params:        key_in_params,
+        expected_attributes:  expected_attributes,
       }
 
       kws[:invoke_method] = :wtf? if use_wtf
@@ -62,7 +64,7 @@ module Trailblazer::Test::Operation
     # @private
     def assert_fail_with_model(ctx, operation:, expected_errors: nil, contract_name: raise, **kws, &user_block)
       _assert_call(operation, ctx, **kws) do |result|
-        assert_equal true, result.failure?
+        assert_equal false, result.success?
 
         raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array)
 
@@ -77,7 +79,7 @@ module Trailblazer::Test::Operation
     def _assert_call(operation_class, ctx, user_block: raise, **kws)
       result = _call_operation(operation_class, ctx, **kws)
 
-      return user_block.call(result) if user_block # DISCUSS: result or model?
+      return user_block.call(result) if user_block
 
       yield(result)
 

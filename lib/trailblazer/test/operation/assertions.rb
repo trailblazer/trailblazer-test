@@ -71,7 +71,8 @@ module Trailblazer::Test::Operation
         # only test _if_ errors are present, not the content.
         errors = result["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
 
-        assert_equal expected_errors.sort, errors.keys.sort, "Contract errors: #{errors}"
+        colored_errors = %{\e[33m#{errors}\e[0m}
+        assert_equal expected_errors.sort, errors.keys.sort, "Actual contract errors: #{colored_errors}"
       end
     end
 

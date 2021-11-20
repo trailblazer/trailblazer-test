@@ -1,134 +1,21 @@
 require "bundler/setup"
-require "simplecov"
-SimpleCov.start do
-  add_group "Trailblazer-Test", "lib"
-  add_group "Tests", "test"
-end
-
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "trailblazer/test"
 
 require "minitest/autorun"
 
-require "trailblazer/activity/dsl/linear"
+require "trailblazer/macro"
+require "trailblazer/macro/contract"
+# require "reform/form/active_model/validations" # FIXME: document!
+require "dry-validation" #  FIXME: bug in reform-rails with Rails 6.1 errors object forces us to use dry-v until it's fixed.
+require "trailblazer/operation"
+
 require "trailblazer/activity/testing"
 
 Activity  = Trailblazer::Activity
 Testing   = Trailblazer::Activity::Testing
 
-Minitest::Spec.class_eval do
+class OperationSpec < Minitest::Spec
   include Trailblazer::Test::Assertions
   include Trailblazer::Test::Operation::Assertions
-
-  class Result
-    def initialize(success, model, errors)
-      @success = success
-      @model = model
-      @errors = errors
-    end
-
-    attr_reader :errors
-
-    def success?
-      @success
-    end
-
-    def failure?
-      !@success
-    end
-
-    def [](name)
-      return @model if name == :model
-      return @errors if name == "contract.default"
-      return @errors.policy if name == "result.policy.default"
-    end
-
-    def wtf?
-      puts "Operation trace"
-    end
-  end
-
-  class CustomResult < Result
-    def [](name)
-      return @model if name == :model
-      return @errors if name == "contract.custom"
-      return @errors.policy if name == "result.policy.custom"
-    end
-  end
-
-  Errors = Struct.new(:messages, :policy) do
-    def errors
-      self
-    end
-  end
-
-  class Policy
-    def initialize(success)
-      @success = success
-    end
-
-    def success?
-      @success
-    end
-
-    def failure?
-      !@success
-    end
-  end
-
-  class Create
-    def self.call(params:)
-      if params[:band] == "Rancid"
-        model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
-        Result.new(true, model, nil)
-      else
-
-        Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
-      end
-    end
-
-    def self.trace(params:)
-      call(params: params)
-    end
-  end
-
-  class Update
-    def self.call(params:, current_user:)
-      return Result.new(false, nil, Errors.new(nil, Policy.new(false))) if current_user.name != "allowed"
-
-      if params[:band] == "Rancid"
-        model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
-        Result.new(true, model, nil)
-      else
-
-        Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
-      end
-    end
-  end
-
-  class CreateNestedParams
-    def self.call(params:)
-      if params[:form][:band] == "Rancid"
-        model = Struct.new(:title, :band).new(params[:form][:title].strip, params[:form][:band])
-        Result.new(true, model, nil)
-      else
-
-        Result.new(false, nil, Errors.new(band: ["must be Rancid"]))
-      end
-    end
-  end
-
-  class CustomUpdate
-    def self.call(params:, current_user:)
-      return CustomResult.new(false, nil, Errors.new(nil, Policy.new(false))) if current_user.name != "allowed"
-
-      if params[:band] == "Rancid"
-        model = Struct.new(:title, :band).new(params[:title].strip, params[:band])
-        CustomResult.new(true, model, nil)
-      else
-
-        CustomResult.new(false, nil, Errors.new(band: ["must be Rancid"]))
-      end
-    end
-  end
 end

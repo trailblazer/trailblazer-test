@@ -73,6 +73,12 @@ class DocsPassFailAssertionsTest < OperationSpec
     it { assert_fail( {band: ""}, [:band], :wtf? ) }
 
     # it { assert_fail( {band: ""}, [:band], :wtf? ) }
+
+    it do
+      assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} ) do |result|
+        assert_equal "Rancid", result[:model].band
+      end
+    end
   end
 
   class Test < Minitest::Spec

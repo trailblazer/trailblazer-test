@@ -79,6 +79,13 @@ class DocsPassFailAssertionsTest < OperationSpec
         assert_equal "Rancid", result[:model].band
       end
     end
+
+    it do
+      assert_fail( {band: ""}, {title: "Ruby Soho"} ) do |result|
+        assert_equal nil, result[:model].band
+        # puts result[:"contract.default"].errors.messages # Yes, this is good for debugging!
+      end
+    end
   end
 
   class Test < Minitest::Spec

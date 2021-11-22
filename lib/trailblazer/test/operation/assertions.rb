@@ -1,4 +1,5 @@
 require "hashie"
+require "trailblazer/test/context"
 
 module Trailblazer::Test::Operation
   module Assertions
@@ -26,7 +27,22 @@ module Trailblazer::Test::Operation
       assert_fail_with_model(ctx, expected_errors: expected_errors, contract_name: contract_name, **kws)
     end
 
+    def ctx(exclude: false, key_in_params: self.key_in_params)
+      params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
+
+      filtered_params =
+        if exclude
+          params.slice(*(params.keys - exclude))
+        end # TODO: handle else
+
+      # FIXME: very, very redundant.
+      params_for_ctx = key_in_params ? {key_in_params => filtered_params} : filtered_params
+
+      Trailblazer::Test::Context[default_ctx.merge(params: params_for_ctx)] # this signals "pass-through"
+    end
+
     private def _ctx_for_params_fragment(params_fragment, key_in_params:, default_ctx:, **)
+      return params_fragment if params_fragment.kind_of?(Trailblazer::Test::Context)
       # If {:key_in_params} is given, key the {params_fragment} with it, e.g. {params: {transaction: {.. params_fragment ..}}}
       merge_with_ctx = key_in_params ? {params: {key_in_params => params_fragment}} : {params: params_fragment}
 

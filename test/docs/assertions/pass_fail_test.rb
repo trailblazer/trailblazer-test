@@ -86,6 +86,16 @@ class DocsPassFailAssertionsTest < OperationSpec
         # puts result[:"contract.default"].errors.messages # Yes, this is good for debugging!
       end
     end
+
+    # ctx(exclude: [])
+    it do
+      # {:band} is still set:
+      assert_pass( ctx(exclude: [:title]), {title: nil} )
+      # {:band} is missing
+      assert_fail( ctx(exclude: [:band]),  [:band]) do |result|
+        assert_equal "Timebomb", result[:"contract.default"].title # title is still set from {default_ctx}!
+      end
+    end
   end
 
   class Test < Minitest::Spec
@@ -189,12 +199,14 @@ Expected: true
 
 
 
+# You can see {ctx[:"contract.default"]} in the {#assert_pass} block.
 test_4 = test.new(:test_0004_anonymous)
       failures = test_4.()
 
       failures[0].must_equal nil
       test_4.instance_variable_get(:@_m).must_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"Millencolin\", title=\"Timebomb\">}
 
+# You can see {ctx[:"contract.default"]} in the {#assert_fail} block.
 test_5 = test.new(:test_0005_anonymous)
       failures = test_5.()
 

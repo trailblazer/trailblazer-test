@@ -1,12 +1,25 @@
 require "test_helper"
+#:operation-spec
+# test/test_helper.rb
+# ...
+
+class OperationSpec < Minitest::Spec
+  include Trailblazer::Test::Assertions
+  include Trailblazer::Test::Operation::Assertions
+end
+#:operation-spec end
 
 class DocsPassFailAssertionsTest < OperationSpec
   # include Trailblazer::Test::Assertions
   # include Trailblazer::Test::Operation::Assertions
 
-  Song = Struct.new(:band, :title) do
+  Song = Struct.new(:band, :title, :duration) do
     def save()
       @save = true
+    end
+
+    def persisted?
+      @save
     end
   end
 
@@ -14,11 +27,14 @@ class DocsPassFailAssertionsTest < OperationSpec
     class Create < Reform::Form
       property :band
       property :title
+      property :duration
 
       require "reform/form/dry"
       include Reform::Form::Dry
       validation do
         params do
+          required(:title).filled
+          optional(:duration).maybe(type?: String)
           required(:band).filled
         end
       end
@@ -26,14 +42,146 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
   end
 
+
   module Song::Operation
     class Create < Trailblazer::Operation
       step Model(Song, :new)
       step Contract::Build(constant: Song::Contract::Create)
       step Contract::Validate(key: :song)
+      step :parse_duration
       step Contract::Persist()
+
+      def parse_duration(ctx, **)
+        duration = ctx["contract.default"].duration or return true
+
+        m = duration.match(/(\d)\.(\d\d)$/)
+        duration_seconds = m[1].to_i*60 + m[2].to_i
+
+        ctx["contract.default"].duration = duration_seconds
+      end
     end
   end
+
+
+  #:test
+  # test/operation/song_operation_test.rb
+  class SongOperationTest < OperationSpec
+
+    # The default ctx passed into the tested operation.
+    #:default-ctx
+    let(:default_ctx) do
+      {
+        params: {
+          song: { # Note the {song} key here!
+            band:  "Rancid",
+            title: "Timebomb",
+            # duration not present
+          }
+        }
+      }
+    end
+    #:default-ctx end
+
+    #:expected-attrs
+    # What will the model look like after running the operation?
+    let(:expected_attrs) do
+      {
+        band:   "Rancid",
+        title:  "Timebomb",
+      }
+    end
+    #:expected-attrs end
+
+    #:let-operation
+    let(:operation)     { Song::Operation::Create }
+    #:let-operation end
+    #:let-key-in-params
+    let(:key_in_params) { :song }
+    #:let-key-in-params end
+
+    #:assert-pass-empty
+    it "passes with valid input, {duration} is optional" do
+      assert_pass( {}, {} )
+    end
+    #:assert-pass-empty end
+
+    #:assert-pass
+    it "converts {duration} to seconds" do
+      assert_pass( {duration: "2.24"}, {duration: 144} )
+    end
+    #:assert-pass end
+
+    #:assert-pass-block
+    it "converts {duration} to seconds" do
+      assert_pass( {duration: "2.24"}, {duration: 144} ) do |result|
+        assert_equal true, result[:model].persisted?
+      end
+    end
+    #:assert-pass-block end
+
+    it "fails with missing {title} and invalid {duration}" do
+      assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
+    end
+  end
+  #:test end
+
+  # No {key: :song}.
+  class SongOperation_OMIT_KEY_Test < OperationSpec
+    module Song; end
+
+    module Song::Operation
+      class Create < Trailblazer::Operation
+        step Model(DocsPassFailAssertionsTest::Song, :new)
+        step Contract::Build(constant: DocsPassFailAssertionsTest::Song::Contract::Create)
+        step Contract::Validate()
+        step Contract::Persist()
+      end
+    end
+    let(:operation) { Song::Operation::Create }
+    let(:expected_attrs) do
+      {
+        band:   "Rancid",
+        title:  "Timebomb",
+      }
+    end
+
+    #:let-key-in-params-false
+    let(:key_in_params) { false }
+
+    let(:default_ctx) do
+      {
+        params: {
+          band:  "Rancid",
+          title: "Timebomb",
+        }
+      }
+    end
+    #:let-key-in-params-false end
+
+
+    it "passes with valid input, {duration} is optional" do
+      assert_pass( {}, {} )
+    end
+
+    #:omit-key-it
+    it "sets {title}" do
+      assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} )
+    end
+    #:omit-key-it end
+
+    it "fails with missing {title} and invalid {duration}" do
+      assert_fail( {title: ""}, [:title] )
+    end
+  end
+
+  # module Song::Operation
+  #   class Create < Trailblazer::Operation
+  #     step Model(Song, :new)
+  #     step Contract::Build(constant: Song::Contract::Create)
+  #     step Contract::Validate(key: :song)
+  #     step Contract::Persist()
+  #   end
+  # end
 
 
   #:assert_pass
@@ -87,12 +235,12 @@ class DocsPassFailAssertionsTest < OperationSpec
       end
     end
 
-    # ctx(exclude: [])
+    # Ctx(exclude: [])
     it do
       # {:band} is still set:
-      assert_pass( ctx(exclude: [:title]), {title: nil} )
+      assert_pass( Ctx(exclude: [:title]), {title: nil} )
       # {:band} is missing
-      assert_fail( ctx(exclude: [:band]),  [:band]) do |result|
+      assert_fail( Ctx(exclude: [:band]),  [:band]) do |result|
         assert_equal "Timebomb", result[:"contract.default"].title # title is still set from {default_ctx}!
       end
     end
@@ -157,6 +305,13 @@ class DocsPassFailAssertionsTest < OperationSpec
             @_m = result[:"contract.default"].errors.messages.inspect
           end
         end
+
+        # Test: Block shouldn't be called when assertions before failed.
+        it do #6
+          assert_pass( {band: "Millencolin"}, {band: "NOFX"} ) do |result|
+            @_m = result[:model].inspect
+          end
+        end
       }
 
       test_1 = test.new(:test_0001_anonymous)
@@ -204,7 +359,16 @@ test_4 = test.new(:test_0004_anonymous)
       failures = test_4.()
 
       failures[0].must_equal nil
-      test_4.instance_variable_get(:@_m).must_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"Millencolin\", title=\"Timebomb\">}
+      test_4.instance_variable_get(:@_m).must_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"Millencolin\", title=\"Timebomb\", duration=nil>}
+      assert_equal 4, test_4.instance_variable_get(:@assertions)
+# pass block is not run when assertion failed before
+test_6 = test.new(:test_0006_anonymous)
+      failures = test_6.()
+      assert_equal 2, test_6.instance_variable_get(:@assertions)
+      failures[0].inspect.must_equal %{#<Minitest::Assertion: Property [band] mismatch.
+Expected: "NOFX"
+  Actual: "Millencolin">}
+      assert_nil test_6.instance_variable_get(:@_m) # no block called.
 
 # You can see {ctx[:"contract.default"]} in the {#assert_fail} block.
 test_5 = test.new(:test_0005_anonymous)
@@ -212,6 +376,8 @@ test_5 = test.new(:test_0005_anonymous)
 
       failures[0].must_equal nil
       test_5.instance_variable_get(:@_m).must_equal %{{:band=>[\"must be filled\"]}}
+      assert_equal 4, test_5.instance_variable_get(:@assertions)
+
   end
 end
 
@@ -223,9 +389,9 @@ end
   #   let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
 
   #   # just works
-  #   it { assert_pass Update, ctx(title: "Ruby Soho"), title: "Ruby Soho" }
+  #   it { assert_pass Update, Ctx(title: "Ruby Soho"), title: "Ruby Soho" }
   #   # trimming works
-  #   it { assert_pass Update, ctx(title: "  Ruby Soho "), title: "Ruby Soho" }
+  #   it { assert_pass Update, Ctx(title: "  Ruby Soho "), title: "Ruby Soho" }
   # end
   # #:assert_pass-with-ctx end
 
@@ -235,7 +401,7 @@ end
   #   let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
 
   #   it do
-  #     assert_pass Update, ctx(title: " Ruby Soho"), {} do |result|
+  #     assert_pass Update, Ctx(title: " Ruby Soho"), {} do |result|
   #       assert_equal "Ruby Soho", result[:model].title
   #     end
   #   end
@@ -246,7 +412,7 @@ end
   # describe "Update with invalid data" do
   #   let(:default_params) { {band: "Rancid"} }
 
-  #   it { assert_fail Update, ctx(band: "Adolescents"), expected_errors: [:band] }
+  #   it { assert_fail Update, Ctx(band: "Adolescents"), expected_errors: [:band] }
   # end
   # #:assert_fail end
 
@@ -255,7 +421,7 @@ end
   #   let(:default_params) { {band: "Rancid"} }
 
   #   it do
-  #     assert_fail Update, ctx(band: " Adolescents") do |result|
+  #     assert_fail Update, Ctx(band: " Adolescents") do |result|
   #       assert_equal({band: ["must be Rancid"]}, result["contract.default"].errors.messages)
   #     end
   #   end
@@ -270,7 +436,7 @@ end
   #   let(:not_allowed_user) { Struct.new(:name).new("not_allowed") }
 
   #   it do
-  #     assert_policy_fail Update, ctx({title: "Ruby Soho"}, current_user: not_allowed_user)
+  #     assert_policy_fail Update, Ctx({title: "Ruby Soho"}, current_user: not_allowed_user)
   #   end
   # end
   # #:policy_fail-block end
@@ -281,7 +447,7 @@ end
 
   #   it do
   #     #:policy_fail-custom-name
-  #     assert_policy_fail CustomUpdate, ctx({title: "Ruby Soho"}, current_user: not_allowed_user), policy_name: "custom"
+  #     assert_policy_fail CustomUpdate, Ctx({title: "Ruby Soho"}, current_user: not_allowed_user), policy_name: "custom"
   #     #:policy_fail-custom-name end
   #   end
   # end

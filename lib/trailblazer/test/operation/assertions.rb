@@ -27,18 +27,24 @@ module Trailblazer::Test::Operation
       assert_fail_with_model(ctx, expected_errors: expected_errors, contract_name: contract_name, **kws)
     end
 
-    def ctx(exclude: false, key_in_params: self.key_in_params)
+    def Ctx(merge_with_ctx={}, exclude: false, key_in_params: self.key_in_params)
       params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
 
       filtered_params =
         if exclude
           params.slice(*(params.keys - exclude))
-        end # TODO: handle else
+        else
+          params # use original params if no filtering configured.
+        end
 
       # FIXME: very, very redundant.
       params_for_ctx = key_in_params ? {key_in_params => filtered_params} : filtered_params
 
-      Trailblazer::Test::Context[default_ctx.merge(params: params_for_ctx)] # this signals "pass-through"
+      ctx = merge_for(default_ctx, merge_with_ctx, true) # merge injections
+
+      ctx = ctx.merge(params: params_for_ctx) # merge {:params}
+
+      Trailblazer::Test::Context[ctx] # this signals "pass-through"
     end
 
     private def _ctx_for_params_fragment(params_fragment, key_in_params:, default_ctx:, **)
@@ -96,9 +102,8 @@ module Trailblazer::Test::Operation
     def _assert_call(operation_class, ctx, user_block: raise, **kws)
       result = _call_operation(operation_class, ctx, **kws)
 
-      return user_block.call(result) if user_block
-
       yield(result)
+      user_block.call(result) if user_block
 
       result
     end

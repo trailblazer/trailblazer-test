@@ -15,7 +15,4 @@ require "trailblazer/activity/testing"
 Activity  = Trailblazer::Activity
 Testing   = Trailblazer::Activity::Testing
 
-class OperationSpec < Minitest::Spec
-  include Trailblazer::Test::Assertions
-  include Trailblazer::Test::Operation::Assertions
-end
+

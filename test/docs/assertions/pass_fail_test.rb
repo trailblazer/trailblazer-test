@@ -19,7 +19,7 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
 
     def persisted?
-      @save
+      !! @save
     end
   end
 
@@ -119,9 +119,21 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
     #:assert-pass-block end
 
+    #:assert-fail
     it "fails with missing {title} and invalid {duration}" do
       assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
     end
+    #:assert-fail end
+    #~meths
+    #:assert-fail-block
+    it "fails with missing {title} and invalid {duration}" do
+      assert_fail( {duration: 1222, title: ""}, [:title, :duration] ) do |result|
+        assert_equal false, result[:model].persisted?
+        assert_equal 2,     result[:"contract.default"].errors.size
+      end
+    end
+    #:assert-fail-block end
+    #~meths end
   end
   #:test end
 
@@ -301,7 +313,8 @@ class DocsPassFailAssertionsTest < OperationSpec
         end
 
         it do #5
-          assert_fail( {band: ""}, {band: "Millencolin"} ) do |result|
+          assert_fail( {band: ""}, [:band] ) do |result|
+            assert_nil result[:model].title
             @_m = result[:"contract.default"].errors.messages.inspect
           end
         end
@@ -374,59 +387,15 @@ Expected: "NOFX"
 test_5 = test.new(:test_0005_anonymous)
       failures = test_5.()
 
-      failures[0].must_equal nil
+      assert_nil failures[0]
       test_5.instance_variable_get(:@_m).must_equal %{{:band=>[\"must be filled\"]}}
-      assert_equal 4, test_5.instance_variable_get(:@assertions)
+      assert_equal 4, test_5.instance_variable_get(:@assertions) # FIXME: why is this 4, not 3?
 
   end
 end
 
-  #:assert_pass end
 
-  # #:assert_pass-with-ctx
-  # describe "Update with sane data" do
-  #   let(:default_params) { {band: "Rancid"} }
-  #   let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
 
-  #   # just works
-  #   it { assert_pass Update, Ctx(title: "Ruby Soho"), title: "Ruby Soho" }
-  #   # trimming works
-  #   it { assert_pass Update, Ctx(title: "  Ruby Soho "), title: "Ruby Soho" }
-  # end
-  # #:assert_pass-with-ctx end
-
-  # #:assert_pass-block
-  # describe "Update with sane data" do
-  #   let(:default_params) { {band: "Rancid"} }
-  #   let(:expected_attrs) { {band: "Rancid", title: "Timebomb"} }
-
-  #   it do
-  #     assert_pass Update, Ctx(title: " Ruby Soho"), {} do |result|
-  #       assert_equal "Ruby Soho", result[:model].title
-  #     end
-  #   end
-  # end
-  # #:assert_pass-block end
-
-  # #:assert_fail
-  # describe "Update with invalid data" do
-  #   let(:default_params) { {band: "Rancid"} }
-
-  #   it { assert_fail Update, Ctx(band: "Adolescents"), expected_errors: [:band] }
-  # end
-  # #:assert_fail end
-
-  # #:assert_fail-block
-  # describe "Update with invalid data" do
-  #   let(:default_params) { {band: "Rancid"} }
-
-  #   it do
-  #     assert_fail Update, Ctx(band: " Adolescents") do |result|
-  #       assert_equal({band: ["must be Rancid"]}, result["contract.default"].errors.messages)
-  #     end
-  #   end
-  # end
-  # #:assert_fail-block end
 
   # include Trailblazer::Test::Operation::PolicyAssertions
 

@@ -133,6 +133,23 @@ class DocsPassFailAssertionsTest < OperationSpec
       end
     end
     #:assert-fail-block end
+
+    #:wtf
+    it "fails with missing {title} and invalid {duration}" do
+      assert_fail( {duration: 1222, title: ""}, [:title, :duration], :wtf? )
+      #=>
+      # -- Song::Operation::Create
+      # |-- Start.default
+      # |-- model.build
+      # |-- contract.build
+      # |-- contract.default.validate
+      # |   |-- Start.default
+      # |   |-- contract.default.params_extract
+      # |   |-- contract.default.call
+      # |   `-- End.failure
+      # `-- End.failure
+    end
+    #:wtf end
     #~meths end
   end
   #:test end
@@ -184,7 +201,7 @@ class DocsPassFailAssertionsTest < OperationSpec
     it "fails with missing {title} and invalid {duration}" do
       assert_fail( {title: ""}, [:title] )
     end
-  end
+  end # SongOperation_OMIT_KEY_Test
 
   # module Song::Operation
   #   class Create < Trailblazer::Operation

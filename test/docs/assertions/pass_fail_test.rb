@@ -163,6 +163,20 @@ class DocsPassFailAssertionsTest < OperationSpec
 
     let(:yogi) { "Yogi" }
 
+    #:ctx-example
+    it "fails with missing key {:title}" do
+      assert_fail( Ctx(exclude: [:title]), [:title] ) do |result|
+        assert_equal ["must be filled"], result[:"contract.default"].errors[:title]
+      end
+    end
+    #:ctx-example end
+
+    #:ctx-pass
+    it "converts {duration} to seconds" do
+      assert_pass( Ctx({current_user: yogi}), {title: "Rancid"} )
+    end
+    #:ctx-pass end
+
     #:ctx-inject
     it "provides {Ctx()}" do
       ctx = Ctx({current_user: yogi}  )

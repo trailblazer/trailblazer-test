@@ -27,22 +27,26 @@ module Trailblazer::Test::Operation
       assert_fail_with_model(ctx, expected_errors: expected_errors, contract_name: contract_name, **kws)
     end
 
-    def Ctx(merge_with_ctx={}, exclude: false, key_in_params: self.key_in_params)
-      params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
+    def Ctx(merge_with_ctx={}, exclude: false, key_in_params: self.key_in_params, default_ctx: self.default_ctx) #  FIXME: use normalize
+      # Extract {:params} from {default_ctx}
+      default_params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
 
-      filtered_params =
+      # Remove {:exclude} variables from the {params:} part
+      filtered_default_params =
         if exclude
-          params.slice(*(params.keys - exclude))
+          default_params.slice(*(default_params.keys - exclude))
         else
-          params # use original params if no filtering configured.
+          default_params # use original params if no filtering configured.
         end
 
       # FIXME: very, very redundant.
-      params_for_ctx = key_in_params ? {key_in_params => filtered_params} : filtered_params
+      default_params_for_ctx = key_in_params ? {key_in_params => filtered_default_params} : filtered_default_params
 
-      ctx = merge_for(default_ctx, merge_with_ctx, true) # merge injections
+      ctx = default_ctx.merge({params: default_params_for_ctx})
 
-      ctx = ctx.merge(params: params_for_ctx) # merge {:params}
+      ctx = merge_for(ctx, merge_with_ctx, true) # merge injections
+
+puts "@@@@@ #{ctx.inspect}"
 
       Trailblazer::Test::Context[ctx] # this signals "pass-through"
     end
@@ -71,7 +75,6 @@ module Trailblazer::Test::Operation
     end
 
     # @private
-    # TODO: test expected_attributes default param and explicit!
     def assert_pass_with_model(ctx, operation:, expected_model_attributes: {}, **kws, &user_block)
       _assert_call(operation, ctx, **kws) do |result|
 

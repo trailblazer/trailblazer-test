@@ -161,6 +161,53 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
     #:option-operation end
 
+    let(:yogi) { "Yogi" }
+
+    #:ctx-inject
+    it "provides {Ctx()}" do
+      ctx = Ctx({current_user: yogi}  )
+      #=> {:params=>{:song=>{:band=>"Rancid", :title=>"Timebomb"}},
+      #    :current_user=>#<User name="Yogi">}
+      #~skip
+      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\", :title=>\"Timebomb\"}}, :current_user=>\"Yogi\"}}, ctx.inspect
+      #~skip end
+    end
+    #:ctx-inject end
+
+    # allows deep-merging additionnal {:params}
+    #:ctx-merge
+    it "provides {Ctx()}" do
+      ctx = Ctx({current_user: yogi, params: {song: {duration: 999}}})
+      #=> {:params=>{:song=>{:band=>"Rancid", :title=>"Timebomb", duration: 999}},
+      #    :current_user=>#<User name="Yogi">}
+
+      #~skip
+      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\", :title=>\"Timebomb\", :duration=>999}}, :current_user=>\"Yogi\"}}, ctx.inspect
+      #~skip end
+    end
+    #:ctx-merge end
+
+    #:ctx-exclude
+    it "provides {Ctx()}" do
+      ctx = Ctx(exclude: [:title])
+      #=> {:params=>{:song=>{:band=>"Rancid"}}}
+      #~skip
+      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\"}}}}, ctx.inspect
+      #~skip end
+    end
+    #:ctx-exclude end
+
+    #:ctx-exclude-merge
+    it "provides {Ctx()}" do
+      ctx = Ctx({current_user: yogi}, exclude: [:title])
+      #=> {:params=>{:song=>{:band=>"Rancid"}},
+      #    :current_user=>#<User name="Yogi">}
+      #~skip
+      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\"}}, :current_user=>\"Yogi\"}}, ctx.inspect
+      #~skip end
+    end
+    #:ctx-exclude-merge end
+
     #~meths end
   end
   #:test end
@@ -359,6 +406,7 @@ class DocsPassFailAssertionsTest < OperationSpec
       # Can we use OPs without `contract.errors`?
         class Overrider < Trailblazer::Operation
           step ->(ctx, params:, **) { ctx[:model] = Song.new(params[:band], params[:title], params[:duration]) }
+          step ->(ctx, **) { puts ctx.inspect;true }
           step ->(ctx, model:, **) { model.band.size > 0 } # pseudo validation
           fail ->(ctx, **) { ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({band: [1]})) }
         end
@@ -368,7 +416,13 @@ class DocsPassFailAssertionsTest < OperationSpec
         it do #8
           @result = assert_fail( {band: ""}, [:band], :wtf, operation: Overrider, key_in_params: false, expected_attributes: {title: "The Brews", duration: 99}, default_ctx: {params: {duration: 99, title: "The Brews", band: "NOFX"}} )
         end
-      }
+
+      # Allow passing injection variables etc.
+        it do #9
+          current_user = "Lola"
+          @result_1 = assert_pass( Ctx({current_user: current_user, params: {band: "Rancid"}}, key_in_params: false, default_ctx: {params: {title: "Timebomb"}}), {band: "Rancid"}, :wtf, operation: Overrider, key_in_params: false )
+        end
+      } # Test
 
       test_1 = test.new(:test_0001_anonymous)
 
@@ -448,6 +502,14 @@ test_8 = test.new(:test_0008_anonymous)
       assert_equal %{nil}, failures[0].inspect
       assert_equal 2, test_8.instance_variable_get(:@assertions)
       assert_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"\", title=\"The Brews\", duration=99>}, test_8.instance_variable_get(:@result)[:model].inspect
+
+test_9 = test.new(:test_0009_anonymous)
+      failures = test_9.()
+
+      assert_equal %{nil}, failures[0].inspect
+      assert_equal 2, test_9.instance_variable_get(:@assertions)
+      assert_equal %{<Result:true #<Trailblazer::Context::Container wrapped_options={:params=>{:title=>\"Timebomb\", :band=>\"Rancid\"}, :current_user=>\"Lola\"} mutable_options={:model=>#<struct DocsPassFailAssertionsTest::Song band=\"Rancid\", title=\"Timebomb\", duration=nil>}> >},
+        test_9.instance_variable_get(:@result_1).inspect
 
 
   end

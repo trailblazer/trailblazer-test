@@ -75,11 +75,12 @@ module Trailblazer::Test::Operation
     def assert_pass_with_model(ctx, operation:, expected_model_attributes: {}, **kws, &user_block)
       _assert_call(operation, ctx, **kws) do |result|
 
-        errors = result[:"contract.default"].errors.messages.inspect
-        colored_errors = %{\e[33m#{errors}\e[0m}
+        colored_errors = _colored_errors_for(result)
         assert_equal( true, result.success?, %{{#{operation}} failed: #{colored_errors}}) # FIXME: only if contract's there!
 
         assert_exposes(_model(result), expected_model_attributes)
+
+        result
       end
     end
 
@@ -90,12 +91,26 @@ module Trailblazer::Test::Operation
 
         raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array)
 
+        # TODO: allow error messages from somewhere else.
         # only test _if_ errors are present, not the content.
         errors = result["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
 
-        colored_errors = %{\e[33m#{errors}\e[0m}
+        colored_errors = _colored_errors_for(result)
         assert_equal expected_errors.sort, errors.keys.sort, "Actual contract errors: #{colored_errors}"
       end
+    end
+
+    # @private
+    def _colored_errors_for(result)
+      # TODO: generic errors object "finding"
+      errors =
+        if result[:"contract.default"]
+          result[:"contract.default"].errors.messages.inspect
+        else
+          ""
+        end
+
+      colored_errors = %{\e[33m#{errors}\e[0m}
     end
 
     # @private

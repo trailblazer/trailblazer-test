@@ -150,6 +150,17 @@ class DocsPassFailAssertionsTest < OperationSpec
       # `-- End.failure
     end
     #:wtf end
+
+    class Song::Operation::Update < Trailblazer::Operation
+      step ->(ctx, params:, **) { ctx[:model] = Song.new(nil, nil, params[:song][:duration]) }
+    end
+
+    #:option-operation
+    it "Update allows integer {duration}" do
+      assert_pass( {duration: 2224}, {duration: 2224}, operation: Song::Operation::Update )
+    end
+    #:option-operation end
+
     #~meths end
   end
   #:test end
@@ -342,6 +353,21 @@ class DocsPassFailAssertionsTest < OperationSpec
             @_m = result[:model].inspect
           end
         end
+
+      # Can we override all let() options?
+      # Do {assert_fail} and {assert_pass} both return {result}?
+      # Can we use OPs without `contract.errors`?
+        class Overrider < Trailblazer::Operation
+          step ->(ctx, params:, **) { ctx[:model] = Song.new(params[:band], params[:title], params[:duration]) }
+          step ->(ctx, model:, **) { model.band.size > 0 } # pseudo validation
+          fail ->(ctx, **) { ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({band: [1]})) }
+        end
+        it do #7
+          @result = assert_pass( {band: "NOFX"}, {band: "NOFX"}, operation: Overrider, key_in_params: false, expected_attributes: {title: "The Brews", duration: 99}, default_ctx: {params: {duration: 99, title: "The Brews"}} )
+        end
+        it do #8
+          @result = assert_fail( {band: ""}, [:band], :wtf, operation: Overrider, key_in_params: false, expected_attributes: {title: "The Brews", duration: 99}, default_ctx: {params: {duration: 99, title: "The Brews", band: "NOFX"}} )
+        end
       }
 
       test_1 = test.new(:test_0001_anonymous)
@@ -407,6 +433,22 @@ test_5 = test.new(:test_0005_anonymous)
       assert_nil failures[0]
       test_5.instance_variable_get(:@_m).must_equal %{{:band=>[\"must be filled\"]}}
       assert_equal 4, test_5.instance_variable_get(:@assertions) # FIXME: why is this 4, not 3?
+
+# Can we override all let() options?
+test_7 = test.new(:test_0007_anonymous)
+      failures = test_7.()
+
+      assert_nil failures[0]
+      assert_equal 4, test_7.instance_variable_get(:@assertions)
+      assert_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"NOFX\", title=\"The Brews\", duration=99>}, test_7.instance_variable_get(:@result)[:model].inspect
+      # same for assert_fail
+test_8 = test.new(:test_0008_anonymous)
+      failures = test_8.()
+
+      assert_equal %{nil}, failures[0].inspect
+      assert_equal 2, test_8.instance_variable_get(:@assertions)
+      assert_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"\", title=\"The Brews\", duration=99>}, test_8.instance_variable_get(:@result)[:model].inspect
+
 
   end
 end

@@ -173,7 +173,7 @@ class DocsPassFailAssertionsTest < OperationSpec
 
     #:ctx-pass
     it "converts {duration} to seconds" do
-      assert_pass( Ctx({current_user: yogi}), {title: "Rancid"} )
+      assert_pass( Ctx({current_user: yogi}), {title: "Timebomb"} )
     end
     #:ctx-pass end
 
@@ -273,16 +273,13 @@ class DocsPassFailAssertionsTest < OperationSpec
     it "fails with missing {title} and invalid {duration}" do
       assert_fail( {title: ""}, [:title] )
     end
-  end # SongOperation_OMIT_KEY_Test
 
-  # module Song::Operation
-  #   class Create < Trailblazer::Operation
-  #     step Model(Song, :new)
-  #     step Contract::Build(constant: Song::Contract::Create)
-  #     step Contract::Validate(key: :song)
-  #     step Contract::Persist()
-  #   end
-  # end
+    it "Ctx()" do
+      assert_equal %{{:params=>{:band=>\"Rancid\"}}}, Ctx(exclude: [:title]).inspect
+      assert_equal %{{:params=>{:band=>\"Rancid\"}, :current_user=>Module}}, Ctx({current_user: Module}, exclude: [:title]).inspect
+      assert_equal %{{:params=>{:band=>\"Rancid\", :duration=>999}, :current_user=>Module}}, Ctx({current_user: Module, params: {duration: 999}}, exclude: [:title]).inspect
+    end
+  end # SongOperation_OMIT_KEY_Test
 
 
   #:assert_pass

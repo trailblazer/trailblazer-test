@@ -46,8 +46,6 @@ module Trailblazer::Test::Operation
 
       ctx = merge_for(ctx, merge_with_ctx, true) # merge injections
 
-puts "@@@@@ #{ctx.inspect}"
-
       Trailblazer::Test::Context[ctx] # this signals "pass-through"
     end
 

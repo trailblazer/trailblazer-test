@@ -9,59 +9,12 @@ class OperationSpec < Minitest::Spec
 end
 #:operation-spec end
 
+# {Song}, {Song::Operation::Create} etc is from lib/trailblazer/test/testing.rb.
 class DocsPassFailAssertionsTest < OperationSpec
+  Song = Trailblazer::Test::Testing::Song
+
   # include Trailblazer::Test::Assertions
   # include Trailblazer::Test::Operation::Assertions
-
-  Song = Struct.new(:band, :title, :duration) do
-    def save()
-      @save = true
-    end
-
-    def persisted?
-      !! @save
-    end
-  end
-
-  module Song::Contract
-    class Create < Reform::Form
-      property :band
-      property :title
-      property :duration
-
-      require "reform/form/dry"
-      include Reform::Form::Dry
-      validation do
-        params do
-          required(:title).filled
-          optional(:duration).maybe(type?: String)
-          required(:band).filled
-        end
-      end
-      # validates :band, presence: true
-    end
-  end
-
-
-  module Song::Operation
-    class Create < Trailblazer::Operation
-      step Model(Song, :new)
-      step Contract::Build(constant: Song::Contract::Create)
-      step Contract::Validate(key: :song)
-      step :parse_duration
-      step Contract::Persist()
-
-      def parse_duration(ctx, **)
-        duration = ctx["contract.default"].duration or return true
-
-        m = duration.match(/(\d)\.(\d\d)$/)
-        duration_seconds = m[1].to_i*60 + m[2].to_i
-
-        ctx["contract.default"].duration = duration_seconds
-      end
-    end
-  end
-
 
   #:test
   # test/operation/song_operation_test.rb
@@ -463,7 +416,7 @@ test_3 = test.new(:test_0003_anonymous)
       failures = test_3.()
 
       # {assert_pass} complains because {title} doesn't match
-      failures[0].inspect.must_equal %{#<Minitest::Assertion: {DocsPassFailAssertionsTest::Song::Operation::Create} failed: \e[33m{:band=>[\"must be filled\"]}\e[0m.
+      failures[0].inspect.must_equal %{#<Minitest::Assertion: {Trailblazer::Test::Testing::Song::Operation::Create} failed: \e[33m{:band=>[\"must be filled\"]}\e[0m.
 Expected: true
   Actual: false>}
 
@@ -474,7 +427,7 @@ test_4 = test.new(:test_0004_anonymous)
       failures = test_4.()
 
       failures[0].must_equal nil
-      test_4.instance_variable_get(:@_m).must_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"Millencolin\", title=\"Timebomb\", duration=nil>}
+      test_4.instance_variable_get(:@_m).must_equal %{#<struct Trailblazer::Test::Testing::Song band=\"Millencolin\", title=\"Timebomb\", duration=nil>}
       assert_equal 4, test_4.instance_variable_get(:@assertions)
 # pass block is not run when assertion failed before
 test_6 = test.new(:test_0006_anonymous)
@@ -499,21 +452,21 @@ test_7 = test.new(:test_0007_anonymous)
 
       assert_nil failures[0]
       assert_equal 4, test_7.instance_variable_get(:@assertions)
-      assert_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"NOFX\", title=\"The Brews\", duration=99>}, test_7.instance_variable_get(:@result)[:model].inspect
+      assert_equal %{#<struct Trailblazer::Test::Testing::Song band=\"NOFX\", title=\"The Brews\", duration=99>}, test_7.instance_variable_get(:@result)[:model].inspect
       # same for assert_fail
 test_8 = test.new(:test_0008_anonymous)
       failures = test_8.()
 
       assert_equal %{nil}, failures[0].inspect
       assert_equal 2, test_8.instance_variable_get(:@assertions)
-      assert_equal %{#<struct DocsPassFailAssertionsTest::Song band=\"\", title=\"The Brews\", duration=99>}, test_8.instance_variable_get(:@result)[:model].inspect
+      assert_equal %{#<struct Trailblazer::Test::Testing::Song band=\"\", title=\"The Brews\", duration=99>}, test_8.instance_variable_get(:@result)[:model].inspect
 
 test_9 = test.new(:test_0009_anonymous)
       failures = test_9.()
 
       assert_equal %{nil}, failures[0].inspect
       assert_equal 2, test_9.instance_variable_get(:@assertions)
-      assert_equal %{<Result:true #<Trailblazer::Context::Container wrapped_options={:params=>{:title=>\"Timebomb\", :band=>\"Rancid\"}, :current_user=>\"Lola\"} mutable_options={:model=>#<struct DocsPassFailAssertionsTest::Song band=\"Rancid\", title=\"Timebomb\", duration=nil>}> >},
+      assert_equal %{<Result:true #<Trailblazer::Context::Container wrapped_options={:params=>{:title=>\"Timebomb\", :band=>\"Rancid\"}, :current_user=>\"Lola\"} mutable_options={:model=>#<struct Trailblazer::Test::Testing::Song band=\"Rancid\", title=\"Timebomb\", duration=nil>}> >},
         test_9.instance_variable_get(:@result_1).inspect
 
 

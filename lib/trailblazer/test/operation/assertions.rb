@@ -65,7 +65,7 @@ module Trailblazer::Test::Operation
       def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, **kws, &block)
         result, ctx, kws = call_operation_with(params_fragment, use_wtf=false, block, **kws)
 
-        expected_attributes = merge_for(kws[:expected_attributes], expected_attributes_to_merge, deep_merge)
+        expected_attributes = expected_attributes_for(expected_attributes_to_merge, deep_merge: deep_merge, **kws)
 
         assert_pass_with_model(result, ctx, expected_model_attributes: expected_attributes, **kws)
       end
@@ -103,16 +103,29 @@ module Trailblazer::Test::Operation
       end
 
       # @private
-      def assert_pass_with_model(result, ctx, expected_model_attributes: {}, operation:, test:, **options)
+      def assert_pass_with_model(result, ctx, expected_model_attributes: {}, test:, **options)
         assert_after_call(result, **options) do |result|
 
-          colored_errors = colored_errors_for(result)
-
-          test.assert_equal( true, result.success?, %{{#{operation}} failed: #{colored_errors}}) # FIXME: only if contract's there!
+          test.assert_equal(*arguments_for_assert_pass(result), error_message_for_assert_pass(result, **options))
           test.send(:assert_exposes, model(result), expected_model_attributes)
 
           result
         end
+      end
+
+      # What needs to be compared?
+      def arguments_for_assert_pass(result)
+        return true, result.success?
+      end
+
+      def error_message_for_assert_pass(result, operation:, **)
+        colored_errors = colored_errors_for(result)
+
+        %{{#{operation}} failed: #{colored_errors}} # FIXME: only if contract's there!
+      end
+
+      def expected_attributes_for(expected_attributes_to_merge, expected_attributes:, deep_merge:, **)
+        _expected_attributes = merge_for(expected_attributes, expected_attributes_to_merge, deep_merge)
       end
 
       # @private

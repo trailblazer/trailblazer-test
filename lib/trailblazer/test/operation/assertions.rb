@@ -12,19 +12,11 @@ module Trailblazer::Test::Operation
     end
 
     def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, **kws, &block)
-      kws = _normalize_kws(use_wtf, block, **kws)
-      ctx = _ctx_for_params_fragment(params_fragment, **kws)
-
-      expected_attributes = merge_for(kws[:expected_attributes], expected_attributes_to_merge, deep_merge)
-
-      assert_pass_with_model(ctx, expected_model_attributes: expected_attributes, **kws)
+      Assert.assert_pass(params_fragment, expected_attributes_to_merge, use_wtf, test: self, **kws, &block)
     end
 
-    def assert_fail(params_fragment, expected_errors, use_wtf=false, contract_name: "default", **kws, &block)
-      kws = _normalize_kws(use_wtf, block, **kws)
-      ctx = _ctx_for_params_fragment(params_fragment, **kws)
-
-      assert_fail_with_model(ctx, expected_errors: expected_errors, contract_name: contract_name, **kws)
+    def assert_fail(params_fragment, expected_errors, use_wtf=false, deep_merge: true, **kws, &block)
+      Assert.assert_fail(params_fragment, expected_errors, use_wtf, test: self, **kws, &block)
     end
 
     def Ctx(merge_with_ctx={}, exclude: false, key_in_params: self.key_in_params, default_ctx: self.default_ctx) #  FIXME: use normalize
@@ -44,109 +36,146 @@ module Trailblazer::Test::Operation
 
       ctx = default_ctx.merge({params: default_params_for_ctx})
 
-      ctx = merge_for(ctx, merge_with_ctx, true) # merge injections
+      ctx = Assert.merge_for(ctx, merge_with_ctx, true) # merge injections
 
       Trailblazer::Test::Context[ctx] # this signals "pass-through"
     end
 
-    private def _ctx_for_params_fragment(params_fragment, key_in_params:, default_ctx:, **)
-      return params_fragment if params_fragment.kind_of?(Trailblazer::Test::Context)
-      # If {:key_in_params} is given, key the {params_fragment} with it, e.g. {params: {transaction: {.. params_fragment ..}}}
-      merge_with_ctx = key_in_params ? {params: {key_in_params => params_fragment}} : {params: params_fragment}
 
-      ctx = merge_for(default_ctx, merge_with_ctx, true)
-    end
+    # Provide {Assert.assert_pass} which decouples the assertion logic from the actual test framework.
+    module Assert
+      module_function
 
-    # Gather all test case configuration. This involves reading all test `let` directives.
-    private def _normalize_kws(use_wtf, block, operation: self.operation, key_in_params: self.key_in_params, default_ctx: self.default_ctx, expected_attributes: self.expected_attributes)
-      kws = {
-        user_block:           block,
-        operation:            operation,
-        default_ctx:          default_ctx,
-        key_in_params:        key_in_params,
-        expected_attributes:  expected_attributes,
-      }
+      def normalize_for(params_fragment, use_wtf, block, **kws)
+        kws = normalize_kws(use_wtf, block, **kws)
+        ctx = ctx_for_params_fragment(params_fragment, **kws)
 
-      kws[:invoke_method] = :wtf? if use_wtf
+        return ctx, kws
+      end
 
-      return kws
-    end
+      # Compile {ctx} from settings and run the operation.
+      def call_operation_with(params_fragment, use_wtf, block=nil, **kws)
+        ctx, kws = normalize_for(params_fragment, use_wtf, block, **kws)
+        result  = call_operation(ctx, **kws)
 
-    # @private
-    def assert_pass_with_model(ctx, operation:, expected_model_attributes: {}, **kws, &user_block)
-      _assert_call(operation, ctx, **kws) do |result|
+        return result, ctx, kws
+      end
 
-        colored_errors = _colored_errors_for(result)
-        assert_equal( true, result.success?, %{{#{operation}} failed: #{colored_errors}}) # FIXME: only if contract's there!
+      #@public
+      def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, **kws, &block)
+        result, ctx, kws = call_operation_with(params_fragment, use_wtf=false, block, **kws)
 
-        assert_exposes(_model(result), expected_model_attributes)
+        expected_attributes = merge_for(kws[:expected_attributes], expected_attributes_to_merge, deep_merge)
+
+        assert_pass_with_model(result, ctx, expected_model_attributes: expected_attributes, **kws)
+      end
+
+      def assert_fail(params_fragment, expected_errors, use_wtf=false, contract_name: "default", **kws, &block)
+        result, ctx, kws = call_operation_with(params_fragment, use_wtf=false, block, **kws)
+
+        assert_fail_with_model(result, ctx, expected_errors: expected_errors, contract_name: contract_name, **kws)
+      end
+
+      #@private
+      def ctx_for_params_fragment(params_fragment, key_in_params:, default_ctx:, **)
+        return params_fragment if params_fragment.kind_of?(Trailblazer::Test::Context)
+        # If {:key_in_params} is given, key the {params_fragment} with it, e.g. {params: {transaction: {.. params_fragment ..}}}
+        merge_with_ctx = key_in_params ? {params: {key_in_params => params_fragment}} : {params: params_fragment}
+
+        ctx = merge_for(default_ctx, merge_with_ctx, true)
+      end
+
+      # @private
+      # Gather all test case configuration. This involves reading all test `let` directives.
+      def normalize_kws(use_wtf, block, test:, operation: test.operation, key_in_params: test.key_in_params, default_ctx: test.default_ctx, expected_attributes: test.expected_attributes)
+        kws = {
+          user_block:           block,
+          operation:            operation,
+          default_ctx:          default_ctx,
+          key_in_params:        key_in_params,
+          expected_attributes:  expected_attributes,
+          test:                 test,
+        }
+
+        kws[:invoke_method] = :wtf? if use_wtf
+
+        return kws
+      end
+
+      # @private
+      def assert_pass_with_model(result, ctx, expected_model_attributes: {}, operation:, test:, **options)
+        assert_after_call(result, **options) do |result|
+
+          colored_errors = colored_errors_for(result)
+
+          test.assert_equal( true, result.success?, %{{#{operation}} failed: #{colored_errors}}) # FIXME: only if contract's there!
+          test.send(:assert_exposes, model(result), expected_model_attributes)
+
+          result
+        end
+      end
+
+      # @private
+      def assert_fail_with_model(result, ctx, operation:, expected_errors: nil, contract_name: raise, test:, **options, &user_block)
+        assert_after_call(result, **options) do |result|
+          raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array) # TODO: test me!
+
+          test.assert_equal false, result.success?
+
+
+          # TODO: allow error messages from somewhere else.
+          # only test _if_ errors are present, not the content.
+          errors = result["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
+
+          colored_errors = colored_errors_for(result)
+          test.assert_equal expected_errors.sort, errors.keys.sort, "Actual contract errors: #{colored_errors}"
+        end
+      end
+
+      # @private
+      # @private
+      def assert_after_call(result, user_block: raise, **kws)
+        yield(result)
+        user_block.call(result) if user_block
 
         result
       end
-    end
 
-    # @private
-    def assert_fail_with_model(ctx, operation:, expected_errors: nil, contract_name: raise, **kws, &user_block)
-      _assert_call(operation, ctx, **kws) do |result|
-        assert_equal false, result.success?
-
-        raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array)
-
-        # TODO: allow error messages from somewhere else.
-        # only test _if_ errors are present, not the content.
-        errors = result["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
-
-        colored_errors = _colored_errors_for(result)
-        assert_equal expected_errors.sort, errors.keys.sort, "Actual contract errors: #{colored_errors}"
+      def call_operation(ctx, operation:, invoke_method: :call, **)
+        operation.send(invoke_method, ctx)
       end
-    end
 
-    # @private
-    def _colored_errors_for(result)
-      # TODO: generic errors object "finding"
-      errors =
-        if result[:"contract.default"]
-          result[:"contract.default"].errors.messages.inspect
-        else
-          ""
-        end
+      # @private
+      class CtxHash < Hash
+        include Hashie::Extensions::DeepMerge
+      end
 
-      colored_errors = %{\e[33m#{errors}\e[0m}
-    end
+      # @private
+      def merge_for(dest, source, deep_merge)
+        return dest.merge(source) unless deep_merge
 
-    # @private
-    def _assert_call(operation_class, ctx, user_block: raise, **kws)
-      result = _call_operation(operation_class, ctx, **kws)
+        CtxHash[dest].deep_merge(CtxHash[source])
+      end
 
-      yield(result)
-      user_block.call(result) if user_block
+      # @private
+      def colored_errors_for(result)
+        # TODO: generic errors object "finding"
+        errors =
+          if result[:"contract.default"]
+            result[:"contract.default"].errors.messages.inspect
+          else
+            ""
+          end
 
-      result
+        colored_errors = %{\e[33m#{errors}\e[0m}
+      end
+
+      def model(result)
+        result[:"model"]
+      end
     end
 
     # @private
     class ExpectedErrorsTypeError < RuntimeError; end
-
-    # @private
-    class CtxHash < Hash
-      include Hashie::Extensions::DeepMerge
-    end
-
-    # @private
-    def merge_for(dest, source, deep_merge)
-      return dest.merge(source) unless deep_merge
-
-      CtxHash[dest].deep_merge(CtxHash[source])
-    end
-
-    # @private
-    def _call_operation(operation_class, ctx, invoke_method: :call, **)
-      operation_class.send(invoke_method, ctx)
-    end
-
-    # @private
-    def _model(result)
-      result[:model]
-    end
   end
 end

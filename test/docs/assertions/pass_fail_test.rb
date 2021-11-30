@@ -37,7 +37,7 @@ class DocsPassFailAssertionsTest < OperationSpec
 
     #:expected-attrs
     # What will the model look like after running the operation?
-    let(:expected_attrs) do
+    let(:expected_attributes) do
       {
         band:   "Rancid",
         title:  "Timebomb",
@@ -105,7 +105,7 @@ class DocsPassFailAssertionsTest < OperationSpec
     #:wtf end
 
     class Song::Operation::Update < Trailblazer::Operation
-      step ->(ctx, params:, **) { ctx[:model] = Song.new(nil, nil, params[:song][:duration]) }
+      step ->(ctx, params:, **) { ctx[:model] = Song.new(params[:song][:band], params[:song][:title], params[:song][:duration]) }
     end
 
     #:option-operation
@@ -196,7 +196,7 @@ class DocsPassFailAssertionsTest < OperationSpec
       end
     end
     let(:operation) { Song::Operation::Create }
-    let(:expected_attrs) do
+    let(:expected_attributes) do
       {
         band:   "Rancid",
         title:  "Timebomb",
@@ -254,7 +254,7 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
 
     # What will the model look like after running the operation?
-    let(:expected_attrs) do
+    let(:expected_attributes) do
       {
         band:   "Rancid",
         title:  "Timebomb",
@@ -319,7 +319,7 @@ class DocsPassFailAssertionsTest < OperationSpec
         end
 
         # What will the model look like after running the operation?
-        let(:expected_attrs) do
+        let(:expected_attributes) do
           {
             band:   "Rancid",
             title:  "Timebomb",
@@ -428,7 +428,7 @@ test_4 = test.new(:test_0004_anonymous)
 
       failures[0].must_equal nil
       test_4.instance_variable_get(:@_m).must_equal %{#<struct Trailblazer::Test::Testing::Song band=\"Millencolin\", title=\"Timebomb\", duration=nil>}
-      assert_equal 4, test_4.instance_variable_get(:@assertions)
+      assert_equal 5, test_4.instance_variable_get(:@assertions)
 # pass block is not run when assertion failed before
 test_6 = test.new(:test_0006_anonymous)
       failures = test_6.()
@@ -465,7 +465,7 @@ test_9 = test.new(:test_0009_anonymous)
       failures = test_9.()
 
       assert_equal %{nil}, failures[0].inspect
-      assert_equal 2, test_9.instance_variable_get(:@assertions)
+      assert_equal 3, test_9.instance_variable_get(:@assertions)
       assert_equal %{<Result:true #<Trailblazer::Context::Container wrapped_options={:params=>{:title=>\"Timebomb\", :band=>\"Rancid\"}, :current_user=>\"Lola\"} mutable_options={:model=>#<struct Trailblazer::Test::Testing::Song band=\"Rancid\", title=\"Timebomb\", duration=nil>}> >},
         test_9.instance_variable_get(:@result_1).inspect
 

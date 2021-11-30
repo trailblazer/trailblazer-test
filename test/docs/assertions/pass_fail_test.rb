@@ -191,10 +191,14 @@ class DocsPassFailAssertionsTest < OperationSpec
     # allows deep-merging additionnal {:params}
     #:ctx-merge
     it "provides {Ctx()}" do
-      ctx = Ctx({current_user: yogi, params: {song: {duration: 999}}})
+      ctx = Ctx(
+        {
+          current_user: yogi,
+          params: {song: {duration: 999}} # this is deep-merged!
+        }
+      )
       #=> {:params=>{:song=>{:band=>"Rancid", :title=>"Timebomb", duration: 999}},
       #    :current_user=>#<User name="Yogi">}
-
       #~skip
       assert_equal %{{:params=>{:song=>{:band=>\"Rancid\", :title=>\"Timebomb\", :duration=>999}}, :current_user=>\"Yogi\"}}, ctx.inspect
       #~skip end
@@ -327,19 +331,9 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
 
     it do
-      assert_fail( {band: ""}, {title: "Ruby Soho"} ) do |result|
-        assert_equal nil, result[:model].band
+      assert_fail( {band: ""}, [:band] ) do |result|
+        assert_nil result[:model].band
         # puts result[:"contract.default"].errors.messages # Yes, this is good for debugging!
-      end
-    end
-
-    # Ctx(exclude: [])
-    it do
-      # {:band} is still set:
-      assert_pass( Ctx(exclude: [:title]), {title: nil} )
-      # {:band} is missing
-      assert_fail( Ctx(exclude: [:band]),  [:band]) do |result|
-        assert_equal "Timebomb", result[:"contract.default"].title # title is still set from {default_ctx}!
       end
     end
   end

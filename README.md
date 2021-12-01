@@ -7,7 +7,7 @@ Testing a Trailblazer project is very simple. Your test suite usually consists o
 
 There’s no need to test controllers, models, service objects, etc. in isolation - unless you want to do so for a better documentation of your internal APIs. As operations are the single entry-point for your functions, your entire stack is covered with the two test types.
 
-The trailblazer-test gem allows simple, streamlined operation unit tests. If you fancy RSpec, [trailblazer-test-rspec](https://github.com/trailblazer/rspec-trailblazer-test/) is here for you.
+The trailblazer-test gem allows simple, streamlined operation unit tests. If you fancy RSpec, [rspec-trailblazer-test](https://github.com/trailblazer/rspec-trailblazer-test/) is here for you.
 
 ## Documentation
 

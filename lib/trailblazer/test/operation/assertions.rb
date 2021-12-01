@@ -70,7 +70,7 @@ module Trailblazer::Test::Operation
         assert_pass_with_model(result, ctx, expected_model_attributes: expected_attributes, **kws)
       end
 
-      def assert_fail(params_fragment, expected_errors, use_wtf=false, contract_name: "default", **kws, &block)
+      def assert_fail(params_fragment, expected_errors, use_wtf=false, **kws, &block)
         result, ctx, kws = call_operation_with(params_fragment, use_wtf=false, block, **kws)
 
         assert_fail_with_model(result, ctx, expected_errors: expected_errors, contract_name: contract_name, **kws)
@@ -87,7 +87,7 @@ module Trailblazer::Test::Operation
 
       # @private
       # Gather all test case configuration. This involves reading all test `let` directives.
-      def normalize_kws(use_wtf, block, test:, operation: test.operation, key_in_params: test.key_in_params, default_ctx: test.default_ctx, expected_attributes: test.expected_attributes)
+      def normalize_kws(use_wtf, block, test:, operation: test.operation, key_in_params: test.key_in_params, default_ctx: test.default_ctx, expected_attributes: test.expected_attributes, contract_name: "default")
         kws = {
           user_block:           block,
           operation:            operation,
@@ -95,6 +95,7 @@ module Trailblazer::Test::Operation
           key_in_params:        key_in_params,
           expected_attributes:  expected_attributes,
           test:                 test,
+          contract_name:        contract_name
         }
 
         kws[:invoke_method] = :wtf? if use_wtf
@@ -118,6 +119,11 @@ module Trailblazer::Test::Operation
         return true, result.success?
       end
 
+      def arguments_for_assert_fail(result)
+        return false, result.success?
+      end
+
+
       def error_message_for_assert_pass(result, operation:, **)
         colored_errors = colored_errors_for(result)
 
@@ -129,20 +135,26 @@ module Trailblazer::Test::Operation
       end
 
       # @private
-      def assert_fail_with_model(result, ctx, operation:, expected_errors: nil, contract_name: raise, test:, **options, &user_block)
+      def assert_fail_with_model(result, ctx, operation:, test:, **options, &user_block)
         assert_after_call(result, **options) do |result|
-          raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array) # TODO: test me!
 
-          test.assert_equal false, result.success?
+          test.assert_equal *arguments_for_assert_fail(result)
 
 
           # TODO: allow error messages from somewhere else.
           # only test _if_ errors are present, not the content.
-          errors = result["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
-
           colored_errors = colored_errors_for(result)
-          test.assert_equal expected_errors.sort, errors.keys.sort, "Actual contract errors: #{colored_errors}"
+
+          test.assert_equal *arguments_for_assert_contract_errors(result, **options), "Actual contract errors: #{colored_errors}"
         end
+      end
+
+      def arguments_for_assert_contract_errors(result, contract_name:, expected_errors:, **)
+        raise ExpectedErrorsTypeError, "expected_errors has to be an Array" unless expected_errors.is_a?(Array) # TODO: test me!
+
+        errors = result["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
+
+        return expected_errors.sort, errors.keys.sort
       end
 
       # @private

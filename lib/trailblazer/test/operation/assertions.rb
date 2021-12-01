@@ -73,7 +73,7 @@ module Trailblazer::Test::Operation
       def assert_fail(params_fragment, expected_errors, use_wtf=false, **kws, &block)
         result, ctx, kws = call_operation_with(params_fragment, use_wtf=false, block, **kws)
 
-        assert_fail_with_model(result, ctx, expected_errors: expected_errors, contract_name: contract_name, **kws)
+        assert_fail_with_model(result, ctx, expected_errors: expected_errors, **kws)
       end
 
       #@private

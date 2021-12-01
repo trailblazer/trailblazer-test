@@ -330,7 +330,7 @@ class DocsPassFailAssertionsTest < OperationSpec
         let(:key_in_params) { :song }
 
         # Assertion fails since {:title} doesn't have errors set.
-        it { assert_fail( {band: ""}, [:band, :title] ) }
+        it { assert_fail( {band: ""}, [:band, :title] ) } #1
 
         # Assertion fails because {title}s don't match.
         it { assert_pass( {title: "Ruby Soho"}, {title: "ruby soho"} ) }
@@ -380,10 +380,13 @@ class DocsPassFailAssertionsTest < OperationSpec
           current_user = "Lola"
           @result_1 = assert_pass( Ctx({current_user: current_user, params: {band: "Rancid"}}, key_in_params: false, default_ctx: {params: {title: "Timebomb"}}), {band: "Rancid"}, :wtf, operation: Overrider, key_in_params: false )
         end
+
+        # 10) Assertion errors because of valid input.
+        it { assert_fail( {band: "NOFX"}, {title: "The Brews"} ) }
+
       } # Test
 
-      test_1 = test.new(:test_0001_anonymous)
-
+test_1 = test.new(:test_0001_anonymous)
       failures = test_1.()
 
       # {assert_fail} sees less errors than the user specified: The errors are colored.
@@ -469,6 +472,14 @@ test_9 = test.new(:test_0009_anonymous)
       assert_equal %{<Result:true #<Trailblazer::Context::Container wrapped_options={:params=>{:title=>\"Timebomb\", :band=>\"Rancid\"}, :current_user=>\"Lola\"} mutable_options={:model=>#<struct Trailblazer::Test::Testing::Song band=\"Rancid\", title=\"Timebomb\", duration=nil>}> >},
         test_9.instance_variable_get(:@result_1).inspect
 
+# When the operation passes but it should fail.
+test_10 = test.new(:test_0010_anonymous)
+      failures = test_10.()
+
+      assert_equal %{#<Minitest::Assertion: Expected: false
+  Actual: true>}, failures[0].inspect
+      assert_equal 1, test_10.instance_variable_get(:@assertions)
+      # assert_nil test_10.instance_variable_get(:@result_1)
 
   end
 end

@@ -19,26 +19,8 @@ module Trailblazer::Test::Operation
       Assert.assert_fail(params_fragment, expected_errors, use_wtf, test: self, **kws, &block)
     end
 
-    def Ctx(merge_with_ctx={}, exclude: false, key_in_params: self.key_in_params, default_ctx: self.default_ctx) #  FIXME: use normalize
-      # Extract {:params} from {default_ctx}
-      default_params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
-
-      # Remove {:exclude} variables from the {params:} part
-      filtered_default_params =
-        if exclude
-          default_params.slice(*(default_params.keys - exclude))
-        else
-          default_params # use original params if no filtering configured.
-        end
-
-      # FIXME: very, very redundant.
-      default_params_for_ctx = key_in_params ? {key_in_params => filtered_default_params} : filtered_default_params
-
-      ctx = default_ctx.merge({params: default_params_for_ctx})
-
-      ctx = Assert.merge_for(ctx, merge_with_ctx, true) # merge injections
-
-      Trailblazer::Test::Context[ctx] # this signals "pass-through"
+    def Ctx(*args, **kws)
+      Assert.Ctx(*args, test: self, **kws)
     end
 
 
@@ -87,20 +69,27 @@ module Trailblazer::Test::Operation
 
       # @private
       # Gather all test case configuration. This involves reading all test `let` directives.
-      def normalize_kws(use_wtf, block, test:, operation: test.operation, key_in_params: test.key_in_params, default_ctx: test.default_ctx, expected_attributes: test.expected_attributes, contract_name: "default")
+      def normalize_kws(use_wtf, block, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", **options)
         kws = {
           user_block:           block,
           operation:            operation,
-          default_ctx:          default_ctx,
-          key_in_params:        key_in_params,
           expected_attributes:  expected_attributes,
           test:                 test,
-          contract_name:        contract_name
+          contract_name:        contract_name,
+
+          **normalize_kws_for_ctx(test: test, **options)
         }
 
         kws[:invoke_method] = :wtf? if use_wtf
 
         return kws
+      end
+
+      def normalize_kws_for_ctx(test:, key_in_params: test.key_in_params, default_ctx: test.default_ctx)
+        {
+          default_ctx:          default_ctx,
+          key_in_params:        key_in_params,
+        }
       end
 
       # @private
@@ -202,7 +191,33 @@ module Trailblazer::Test::Operation
       def model(result)
         result[:"model"]
       end
-    end
+
+      def Ctx(merge_with_ctx={}, exclude: false, **kws)
+        options       = normalize_kws_for_ctx(**kws)
+        key_in_params = options[:key_in_params]
+        default_ctx   = options[:default_ctx]
+
+        # Extract {:params} from {default_ctx}
+        default_params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
+
+        # Remove {:exclude} variables from the {params:} part
+        filtered_default_params =
+          if exclude
+            default_params.slice(*(default_params.keys - exclude))
+          else
+            default_params # use original params if no filtering configured.
+          end
+
+        # FIXME: very, very redundant.
+        default_params_for_ctx = key_in_params ? {key_in_params => filtered_default_params} : filtered_default_params
+
+        ctx = default_ctx.merge({params: default_params_for_ctx})
+
+        ctx = Assert.merge_for(ctx, merge_with_ctx, true) # merge injections
+
+        Trailblazer::Test::Context[ctx] # this signals "pass-through"
+      end
+    end # Assert
 
     # @private
     class ExpectedErrorsTypeError < RuntimeError; end

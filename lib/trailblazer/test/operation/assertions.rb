@@ -130,15 +130,19 @@ module Trailblazer::Test::Operation
         %{{#{operation}} failed: #{colored_errors}} # FIXME: only if contract's there!
       end
 
+      def error_message_for_assert_fail_after_call(result, operation:, **)
+        %{{#{operation}} didn't fail, it passed}
+      end
+
       def expected_attributes_for(expected_attributes_to_merge, expected_attributes:, deep_merge:, **)
         _expected_attributes = merge_for(expected_attributes, expected_attributes_to_merge, deep_merge)
       end
 
       # @private
-      def assert_fail_with_model(result, ctx, operation:, test:, **options, &user_block)
+      def assert_fail_with_model(result, ctx, test:, **options, &user_block)
         assert_after_call(result, **options) do |result|
 
-          test.assert_equal *arguments_for_assert_fail(result)
+          test.assert_equal *arguments_for_assert_fail(result), error_message_for_assert_fail_after_call(result, **options)
 
 
           # TODO: allow error messages from somewhere else.

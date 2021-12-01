@@ -476,7 +476,8 @@ test_9 = test.new(:test_0009_anonymous)
 test_10 = test.new(:test_0010_anonymous)
       failures = test_10.()
 
-      assert_equal %{#<Minitest::Assertion: Expected: false
+      assert_equal %{#<Minitest::Assertion: {Trailblazer::Test::Testing::Song::Operation::Create} didn't fail, it passed.
+Expected: false
   Actual: true>}, failures[0].inspect
       assert_equal 1, test_10.instance_variable_get(:@assertions)
       # assert_nil test_10.instance_variable_get(:@result_1)

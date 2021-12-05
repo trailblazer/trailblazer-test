@@ -45,7 +45,7 @@ module Trailblazer::Test::Operation
 
       #@public
       def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, **kws, &block)
-        result, ctx, kws = call_operation_with(params_fragment, use_wtf=false, block, **kws)
+        result, ctx, kws = call_operation_with(params_fragment, use_wtf, block, **kws)
 
         expected_attributes = expected_attributes_for(expected_attributes_to_merge, deep_merge: deep_merge, **kws)
 
@@ -53,7 +53,7 @@ module Trailblazer::Test::Operation
       end
 
       def assert_fail(params_fragment, expected_errors, use_wtf=false, **kws, &block)
-        result, ctx, kws = call_operation_with(params_fragment, use_wtf=false, block, **kws)
+        result, ctx, kws = call_operation_with(params_fragment, use_wtf, block, **kws)
 
         assert_fail_with_model(result, ctx, expected_errors: expected_errors, **kws)
       end

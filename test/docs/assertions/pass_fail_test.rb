@@ -384,6 +384,16 @@ class DocsPassFailAssertionsTest < OperationSpec
         # 10) Assertion errors because of valid input.
         it { assert_fail( {band: "NOFX"}, {title: "The Brews"} ) }
 
+        # 11) We use wtf?
+        it { assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"}, :wtf ) }
+        # 12) we DON'T use wtf?
+        it { assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} ) }
+        # 13) assert_fail uses wtf?
+        it { assert_fail( {title: ""}, [:title], :wtf ) }
+        # 14) assert_fail DOESN'T use {wtf?} per default
+        it { assert_fail( {title: ""}, [:title] ) }
+
+
       } # Test
 
 test_1 = test.new(:test_0001_anonymous)
@@ -482,6 +492,45 @@ Expected: false
       assert_equal 1, test_10.instance_variable_get(:@assertions)
       # assert_nil test_10.instance_variable_get(:@result_1)
 
+# {assert_pass} uses wtf?.
+test_11 = test.new(:test_0011_anonymous)
+      output = capture_io do
+        failures = test_11.()
+      end
+
+      assert_equal %{`-- Trailblazer::Test::Testing::Song::Operation::Create\n    |-- \e[32mStart.default\e[0m\n    |-- \e[32mmodel.build\e[0m\n    |-- \e[32mcontract.build\e[0m\n    |-- contract.default.validate\n    |   |-- \e[32mStart.default\e[0m\n    |   |-- \e[32mcontract.default.params_extract\e[0m\n    |   |-- \e[32mcontract.default.call\e[0m\n    |   `-- End.success\n    |-- \e[32mparse_duration\e[0m\n    |-- \e[32mpersist.save\e[0m\n    `-- End.success\n},
+        output.join("")
+      assert_nil failures[0]
+      assert_equal 3, test_11.instance_variable_get(:@assertions)
+# {assert_pass} DOES NOT use wtf? per default.
+test_12 = test.new(:test_0012_anonymous)
+      output = capture_io { failures = test_12.() }
+
+      assert_equal %{}, output.join("")
+      assert_nil failures[0]
+      assert_equal 3, test_12.instance_variable_get(:@assertions)
+test_13 = test.new(:test_0013_anonymous)
+      output = capture_io { failures = test_13.() }
+
+      assert_equal %{`-- Trailblazer::Test::Testing::Song::Operation::Create
+    |-- \e[32mStart.default\e[0m
+    |-- \e[32mmodel.build\e[0m
+    |-- \e[32mcontract.build\e[0m
+    |-- contract.default.validate
+    |   |-- \e[32mStart.default\e[0m
+    |   |-- \e[32mcontract.default.params_extract\e[0m
+    |   |-- \e[33mcontract.default.call\e[0m
+    |   `-- End.failure
+    `-- End.failure
+}, output.join("")
+      assert_nil failures[0]
+      assert_equal 2, test_13.instance_variable_get(:@assertions)
+test_14 = test.new(:test_0014_anonymous)
+      output = capture_io { failures = test_14.() }
+
+      assert_equal %{}, output.join("")
+      assert_nil failures[0]
+      assert_equal 2, test_14.instance_variable_get(:@assertions)
   end
 end
 

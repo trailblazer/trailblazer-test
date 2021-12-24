@@ -78,6 +78,20 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
     #:assert-fail end
     #~meths
+    #:assert-fail-msg
+    it "fails with missing {title} and invalid {duration} with given error messages" do
+      assert_fail( {duration: 1222, title: ""}, {title: ["must be filled"], duration: ["must be String"]} )
+    end
+    #:assert-fail-msg end
+    it "fails with missing {title} and invalid {duration} with given error messages" do
+      assert_fail( {duration: 1222, title: ""}, {title: "must be filled", duration: "must be String"} )
+    end
+    #:assert-fail-msg-array
+    it "fails with missing {title} and invalid {duration} with given error messages" do
+      assert_fail( {title: "", duration: "1222"}, {title: "must be filled"} )
+    end
+    #:assert-fail-msg-array end
+
     #:assert-fail-block
     it "fails with missing {title} and invalid {duration}" do
       assert_fail( {duration: 1222, title: ""}, [:title, :duration] ) do |result|
@@ -393,6 +407,8 @@ class DocsPassFailAssertionsTest < OperationSpec
         # 14) assert_fail DOESN'T use {wtf?} per default
         it { assert_fail( {title: ""}, [:title] ) }
 
+        # 15) Assertion errors because errors don't match
+        it { assert_fail( {title: "Ruby Soho", band: nil}, {band: "here is an error"} ) }
 
       } # Test
 
@@ -530,6 +546,15 @@ test_14 = test.new(:test_0014_anonymous)
 
       assert_equal %{}, output.join("")
       assert_nil failures[0]
+      assert_equal 2, test_14.instance_variable_get(:@assertions)
+
+test_15 = test.new(:test_0015_anonymous)
+      output = capture_io { failures = test_15.() }
+
+      assert_equal %{}, output.join("")
+      failures[0].inspect.must_equal %{#<Minitest::Assertion: Actual contract errors: \e[33m{:band=>[\"must be filled\"]}\e[0m.
+Expected: {:band=>[\"here is an error\"]}
+  Actual: {:band=>[\"must be filled\"]}>}
       assert_equal 2, test_14.instance_variable_get(:@assertions)
   end
 end

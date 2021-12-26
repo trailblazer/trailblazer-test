@@ -80,7 +80,9 @@ class DocsPassFailAssertionsTest < OperationSpec
     #~meths
     #:assert-fail-msg
     it "fails with missing {title} and invalid {duration} with given error messages" do
-      assert_fail( {duration: 1222, title: ""}, {title: ["must be filled"], duration: ["must be String"]} )
+      assert_fail( {duration: 1222, title: ""},
+        {title: ["must be filled"], duration: ["must be String"]} # hash instead of array!
+      )
     end
     #:assert-fail-msg end
     it "fails with missing {title} and invalid {duration} with given error messages" do
@@ -410,6 +412,15 @@ class DocsPassFailAssertionsTest < OperationSpec
         # 15) Assertion errors because errors don't match
         it { assert_fail( {title: "Ruby Soho", band: nil}, {band: "here is an error"} ) }
 
+        # 16) {assert_pass} returns result
+        it { @result = assert_pass( {}, {} ) }
+        # 17) {assert_pass} with block returns result
+        it { @result = assert_pass( {}, {} ) { |result| assert result } }
+        # 18) {assert_fail} returns result
+        it { @result = assert_fail( {band: ""}, [:band] ) }
+        # 19) {assert_fail} with block returns result
+        it { @result = assert_fail( {band: ""}, [:band] ) { |result| assert result } }
+
       } # Test
 
 test_1 = test.new(:test_0001_anonymous)
@@ -556,6 +567,34 @@ test_15 = test.new(:test_0015_anonymous)
 Expected: {:band=>[\"here is an error\"]}
   Actual: {:band=>[\"must be filled\"]}>}
       assert_equal 2, test_14.instance_variable_get(:@assertions)
+
+  test_16 = test.new(:test_0016_anonymous)
+      output = capture_io { failures = test_16.() }
+      assert_equal %{}, output.join("")
+      assert_nil failures[0]
+      assert_equal 3, test_16.instance_variable_get(:@assertions)
+      assert_equal %{Trailblazer::Operation::Railway::Result}, test_16.instance_variable_get(:@result).class.inspect
+
+  test_17 = test.new(:test_0017_anonymous)
+      output = capture_io { failures = test_17.() }
+      assert_equal %{}, output.join("")
+      assert_nil failures[0]
+      assert_equal 4, test_17.instance_variable_get(:@assertions)
+      assert_equal %{Trailblazer::Operation::Railway::Result}, test_16.instance_variable_get(:@result).class.inspect
+
+  test_18 = test.new(:test_0018_anonymous)
+      output = capture_io { failures = test_18.() }
+      assert_equal %{}, output.join("")
+      assert_nil failures[0]
+      assert_equal 2, test_18.instance_variable_get(:@assertions)
+      assert_equal %{Trailblazer::Operation::Railway::Result}, test_18.instance_variable_get(:@result).class.inspect
+
+  test_19 = test.new(:test_0019_anonymous)
+      output = capture_io { failures = test_19.() }
+      assert_equal %{}, output.join("")
+      assert_nil failures[0]
+      assert_equal 3, test_19.instance_variable_get(:@assertions)
+      assert_equal %{Trailblazer::Operation::Railway::Result}, test_19.instance_variable_get(:@result).class.inspect
   end
 end
 

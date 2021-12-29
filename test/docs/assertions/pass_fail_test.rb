@@ -72,6 +72,14 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
     #:assert-pass-block end
 
+    #:assert-pass-result
+    it "converts {duration} to seconds" do
+      result = assert_pass( {duration: "2.24"}, {duration: 144} ) # with our without a block
+
+      assert_equal true, result[:model].persisted?
+    end
+    #:assert-pass-result end
+
     #:assert-fail
     it "fails with missing {title} and invalid {duration}" do
       assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
@@ -102,6 +110,14 @@ class DocsPassFailAssertionsTest < OperationSpec
       end
     end
     #:assert-fail-block end
+
+    #:assert-fail-result
+    it "fails with missing {title} and invalid {duration}" do
+      result = assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
+
+      assert_equal false, result[:model].persisted?
+    end
+    #:assert-fail-result end
 
     #:wtf
     it "fails with missing {title} and invalid {duration}" do

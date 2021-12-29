@@ -364,7 +364,7 @@ class DocsPassFailAssertionsTest < OperationSpec
         # Assertion fails since {:title} doesn't have errors set.
         it { assert_fail( {band: ""}, [:band, :title] ) } #1
 
-        # Assertion fails because {title}s don't match.
+        # 2) Assertion fails because {title}s don't match.
         it { assert_pass( {title: "Ruby Soho"}, {title: "ruby soho"} ) }
 
         # Assertion fails because validation error.
@@ -484,7 +484,7 @@ test_4 = test.new(:test_0004_anonymous)
 
       failures[0].must_equal nil
       test_4.instance_variable_get(:@_m).must_equal %{#<struct Trailblazer::Test::Testing::Song band=\"Millencolin\", title=\"Timebomb\", duration=nil>}
-      assert_equal 5, test_4.instance_variable_get(:@assertions)
+      assert_equal 3, test_4.instance_variable_get(:@assertions)
 # pass block is not run when assertion failed before
 test_6 = test.new(:test_0006_anonymous)
       failures = test_6.()
@@ -507,7 +507,7 @@ test_7 = test.new(:test_0007_anonymous)
       failures = test_7.()
 
       assert_nil failures[0]
-      assert_equal 4, test_7.instance_variable_get(:@assertions)
+      assert_equal 1, test_7.instance_variable_get(:@assertions)
       assert_equal %{#<struct Trailblazer::Test::Testing::Song band=\"NOFX\", title=\"The Brews\", duration=99>}, test_7.instance_variable_get(:@result)[:model].inspect
       # same for assert_fail
 test_8 = test.new(:test_0008_anonymous)
@@ -521,7 +521,7 @@ test_9 = test.new(:test_0009_anonymous)
       failures = test_9.()
 
       assert_equal %{nil}, failures[0].inspect
-      assert_equal 3, test_9.instance_variable_get(:@assertions)
+      assert_equal 1, test_9.instance_variable_get(:@assertions)
       assert_equal %{<Result:true #<Trailblazer::Context::Container wrapped_options={:params=>{:title=>\"Timebomb\", :band=>\"Rancid\"}, :current_user=>\"Lola\"} mutable_options={:model=>#<struct Trailblazer::Test::Testing::Song band=\"Rancid\", title=\"Timebomb\", duration=nil>}> >},
         test_9.instance_variable_get(:@result_1).inspect
 
@@ -544,14 +544,14 @@ test_11 = test.new(:test_0011_anonymous)
       assert_equal %{`-- Trailblazer::Test::Testing::Song::Operation::Create\n    |-- \e[32mStart.default\e[0m\n    |-- \e[32mmodel.build\e[0m\n    |-- \e[32mcontract.build\e[0m\n    |-- contract.default.validate\n    |   |-- \e[32mStart.default\e[0m\n    |   |-- \e[32mcontract.default.params_extract\e[0m\n    |   |-- \e[32mcontract.default.call\e[0m\n    |   `-- End.success\n    |-- \e[32mparse_duration\e[0m\n    |-- \e[32mpersist.save\e[0m\n    `-- End.success\n},
         output.join("")
       assert_nil failures[0]
-      assert_equal 3, test_11.instance_variable_get(:@assertions)
+      assert_equal 1, test_11.instance_variable_get(:@assertions)
 # {assert_pass} DOES NOT use wtf? per default.
 test_12 = test.new(:test_0012_anonymous)
       output = capture_io { failures = test_12.() }
 
       assert_equal %{}, output.join("")
       assert_nil failures[0]
-      assert_equal 3, test_12.instance_variable_get(:@assertions)
+      assert_equal 1, test_12.instance_variable_get(:@assertions)
 test_13 = test.new(:test_0013_anonymous)
       output = capture_io { failures = test_13.() }
 
@@ -588,14 +588,14 @@ Expected: {:band=>[\"here is an error\"]}
       output = capture_io { failures = test_16.() }
       assert_equal %{}, output.join("")
       assert_nil failures[0]
-      assert_equal 3, test_16.instance_variable_get(:@assertions)
+      assert_equal 1, test_16.instance_variable_get(:@assertions)
       assert_equal %{Trailblazer::Operation::Railway::Result}, test_16.instance_variable_get(:@result).class.inspect
 
   test_17 = test.new(:test_0017_anonymous)
       output = capture_io { failures = test_17.() }
       assert_equal %{}, output.join("")
       assert_nil failures[0]
-      assert_equal 4, test_17.instance_variable_get(:@assertions)
+      assert_equal 2, test_17.instance_variable_get(:@assertions)
       assert_equal %{Trailblazer::Operation::Railway::Result}, test_16.instance_variable_get(:@result).class.inspect
 
   test_18 = test.new(:test_0018_anonymous)

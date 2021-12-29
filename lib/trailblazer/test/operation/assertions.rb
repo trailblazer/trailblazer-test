@@ -47,7 +47,7 @@ module Trailblazer::Test::Operation
       def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, **kws, &block)
         result, ctx, kws = call_operation_with(params_fragment, use_wtf, block, **kws)
 
-        expected_attributes = expected_attributes_for(expected_attributes_to_merge, deep_merge: deep_merge, **kws)
+        expected_attributes = expected_attributes_for(expected_attributes_to_merge, **kws)
 
         assert_pass_with_model(result, ctx, expected_model_attributes: expected_attributes, **kws)
       end
@@ -123,7 +123,9 @@ module Trailblazer::Test::Operation
         %{{#{operation}} didn't fail, it passed}
       end
 
-      def expected_attributes_for(expected_attributes_to_merge, expected_attributes:, deep_merge:, **)
+      # FIXME: when {deep_merge: true} the result hash contains subclassed AR classes instead of the original ones.
+      #        when we got this sorted we can allows deep merging here, too.
+      def expected_attributes_for(expected_attributes_to_merge, expected_attributes:, deep_merge: false, **)
         _expected_attributes = merge_for(expected_attributes, expected_attributes_to_merge, deep_merge)
       end
 
@@ -180,7 +182,7 @@ module Trailblazer::Test::Operation
       def merge_for(dest, source, deep_merge)
         return dest.merge(source) unless deep_merge
 
-        CtxHash[dest].deep_merge(CtxHash[source])
+        CtxHash[dest].deep_merge(CtxHash[source]) # FIXME: this subclasses ActiveRecord classes in dest like {class: ReportSubscription}
       end
 
       # @private

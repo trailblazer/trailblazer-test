@@ -3,21 +3,47 @@ require "test_helper"
 class ExposesUnitTest < Minitest::Spec
   include Trailblazer::Test::Assertions
 
+  let(:ass) { Trailblazer::Test::Assertions::Assert }
+
   let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
+
+
+  describe "{Assert.expected_attributes_for}" do
+    it "what" do
+      expected = Trailblazer::Test::Operation::Assertions::Assert.expected_attributes_for({title: "Timebomb", class: Object},
+        expected_attributes: {title: "The Brews", duration: 999},
+        deep_merge: false,
+      )
+      pp expected
+    end
+  end
 
   it do
     skip "fails!"
     assert_exposes model, title: "Timebomb", band: "Rancid"
   end
-end
 
-class DocsExposeTest < Minitest::Spec
-  it "what" do
-    passed, matches, last_failed = Trailblazer::Test::Assertions::Assert.match_tuples({title: "Timebomb"}, {title: "__Timebomb__"}, reader: :[])
+  it "runs block when match fails" do
+    passed, matches, last_failed = ass.assert_attributes({title: "Timebomb"}, {title: "__Timebomb__"}, reader: :[]) do |matches, last_failed|
+      @block_run = last_failed
+    end
      # pp matches
     assert_equal false, passed
     assert_equal %{[:title, \"__Timebomb__\", \"Timebomb\", false, true, \"Property [title] mismatch\"]}, last_failed.inspect
+    assert_equal %{[:title, "__Timebomb__", "Timebomb", false, true, "Property [title] mismatch"]}, @block_run.inspect
   end
+
+  it "all properties match" do
+    passed, matches, last_failed = ass.assert_attributes(model, {title: "__Timebomb__", band: "__Rancid__"}) do |*|
+      @block_run = true
+    end
+
+    assert_equal true, passed
+    assert_nil @block_run
+  end
+end
+
+class DocsExposeTest < Minitest::Spec
 
   class Test < Minitest::Spec
     def initialize(*)

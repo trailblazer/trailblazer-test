@@ -126,7 +126,8 @@ class DocsExposeTest < Minitest::Spec
       }.new(:test_0001_anonymous) # Note: this has to be that name, otherwise the test case won't be run!
 
     assert_equal [
-      [true, "Actual: \"__Rancid__\"."]], test.()
+      ["Timebomb", "__Timebomb__", "Property [title] mismatch"]
+    ], test.()
       # ["Timebomb", "__Timebomb__", "Property [title] mismatch"],
 
   end
@@ -146,7 +147,7 @@ class DocsExposeTest < Minitest::Spec
 
     assert_equal [
       ["Timebomb", "__Timebomb__", "Property [title] mismatch"],
-      ["Rancid", "__Rancid__", "Property [band] mismatch"]
+      # ["Rancid", "__Rancid__", "Property [band] mismatch"]
     ], test.()
   end
 
@@ -170,7 +171,7 @@ class DocsExposeTest < Minitest::Spec
 
     assert_equal [
       ["Timebomb", "__Timebomb__", "Property [title] mismatch"],
-      ["Rancid", "__Rancid__", "Property [band] mismatch"]
+      # ["Rancid", "__Rancid__", "Property [band] mismatch"]
     ], test.()
   end
 end

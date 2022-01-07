@@ -80,6 +80,22 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
     #:assert-pass-result end
 
+    describe "we have {:song}, not {:model}" do
+      let(:operation) {
+        Class.new(Song::Operation::Create) do
+          step :set_song
+
+          def set_song(ctx, **)
+            ctx[:song]  = ctx[:model]
+            ctx[:model] = "i don't exist"
+          end
+        end
+      }
+      it "what" do
+        assert_pass( {duration: "2.24"}, {duration: 144}, model_at: :song )
+      end
+    end
+
     #:assert-fail
     it "fails with missing {title} and invalid {duration}" do
       assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
@@ -211,6 +227,12 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
     #:ctx-exclude-merge end
 
+    it "{Ctx} provides {merge: false} to allow direct ctx building without any automatic merging" do
+      ctx = Ctx({current_user: yogi}, merge: false)
+
+      assert_equal %{{:current_user=>\"Yogi\"}}, ctx.inspect
+    end
+
     #~meths end
   end
   #:test end
@@ -320,6 +342,18 @@ class DocsPassFailAssertionsTest < OperationSpec
         assert_nil result[:model].band
         # puts result[:"contract.default"].errors.messages # Yes, this is good for debugging!
       end
+    end
+  end
+
+  class PassFailTestWithoutSettings < OperationSpec
+    it "allows to pass the entire context without any automatic merging" do
+      assert_pass Ctx({params: {song: {title: "Ruby Soho", band: "Rancid"}}}, merge: false),
+        {title: "Ruby Soho", band: "Rancid"},
+        operation: Song::Operation::Create, default_ctx: {}
+    end
+
+    it "what" do
+      assert_pass( {title: "Ruby Soho", band: "Rancid"}, {}, :wtff?, operation: Song::Operation::Create, default_ctx: {}, key_in_params: :song )
     end
   end
 

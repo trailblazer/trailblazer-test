@@ -69,13 +69,14 @@ module Trailblazer::Test::Operation
 
       # @private
       # Gather all test case configuration. This involves reading all test `let` directives.
-      def normalize_kws(use_wtf, block, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", **options)
+      def normalize_kws(use_wtf, block, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, **options)
         kws = {
           user_block:           block,
           operation:            operation,
           expected_attributes:  expected_attributes,
           test:                 test,
           contract_name:        contract_name,
+          model_at:             model_at,
 
           **normalize_kws_for_ctx(test: test, **options)
         }
@@ -97,7 +98,7 @@ module Trailblazer::Test::Operation
         assert_after_call(result, **options) do |result|
 
           test.assert_equal(*arguments_for_assert_pass(result), error_message_for_assert_pass(result, **options))
-          test.send(:assert_exposes, model(result), expected_model_attributes)
+          test.send(:assert_exposes, model(result, **options), expected_model_attributes)
 
           result
         end
@@ -198,30 +199,34 @@ module Trailblazer::Test::Operation
         colored_errors = %{\e[33m#{errors}\e[0m}
       end
 
-      def model(result)
-        result[:"model"]
+      def model(result, model_at:, **)
+        result[model_at]
       end
 
-      def Ctx(merge_with_ctx={}, exclude: false, **kws)
-        options       = normalize_kws_for_ctx(**kws)
-        key_in_params = options[:key_in_params]
-        default_ctx   = options[:default_ctx]
+      def Ctx(merge_with_ctx={}, exclude: false, merge: true, **kws)
+        if merge
+          options       = normalize_kws_for_ctx(**kws)
+          key_in_params = options[:key_in_params]
+          default_ctx   = options[:default_ctx]
 
-        # Extract {:params} from {default_ctx}
-        default_params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
+          # Extract {:params} from {default_ctx}
+          default_params = key_in_params ? default_ctx[:params][key_in_params] : default_ctx[:params]
 
-        # Remove {:exclude} variables from the {params:} part
-        filtered_default_params =
-          if exclude
-            default_params.slice(*(default_params.keys - exclude))
-          else
-            default_params # use original params if no filtering configured.
-          end
+          # Remove {:exclude} variables from the {params:} part
+          filtered_default_params =
+            if exclude
+              default_params.slice(*(default_params.keys - exclude))
+            else
+              default_params # use original params if no filtering configured.
+            end
 
-        # FIXME: very, very redundant.
-        default_params_for_ctx = key_in_params ? {key_in_params => filtered_default_params} : filtered_default_params
+          # FIXME: very, very redundant.
+          default_params_for_ctx = key_in_params ? {key_in_params => filtered_default_params} : filtered_default_params
 
-        ctx = default_ctx.merge({params: default_params_for_ctx})
+          ctx = default_ctx.merge({params: default_params_for_ctx})
+        else # FIXME: if/else here sucks.
+          ctx = {}
+        end
 
         ctx = Assert.merge_for(ctx, merge_with_ctx, true) # merge injections
 

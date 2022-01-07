@@ -18,8 +18,19 @@ module Trailblazer
       # @param tuples Hash Key/value attribute pairs to test
       # @param options Hash Default :reader is `asserted.{name}`,
       # TODO: test err msgs!
-      def assert_exposes(asserted, expected, reader = nil) # FIXME: {reader}
-        passed, matches, last_failed = Assert.assert_attributes(asserted, expected, reader: reader) do |_matches, last_failed|
+      def assert_exposes(asserted, expected=nil, reader: nil, **options)
+        expected = options.any? ? options : expected # allow passing {expected} as kwargs, too.
+
+        _assert_exposes_for(asserted, expected, reader: reader)
+      end
+
+      # def assert_exposes_hash(asserted, expected)
+      #   _assert_exposes_for(asserted, expected, reader: :[])
+      # end
+
+      # @private
+      def _assert_exposes_for(asserted, expected, **options)
+        passed, matches, last_failed = Assert.assert_attributes(asserted, expected, **options) do |_matches, last_failed|
           name, expected_value, actual_value, _passed, is_eq, error_msg = last_failed
 
           is_eq ? assert_equal(expected_value, actual_value, error_msg) : assert(expected_value, error_msg)
@@ -33,7 +44,8 @@ module Trailblazer
       module Assert
         module_function
 
-        def assert_attributes(asserted, expected, reader: nil, &block)
+        # Yields {block} if tuples don't match/failed.
+        def assert_attributes(asserted, expected, reader: false, &block)
           passed, matches, last_failed = match_tuples(asserted, expected, reader: reader)
 
           yield matches, last_failed unless passed
@@ -49,7 +61,6 @@ module Trailblazer
           matches = expected.collect do |k, v|
             actual          = Test.actual(asserted, reader, k)
             expected, is_eq = Test.expected(asserted, v, actual)
-# puts "@@@@@ #{actual.inspect} <>!!!!!!!!!!!! #{expected.inspect} #{is_eq}"
 
             is_eq ?
               [k, expected, actual, passed &= test_equal(expected, actual), is_eq, "Property [#{k}] mismatch"] :

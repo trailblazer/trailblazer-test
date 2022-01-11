@@ -9,6 +9,7 @@ module Trailblazer::Test::Operation
       includer.let(:operation)            { raise "Trailblazer::Test: `let(:operation) { ... }` is missing" }
       includer.let(:key_in_params)        { false }
       includer.let(:expected_attributes)  { {} } # You need to override this in your tests.
+      includer.let(:default_ctx)          { {} }
     end
 
     def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, **kws, &block)

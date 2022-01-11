@@ -353,7 +353,11 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
 
     it "what" do
-      assert_pass( {title: "Ruby Soho", band: "Rancid"}, {}, :wtff?, operation: Song::Operation::Create, default_ctx: {}, key_in_params: :song )
+      assert_pass( {title: "Ruby Soho", band: "Rancid"}, {}, :wtff?, operation: Song::Operation::Create, key_in_params: :song )
+    end
+
+    it "what" do
+      assert_pass( {song: {title: "Ruby Soho", band: "Rancid"}}, {}, operation: Song::Operation::Create )
     end
   end
 

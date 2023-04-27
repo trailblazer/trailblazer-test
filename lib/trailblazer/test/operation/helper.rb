@@ -1,11 +1,11 @@
 module Trailblazer::Test::Operation
   module Helper
     def call(operation_class, **args, &block)
-      call!(operation_class, args, &block)
+      call!(operation_class, **args, &block)
     end
 
     def factory(operation_class, **args, &block)
-      call!(operation_class, args.merge(raise_on_failure: true), &block)
+      call!(operation_class, **args.merge(raise_on_failure: true), &block)
     end
 
     def mock_step(operation_class, id:, subprocess: nil, subprocess_path: nil)

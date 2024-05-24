@@ -8,20 +8,20 @@ module Trailblazer::Test::Operation
       call!(operation_class, args.merge(raise_on_failure: true), &block)
     end
 
-    def mock_step(operation_class, id:, subprocess: nil, subprocess_path: nil)
-      raise ArgumentError, "Missing block: `mock_step` requires a block." unless block_given?
+    def mock_step(operation_class, id:, subprocess: nil, subprocess_path: nil, &block)
+      raise ArgumentError, "Missing block: `mock_step` requires a block." if block.nil?
 
-      block = ->(ctx, **) { yield(ctx) }
+      override = ->(*) { step block, replace: id, id: id }
 
-      # If deeply nested step needs to be mocked, use the `patch` provided by Subprocess
+      return Class.new(operation_class, &override) if subprocess_path.nil?
+
+      # Remove below check in 1.0.0
       if subprocess
-        return Class.new(operation_class) do
-          patch = { subprocess_path => ->() { step block, replace: id, id: id } }
-          step Subprocess(subprocess, patch: patch), replace: subprocess, id: subprocess
-        end
+        subprocess_path = [subprocess, *subprocess_path]
+        Trailblazer::Activity::Deprecate.warn caller_locations[0], ":subprocess is deprecated and will be removed in 1.0.0. Pass `subprocess_path: #{subprocess_path}` instead."
       end
 
-      Class.new(operation_class) { step block, replace: id, id: id }
+      Trailblazer::Activity::DSL::Linear::Patch.call(operation_class, subprocess_path, override)
     end
 
     # @private

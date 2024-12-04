@@ -21,6 +21,17 @@ class AssertionsTest < Minitest::Spec
     end
   end
 
+  class Update < Trailblazer::Operation
+    step :validate
+
+    def validate(ctx, params:, **)
+      return true if params[:record]
+
+      ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({:title => ["is missing"]}))
+      false
+    end
+  end
+
   # TODO: should we test the "meat" of these assertions here?
   it "#assert_exposes" do
     test =
@@ -59,7 +70,6 @@ Expected: 2
   Actual: 1>)
   end
 
-        include Trailblazer::Test::Assertion::AssertPass
   it "#assert_pass" do
         # assert_pass Create, {params: {bla: 1}}, id: 1
 
@@ -77,6 +87,16 @@ Expected: 2
             title: "Somewhere Far Beyond",
             genre: nil
         end
+
+        # test_0002_anonymous
+        it do
+          assert_pass Create, {params: {title: "Somewhere Far Beyond"}},
+            # expected:
+            id: nil,
+            persisted?: nil,
+            title: "Somewhere Far Beyond",
+            genre: nil
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -85,5 +105,45 @@ Expected: 2
     failures[0].inspect.must_equal %(#<Minitest::Assertion: Property [id] mismatch.
 Expected: 1
   Actual: nil>)
+
+    test_2 = test.new(:test_0002_anonymous)
+    failures = test_2.()
+    assert_equal failures.size, 0
+  end
+
+          include Trailblazer::Test::Assertion::AssertPass
+          include Trailblazer::Test::Assertion::AssertFail
+  it "#assert_fail" do
+        assert_fail Update, {params: {bla: 1}}, [:title]
+
+    test =
+      Class.new(Test) do
+        include Trailblazer::Test::Assertion::AssertPass
+        include Trailblazer::Test::Assertion::AssertFail
+        # include Trailblazer::Test::Assertion::AssertExposes
+
+        # test_0001_anonymous
+        it do
+          assert_fail Update, {params: {title: nil}},
+            # expected:
+            [:title]
+        end
+
+        # test_0002_anonymous
+        it do
+          assert_fail Update, {params: {record: true}}, [:title]
+        end
+      end
+
+    test_1 = test.new(:test_0001_anonymous)
+    failures = test_1.()
+    assert_equal failures.size, 0
+
+    test_2 = test.new(:test_0002_anonymous)
+    failures = test_2.()
+    assert_equal failures.size, 1
+    failures[0].inspect.must_equal %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
+Expected: false
+  Actual: true>)
   end
 end

@@ -91,9 +91,12 @@ class DocsPassFailAssertionsTest < OperationSpec
           end
         end
       }
+
+      #:model-at
       it "what" do
         assert_pass( {duration: "2.24"}, {duration: 144}, model_at: :song )
       end
+      #:model-at end
     end
 
     #:assert-fail

@@ -7,6 +7,8 @@ module Trailblazer
 end
 
 require "trailblazer/test/assertion/assert_exposes"
+require "trailblazer/test/assertion/assert_pass"
+require "trailblazer/test/assertion/assert_fail"
 require "trailblazer/test/assertions"
 require "trailblazer/test/operation/helper"
 require "trailblazer/test/operation/assertions"

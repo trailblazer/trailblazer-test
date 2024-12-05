@@ -48,8 +48,8 @@ module Trailblazer
             passed = true # goes {false} if one or more attributes didn't match.
 
             matches = expected.collect do |k, v|
-              actual          = Test.actual(asserted, reader, k)
-              expected, is_eq = Test.expected(asserted, v, actual)
+              actual          = Test::Assertion.actual(asserted, reader, k)
+              expected, is_eq = Test::Assertion.expected(asserted, v, actual)
 
               is_eq ?
                 [k, expected, actual, passed &= test_equal(expected, actual), is_eq, "Property [#{k}] mismatch"] :

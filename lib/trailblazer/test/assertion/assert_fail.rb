@@ -2,10 +2,14 @@ module Trailblazer
   module Test
     module Assertion
       module AssertFail
-        def assert_fail(activity, options, expected_errors, use_wtf=false, **kws, &block)
+        module_function
+
+        extend AssertPass::Utils
+
+        def call(activity, options, expected_errors, use_wtf=false, test:, **kws, &block)
           result, ctx, _ = call_operation(options, operation: activity) # FIXME: remove kws?
 
-          assert_fail_with_model(result, ctx, expected_errors: expected_errors, test: self, user_block: block, operation: activity)
+          assert_fail_with_model(result, ctx, expected_errors: expected_errors, test: test, user_block: block, operation: activity)
         end
 
         # @private

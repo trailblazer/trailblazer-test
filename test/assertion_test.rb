@@ -70,12 +70,13 @@ Expected: 2
   Actual: 1>)
   end
 
+        # include Trailblazer::Test::Assertion
+        # include Trailblazer::Test::Assertion::AssertExposes
   it "#assert_pass" do
-        # assert_pass Create, {params: {bla: 1}}, id: 1
-
+        # assert_pass Create, {params: {title: 1}}, id: 1
     test =
       Class.new(Test) do
-        include Trailblazer::Test::Assertion::AssertPass
+        include Trailblazer::Test::Assertion
         include Trailblazer::Test::Assertion::AssertExposes
 
         # test_0001_anonymous
@@ -111,15 +112,13 @@ Expected: 1
     assert_equal failures.size, 0
   end
 
-          include Trailblazer::Test::Assertion::AssertPass
-          include Trailblazer::Test::Assertion::AssertFail
+          include Trailblazer::Test::Assertion
   it "#assert_fail" do
         assert_fail Update, {params: {bla: 1}}, [:title]
 
     test =
       Class.new(Test) do
-        include Trailblazer::Test::Assertion::AssertPass
-        include Trailblazer::Test::Assertion::AssertFail
+        include Trailblazer::Test::Assertion
         # include Trailblazer::Test::Assertion::AssertExposes
 
         # test_0001_anonymous

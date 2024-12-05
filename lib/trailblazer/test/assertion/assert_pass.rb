@@ -2,10 +2,12 @@ module Trailblazer
   module Test
     module Assertion
       module AssertPass
-        def assert_pass(activity, options, use_wtf: false, **expected_model_attributes, &block)
+        module_function
+
+        def call(activity, options, use_wtf: false, test:, **expected_model_attributes, &block)
           result, ctx, kws = call_operation(options, operation: activity)
 
-          assert_pass_with_model(result, ctx, expected_model_attributes: expected_model_attributes, test: self, user_block: block, operation: activity)
+          assert_pass_with_model(result, ctx, expected_model_attributes: expected_model_attributes, test: test, user_block: block, operation: activity)
         end
 
         def assert_pass_with_model(result, ctx, expected_model_attributes: {}, test:, **options)
@@ -23,18 +25,6 @@ module Trailblazer
           return true, result.success?
         end
 
-        # @private
-        def assert_after_call(result, user_block: raise, **kws)
-          yield(result)
-          user_block.call(result) if user_block
-
-          result
-        end
-
-        def call_operation(ctx, operation:, invoke_method: :call, **)
-          operation.send(invoke_method, ctx)
-        end
-
         def model(result, model_at:, **)
           result[model_at]
         end
@@ -45,17 +35,33 @@ module Trailblazer
           %{{#{operation}} failed: #{colored_errors}} # FIXME: only if contract's there!
         end
 
-        def colored_errors_for(result)
-          # TODO: generic errors object "finding"
-          errors =
-            if result[:"contract.default"]
-              result[:"contract.default"].errors.messages.inspect
-            else
-              ""
-            end
+        module Utils
+          def call_operation(ctx, operation:, invoke_method: :call, **)
+            operation.send(invoke_method, ctx)
+          end
 
-          colored_errors = %{\e[33m#{errors}\e[0m}
+          # @private
+          def assert_after_call(result, user_block: raise, **kws)
+            yield(result)
+            user_block.call(result) if user_block
+
+            result
+          end
+
+          def colored_errors_for(result)
+            # TODO: generic errors object "finding"
+            errors =
+              if result[:"contract.default"]
+                result[:"contract.default"].errors.messages.inspect
+              else
+                ""
+              end
+
+            colored_errors = %{\e[33m#{errors}\e[0m}
+          end
         end
+
+        extend Utils
       end
     end
   end

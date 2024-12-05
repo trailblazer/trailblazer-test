@@ -131,7 +131,22 @@ Expected: 1
 
         # test_0002_anonymous
         it do
+          assert_fail Update, {params: {title: nil}},
+            # expected:
+            {title: ["is missing"]}
+        end
+
+
+        # test_0003_anonymous
+        it do
           assert_fail Update, {params: {record: true}}, [:title]
+        end
+
+        # test_0004_anonymous
+        it do
+          assert_fail Update, {params: {title: nil}},
+            # expected:
+            {title: ["is XXX"]} # this is wrong.
         end
       end
 
@@ -141,9 +156,20 @@ Expected: 1
 
     test_2 = test.new(:test_0002_anonymous)
     failures = test_2.()
+    assert_equal failures.size, 0
+
+    test_3 = test.new(:test_0003_anonymous)
+    failures = test_3.()
     assert_equal failures.size, 1
     failures[0].inspect.must_equal %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
 Expected: false
   Actual: true>)
+
+  test_4 = test.new(:test_0004_anonymous)
+    failures = test_4.()
+    assert_equal failures.size, 1
+    failures[0].inspect.must_equal %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
+Expected: {:title=>[\"is XXX\"]}
+  Actual: {:title=>[\"is missing\"]}>)
   end
 end

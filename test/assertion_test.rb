@@ -98,6 +98,22 @@ Expected: 2
             title: "Somewhere Far Beyond",
             genre: nil
         end
+
+        # test_0003_anonymous
+        it do
+          assert_pass Create, {params: {title: "Somewhere Far Beyond"}} do |result|
+            @_m = result.keys.inspect
+
+            assert_equal result[:model].class, Record
+          end
+        end
+
+        # test_0004_anonymous
+        it do
+          assert_pass Create, {params: {title: "Somewhere Far Beyond"}} do |result|
+            assert_equal result[:model].class, "Song" # fails
+          end
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -110,6 +126,21 @@ Expected: 1
     test_2 = test.new(:test_0002_anonymous)
     failures = test_2.()
     assert_equal failures.size, 0
+
+    test_3 = test.new(:test_0003_anonymous)
+    failures = test_3.()
+    assert_equal failures.size, 0
+    assert_equal test_3.instance_variable_get(:@_m), %([:params, :model])
+
+    test_4 = test.new(:test_0004_anonymous)
+    failures = test_4.()
+    assert_equal failures.size, 1
+    failures[0].inspect.must_equal %(#<Minitest::Assertion: --- expected
++++ actual
+@@ -1 +1 @@
+-AssertionsTest::Record(keyword_init: true)
++"Song"
+>)
   end
 
           include Trailblazer::Test::Assertion

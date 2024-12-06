@@ -6,14 +6,14 @@ module Trailblazer
 
         extend AssertPass::Utils
 
-        def call(activity, options, expected_errors, use_wtf=false, test:, **kws, &block)
-          result, ctx, _ = call_operation(options, operation: activity) # FIXME: remove kws?
+        def call(activity, ctx, expected_errors, use_wtf=false, test:, **kws, &block)
+          result, ctx, _ = call_operation(ctx, operation: activity) # FIXME: remove kws?
 
           assert_fail_with_model(result, ctx, expected_errors: expected_errors, test: test, user_block: block, operation: activity)
         end
 
         # @private
-        def assert_fail_with_model(result, ctx, test:, **options, &user_block)
+        def assert_fail_with_model(result, ctx, test:, **options, &block)
           assert_after_call(result, **options) do |result|
 
             test.assert_equal *arguments_for_assert_fail(result), error_message_for_assert_fail_after_call(result, **options)

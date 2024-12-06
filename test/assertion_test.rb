@@ -145,7 +145,7 @@ Expected: 1
 
           include Trailblazer::Test::Assertion
   it "#assert_fail" do
-        # assert_fail Update, {params: {bla: 1}}, [:title]
+        assert_fail Update, {params: {bla: 1}}, [:title]
         # assert_fail Update, {params: {bla: 1}} do |result|
         # end
 

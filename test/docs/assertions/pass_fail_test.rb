@@ -418,7 +418,7 @@ class DocsPassFailAssertionsTest < OperationSpec
         end
 
         it do #5
-          assert_fail( {band: ""}, [:band] ) do |result|
+          assert_fail({band: ""}, [:band]) do |result|
             assert_nil result[:model].title
             @_m = result[:"contract.default"].errors.messages.inspect
           end
@@ -539,8 +539,8 @@ test_5 = test.new(:test_0005_anonymous)
       failures = test_5.()
 
       assert_nil failures[0]
-      test_5.instance_variable_get(:@_m).must_equal %{{:band=>[\"must be filled\"]}}
-      assert_equal 4, test_5.instance_variable_get(:@assertions) # FIXME: why is this 4, not 3?
+      assert_equal test_5.instance_variable_get(:@_m), %({:band=>[\"must be filled\"]})
+      assert_equal 3, test_5.instance_variable_get(:@assertions)
 
 # Can we override all let() options?
 test_7 = test.new(:test_0007_anonymous)

@@ -19,11 +19,11 @@ module Trailblazer
         end
 
         def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, assertion: AssertPass, **kws, &block)
-          Assert.assert_pass(params_fragment, expected_attributes_to_merge, use_wtf, test: self, assertion: assertion, **kws, &block)
+          Assert.assert_pass(params_fragment, expected_attributes_to_merge, use_wtf, test: self, user_block: block, assertion: assertion, **kws)
         end
 
         def assert_fail(params_fragment, expected_errors, use_wtf=false, deep_merge: true, assertion: AssertFail, **kws, &block)
-          Assert.assert_fail(params_fragment, expected_errors, use_wtf, test: self, assertion: assertion, **kws, &block)
+          Assert.assert_fail(params_fragment, expected_errors, use_wtf, test: self, user_block: block, assertion: assertion, **kws)
         end
 
         def Ctx(*args, **kws)
@@ -35,27 +35,27 @@ module Trailblazer
         module Assert
           module_function
 
-          def normalize_for(params_fragment, use_wtf, block, **kws)
-            kws = normalize_kws(use_wtf, block, **kws)
+          def normalize_for(params_fragment, use_wtf, **kws)
+            kws = normalize_kws(use_wtf, **kws)
             ctx = ctx_for_params_fragment(params_fragment, **kws)
 
             return ctx, kws
           end
 
           #@public
-          def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, assertion:, test:, **kws, &block)
-            ctx, kws = normalize_for(params_fragment, use_wtf, block, test: test, **kws)
+          def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, assertion:, test:, user_block:, **kws)
+            ctx, kws = normalize_for(params_fragment, use_wtf, test: test, user_block: user_block, **kws)
 
             expected_attributes = expected_attributes_for(expected_attributes_to_merge, **kws)
 
             activity = kws[:operation]  # FIXME.
             model_at = kws[:model_at]  # FIXME.
 
-            assertion.(activity, ctx, use_wtf: use_wtf, test: test, model_at: model_at, **expected_attributes, &block)
+            assertion.(activity, ctx, use_wtf: use_wtf, test: test, model_at: model_at, user_block: user_block, **expected_attributes)
           end
 
-          def assert_fail(params_fragment, expected_errors, use_wtf=false, assertion:, **kws, &block)
-            ctx, kws = normalize_for(params_fragment, use_wtf, block, **kws)
+          def assert_fail(params_fragment, expected_errors, use_wtf=false, assertion:, **kws)
+            ctx, kws = normalize_for(params_fragment, use_wtf, **kws)
 
             activity = kws[:operation]  # FIXME.
 
@@ -73,9 +73,9 @@ module Trailblazer
 
           # @private
           # Gather all test case configuration. This involves reading all test `let` directives.
-          def normalize_kws(use_wtf, block, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, **options)
+          def normalize_kws(use_wtf, user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, **options)
             kws = {
-              user_block:           block,
+              user_block:           user_block,
               operation:            operation,
               expected_attributes:  expected_attributes,
               test:                 test,

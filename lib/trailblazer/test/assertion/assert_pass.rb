@@ -4,10 +4,10 @@ module Trailblazer
       module AssertPass
         module_function
 
-        def call(activity, ctx, use_wtf: false, model_at: :model, test:, **expected_model_attributes, &block)
+        def call(activity, ctx, use_wtf: false, model_at: :model, test:, user_block:, **expected_model_attributes)
           result, ctx, kws = call_operation(ctx, operation: activity)
 
-          assert_pass_with_model(result, ctx, expected_model_attributes: expected_model_attributes, test: test, model_at: model_at, user_block: block, operation: activity)
+          assert_pass_with_model(result, ctx, expected_model_attributes: expected_model_attributes, test: test, user_block: user_block, model_at: model_at, operation: activity)
         end
 
         def assert_pass_with_model(result, ctx, expected_model_attributes: {}, test:, **options)

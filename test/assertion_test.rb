@@ -65,7 +65,7 @@ class AssertionsTest < Minitest::Spec
     test_2 = test.new(:test_0002_anonymous)
     failures = test_2.()
     assert_equal 1, failures.size
-    failures[0].inspect.must_equal %(#<Minitest::Assertion: Property [id] mismatch.
+    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Property [id] mismatch.
 Expected: 2
   Actual: 1>)
   end
@@ -119,7 +119,7 @@ Expected: 2
     test_1 = test.new(:test_0001_anonymous)
     failures = test_1.()
     assert_equal failures.size, 1
-    failures[0].inspect.must_equal %(#<Minitest::Assertion: Property [id] mismatch.
+    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Property [id] mismatch.
 Expected: 1
   Actual: nil>)
 
@@ -135,7 +135,7 @@ Expected: 1
     test_4 = test.new(:test_0004_anonymous)
     failures = test_4.()
     assert_equal failures.size, 1
-    failures[0].inspect.must_equal %(#<Minitest::Assertion: --- expected
+    assert_equal failures[0].inspect, %(#<Minitest::Assertion: --- expected
 +++ actual
 @@ -1 +1 @@
 -AssertionsTest::Record(keyword_init: true)
@@ -194,6 +194,23 @@ Expected: 1
             @_m = true
           end
         end
+
+        # test_0007_anonymous
+        # both expected_errors and block are considered.
+        it do
+          assert_fail Update, {params: {title: nil}}, [:title] do |result|
+            assert_equal result[:"contract.default"].errors.messages, {:title=>["is missing"]}
+            @_m = true
+          end
+        end
+
+        # test_0008_anonymous
+        # expected_errors is wrong
+        it do
+          assert_fail Update, {params: {title: nil}}, [:title_XXX] do |result|
+            @_m = true
+          end
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -207,14 +224,14 @@ Expected: 1
     test_3 = test.new(:test_0003_anonymous)
     failures = test_3.()
     assert_equal failures.size, 1
-    failures[0].inspect.must_equal %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
+    assert_equal failures[0].inspect, %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
 Expected: false
   Actual: true>)
 
     test_4 = test.new(:test_0004_anonymous)
     failures = test_4.()
     assert_equal failures.size, 1
-    failures[0].inspect.must_equal %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
+    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
 Expected: {:title=>[\"is XXX\"]}
   Actual: {:title=>[\"is missing\"]}>)
 
@@ -227,8 +244,21 @@ Expected: {:title=>[\"is XXX\"]}
     failures = test_6.()
     assert_nil test_6.instance_variable_get(:@_m) # block is not executed.
     assert_equal failures.size, 1
-    failures[0].inspect.must_equal %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
+    assert_equal failures[0].inspect, %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
 Expected: false
   Actual: true>)
+
+    test_7 = test.new(:test_0007_anonymous)
+    failures = test_7.()
+    assert_equal test_7.instance_variable_get(:@_m), true
+    assert_equal failures.size, 0
+
+    test_8 = test.new(:test_0008_anonymous)
+    failures = test_8.()
+    assert_nil test_8.instance_variable_get(:@_m) # block is not executed.
+    assert_equal failures.size, 1
+    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
+Expected: [:title_XXX]
+  Actual: [:title]>)
   end
 end

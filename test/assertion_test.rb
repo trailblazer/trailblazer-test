@@ -145,7 +145,9 @@ Expected: 1
 
           include Trailblazer::Test::Assertion
   it "#assert_fail" do
-        assert_fail Update, {params: {bla: 1}}, [:title]
+        # assert_fail Update, {params: {bla: 1}}, [:title]
+        # assert_fail Update, {params: {bla: 1}} do |result|
+        # end
 
     test =
       Class.new(Test) do
@@ -166,7 +168,6 @@ Expected: 1
             {title: ["is missing"]}
         end
 
-
         # test_0003_anonymous
         it do
           assert_fail Update, {params: {record: true}}, [:title]
@@ -177,6 +178,21 @@ Expected: 1
           assert_fail Update, {params: {title: nil}},
             # expected:
             {title: ["is XXX"]} # this is wrong.
+        end
+
+        # test_0005_anonymous
+        it do
+          assert_fail Update, {params: {title: nil}} do |result|
+            @_m = true
+            assert_equal result[:"contract.default"].errors.messages, {:title=>["is missing"]}
+          end
+        end
+
+        # test_0006_anonymous
+        it do
+          assert_fail Update, {params: {record: true}} do |result| # this actually passes.
+            @_m = true
+          end
         end
       end
 
@@ -195,11 +211,24 @@ Expected: 1
 Expected: false
   Actual: true>)
 
-  test_4 = test.new(:test_0004_anonymous)
+    test_4 = test.new(:test_0004_anonymous)
     failures = test_4.()
     assert_equal failures.size, 1
     failures[0].inspect.must_equal %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
 Expected: {:title=>[\"is XXX\"]}
   Actual: {:title=>[\"is missing\"]}>)
+
+    test_5 = test.new(:test_0005_anonymous)
+    failures = test_5.()
+    assert_equal test_5.instance_variable_get(:@_m), true
+    assert_equal failures.size, 0
+
+    test_6 = test.new(:test_0006_anonymous)
+    failures = test_6.()
+    assert_nil test_6.instance_variable_get(:@_m) # block is not executed.
+    assert_equal failures.size, 1
+    failures[0].inspect.must_equal %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
+Expected: false
+  Actual: true>)
   end
 end

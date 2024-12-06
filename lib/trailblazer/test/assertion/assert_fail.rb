@@ -6,24 +6,26 @@ module Trailblazer
 
         extend AssertPass::Utils
 
-        def call(activity, ctx, expected_errors, use_wtf=false, test:, **kws, &block)
+        # {expected_errors} can be nil when using the {#assert_fail} block syntax.
+        def call(activity, ctx, expected_errors=nil, test:, **kws, &block)
           result, ctx, _ = call_operation(ctx, operation: activity) # FIXME: remove kws?
 
           assert_fail_with_model(result, ctx, expected_errors: expected_errors, test: test, user_block: block, operation: activity)
         end
 
         # @private
-        def assert_fail_with_model(result, ctx, test:, **options, &block)
+        def assert_fail_with_model(result, ctx, test:, **options)
           assert_after_call(result, **options) do |result|
 
             test.assert_equal *arguments_for_assert_fail(result), error_message_for_assert_fail_after_call(result, **options)
 
+            if options[:expected_errors]
+              # TODO: allow error messages from somewhere else.
+              # only test _if_ errors are present, not the content.
+              colored_errors = colored_errors_for(result)
 
-            # TODO: allow error messages from somewhere else.
-            # only test _if_ errors are present, not the content.
-            colored_errors = colored_errors_for(result)
-
-            test.assert_equal *arguments_for_assert_contract_errors(result, contract_name: :default, **options), "Actual contract errors: #{colored_errors}"
+              test.assert_equal *arguments_for_assert_contract_errors(result, contract_name: :default, **options), "Actual contract errors: #{colored_errors}"
+            end
           end
         end
 

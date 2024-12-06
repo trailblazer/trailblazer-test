@@ -43,6 +43,7 @@ module Trailblazer
           # @private
           def assert_after_call(result, user_block: raise, **kws)
             yield(result)
+
             user_block.call(result) if user_block
 
             result
@@ -59,7 +60,7 @@ module Trailblazer
 
             colored_errors = %{\e[33m#{errors}\e[0m}
           end
-        end
+        end # Utils
 
         extend Utils
       end

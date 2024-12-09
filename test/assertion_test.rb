@@ -73,7 +73,8 @@ Expected: 2
         include Trailblazer::Test::Assertion
         include Trailblazer::Test::Assertion::AssertExposes
   it "#assert_pass" do
-    # assert_pass Create, {params: {title: 1}}, id: 1, invoke_method: :wtf?
+# FIXME: test that assert_* returns {ctx}
+# assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke_method: :wtf?
 
     test =
       Class.new(Test) do
@@ -117,12 +118,28 @@ Expected: 2
         end
 
         # test_0005_anonymous
+        # We accept {:invoke_method} as a first level kw arg, currently.
         it do
           stdout, _ = capture_io do
             assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke_method: :wtf?
           end
 
           assert_equal stdout, %(`-- AssertionsTest::Create\n    |-- \e[32mStart.default\e[0m\n    |-- \e[32mmodel\e[0m\n    `-- End.success\n)
+        end
+
+        # test_0006_anonymous
+        # We accept {:model_at} as a first level kw arg, currently.
+        it do
+          create = Class.new(Trailblazer::Operation) do
+            step :model
+
+            def model(ctx, params:, **)
+              ctx[:song] = Record.new(**params)
+            end
+          end
+
+          assert_pass create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", model_at: :song
+          # assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, {invoke_method: :wtf?, model_at: }, {...} # DISCUSS: this would be an alternative syntax.
         end
       end
 
@@ -154,6 +171,10 @@ Expected: 1
 
     test_5 = test.new(:test_0005_anonymous)
     failures = test_5.()
+    assert_equal failures.size, 0
+
+    test_6 = test.new(:test_0006_anonymous)
+    failures = test_6.()
     assert_equal failures.size, 0
   end
 

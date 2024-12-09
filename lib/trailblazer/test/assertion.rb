@@ -1,10 +1,19 @@
 module Trailblazer
   module Test
+    # Top-level entry points for end users.
+    # These methods expose the syntax sugar, not the logic.
     module Assertion
       # DISCUSS: move to Assertion::Minitest?
       # Test case instance method. Specific to Minitest.
-      def assert_pass(activity, options, assertion: AssertPass, **kws, &block)
-        assertion.(activity, options, test: self, user_block: block, **kws) # Forward {#assert_pass} to {AssertPass.call} or wherever your implementation sits.
+      def assert_pass(activity, options, assertion: AssertPass, model_at: :model, invoke_method: :call, **kws, &block)
+        # DISCUSS: {:model_at} and {:invoke_method} block actual attributes.
+        assertion.(activity, options,
+          test: self,
+          user_block: block,
+          expected_model_attributes: kws,
+          model_at: model_at,
+          invoke_method: invoke_method,
+        ) # Forward {#assert_pass} to {AssertPass.call} or wherever your implementation sits.
       end
 
       # DISCUSS: move to Assertion::Minitest?

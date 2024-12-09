@@ -50,14 +50,16 @@ module Trailblazer
 
             activity = kws[:operation]  # FIXME.
             model_at = kws[:model_at]  # FIXME.
+            # invoke_method = kws[:invoke_method] if kws.key?(:invoke_method) # FIXME.
 
-            assertion.(activity, ctx, use_wtf: use_wtf, test: test, model_at: model_at, user_block: user_block, **expected_attributes)
+            assertion.(activity, ctx, invoke_method: invoke_method, test: test, model_at: model_at, user_block: user_block, **expected_attributes)
           end
 
           def assert_fail(params_fragment, expected_errors, use_wtf=false, assertion:, **kws)
             ctx, kws = normalize_for(params_fragment, use_wtf, **kws)
 
             activity = kws[:operation]  # FIXME.
+            # invoke_method = kws[:invoke_method]  # FIXME.
 
             assertion.(activity, ctx, expected_errors, **kws)
           end
@@ -75,7 +77,7 @@ module Trailblazer
           # Gather all test case configuration. This involves reading all test `let` directives.
           def normalize_kws(use_wtf, user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, **options)
             kws = {
-              user_block:           user_block,
+              # user_block:           user_block,
               operation:            operation,
               expected_attributes:  expected_attributes,
               test:                 test,

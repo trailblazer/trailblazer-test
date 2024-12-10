@@ -80,6 +80,12 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
     #:assert-pass-result end
 
+    it "returns {result}" do
+      result = assert_pass( {}, {} )
+
+      assert_equal result[:model].title, %(Timebomb)
+    end
+
     describe "we have {:song}, not {:model}" do
       let(:operation) {
         Class.new(Song::Operation::Create) do
@@ -137,6 +143,12 @@ class DocsPassFailAssertionsTest < OperationSpec
       assert_equal false, result[:model].persisted?
     end
     #:assert-fail-result end
+
+    it "{#assert_fail} returns result" do
+      result = assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
+
+      assert_equal CU.inspect(result[:"contract.default"].errors.messages), %({:title=>[\"must be filled\"], :duration=>[\"must be String\"]})
+    end
 
     #:wtf
     it "fails with missing {title} and invalid {duration}" do

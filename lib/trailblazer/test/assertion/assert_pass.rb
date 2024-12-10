@@ -42,7 +42,7 @@ module Trailblazer
           end
 
           # @private
-          def assert_after_call(result, user_block: raise, **kws)
+          def assert_after_call(result, user_block:, **kws)
             yield(result)
 
             user_block.call(result) if user_block

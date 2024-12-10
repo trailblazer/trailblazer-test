@@ -18,48 +18,51 @@ module Trailblazer
           include AssertExposes
         end
 
-        def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, assertion: AssertPass, **kws, &block)
-          Assert.assert_pass(params_fragment, expected_attributes_to_merge, use_wtf, test: self, user_block: block, assertion: assertion, **kws)
+        def assert_pass(params_fragment, expected_attributes_to_merge={}, assertion: AssertPass, **options, &block)
+          Assert.assert_pass(params_fragment, test: self, user_block: block, assertion: assertion, expected_attributes_to_merge: expected_attributes_to_merge, **options)
         end
 
-        def assert_fail(params_fragment, expected_errors, use_wtf=false, deep_merge: true, assertion: AssertFail, **kws, &block)
-          Assert.assert_fail(params_fragment, expected_errors, use_wtf, test: self, user_block: block, assertion: assertion, **kws)
+        def assert_fail(params_fragment, expected_errors, assertion: AssertFail, **kws, &block)
+          Assert.assert_fail(params_fragment, expected_errors, test: self, user_block: block, assertion: assertion, **kws)
         end
 
         def Ctx(*args, **kws)
           Assert.Ctx(*args, test: self, **kws)
         end
 
+        def assert_pass?(*args, **kws, &block)
+          assert_pass(*args, **kws, use_wtf: true, &block)
+        end
+
+        def assert_fail?(*args, **kws, &block)
+          assert_fail(*args, **kws, use_wtf: true, &block)
+        end
 
         # Provide {Assert.assert_pass} which decouples the assertion logic from the actual test framework.
         module Assert
           module_function
 
-          def normalize_for(params_fragment, use_wtf, **kws)
-            kws = normalize_kws(use_wtf, **kws)
+          def normalize_for(params_fragment, **kws)
+            kws = normalize_kws(**kws)
             ctx = ctx_for_params_fragment(params_fragment, **kws)
 
             return ctx, kws
           end
 
           #@public
-          def assert_pass(params_fragment, expected_attributes_to_merge, use_wtf=false, deep_merge: true, assertion:, test:, user_block:, **kws)
-            ctx, kws = normalize_for(params_fragment, use_wtf, test: test, user_block: user_block, **kws)
+          def assert_pass(params_fragment, deep_merge: true, assertion:, test:, expected_attributes_to_merge:, **kws) # TODO: remove kws.
+            ctx, kws = normalize_for(params_fragment, test: test, **kws)
 
             expected_attributes = expected_attributes_for(expected_attributes_to_merge, **kws)
 
             activity = kws[:operation]  # FIXME.
-            model_at = kws[:model_at]  # FIXME.
-            # invoke_method = kws[:invoke_method] if kws.key?(:invoke_method) # FIXME.
 
-            assertion.(activity, ctx, invoke_method: invoke_method, test: test, model_at: model_at, user_block: user_block, **expected_attributes)
+            assertion.(activity, ctx, test: test, expected_model_attributes: expected_attributes, user_block: kws[:user_block], model_at: kws[:model_at], invoke_method: kws[:invoke_method])
           end
 
-          def assert_fail(params_fragment, expected_errors, use_wtf=false, assertion:, **kws)
-            ctx, kws = normalize_for(params_fragment, use_wtf, **kws)
-
+          def assert_fail(params_fragment, expected_errors, assertion:, **kws)
+            ctx, kws = normalize_for(params_fragment, **kws)
             activity = kws[:operation]  # FIXME.
-            # invoke_method = kws[:invoke_method]  # FIXME.
 
             assertion.(activity, ctx, expected_errors, **kws)
           end
@@ -75,7 +78,7 @@ module Trailblazer
 
           # @private
           # Gather all test case configuration. This involves reading all test `let` directives.
-          def normalize_kws(use_wtf, user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, **options)
+          def normalize_kws(user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, use_wtf: false, invoke_method: :call, **options)
             kws = {
               # user_block:           user_block,
               operation:            operation,
@@ -83,11 +86,11 @@ module Trailblazer
               test:                 test,
               contract_name:        contract_name,
               model_at:             model_at,
+              user_block:           user_block,
+              invoke_method:        use_wtf ? :wtf? : invoke_method,
 
               **normalize_kws_for_ctx(test: test, **options)
             }
-
-            kws[:invoke_method] = :wtf? if use_wtf
 
             return kws
           end

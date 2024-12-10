@@ -140,7 +140,7 @@ class DocsPassFailAssertionsTest < OperationSpec
 
     #:wtf
     it "fails with missing {title} and invalid {duration}" do
-      assert_fail( {duration: 1222, title: ""}, [:title, :duration], :wtf? )
+      assert_fail?( {duration: 1222, title: ""}, [:title, :duration] )
       #=>
       # -- Song::Operation::Create
       # |-- Start.default
@@ -330,9 +330,7 @@ class DocsPassFailAssertionsTest < OperationSpec
     # Check if coercing works..
 
     # Check if validations work
-    it { assert_fail( {band: ""}, [:band], :wtf? ) }
-
-    # it { assert_fail( {band: ""}, [:band], :wtf? ) }
+    it { assert_fail?( {band: ""}, [:band] ) }
 
     it do
       assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} ) do |result|
@@ -356,7 +354,7 @@ class DocsPassFailAssertionsTest < OperationSpec
     end
 
     it "what" do
-      assert_pass( {title: "Ruby Soho", band: "Rancid"}, {}, :wtff?, operation: Song::Operation::Create, key_in_params: :song )
+      assert_pass( {title: "Ruby Soho", band: "Rancid"}, {}, operation: Song::Operation::Create, key_in_params: :song )
     end
 
     it "what" do
@@ -444,24 +442,24 @@ class DocsPassFailAssertionsTest < OperationSpec
           @result = assert_pass( {band: "NOFX"}, {band: "NOFX"}, operation: Overrider, key_in_params: false, expected_attributes: {title: "The Brews", duration: 99}, default_ctx: {params: {duration: 99, title: "The Brews"}} )
         end
         it do #8
-          @result = assert_fail( {band: ""}, [:band], :wtf, operation: Overrider, key_in_params: false, expected_attributes: {title: "The Brews", duration: 99}, default_ctx: {params: {duration: 99, title: "The Brews", band: "NOFX"}} )
+          @result = assert_fail?( {band: ""}, [:band], operation: Overrider, key_in_params: false, expected_attributes: {title: "The Brews", duration: 99}, default_ctx: {params: {duration: 99, title: "The Brews", band: "NOFX"}} )
         end
 
       # Allow passing injection variables etc.
         it do #9
           current_user = "Lola"
-          @result_1 = assert_pass( Ctx({current_user: current_user, params: {band: "Rancid"}}, key_in_params: false, default_ctx: {params: {title: "Timebomb"}}), {band: "Rancid"}, :wtf, operation: Overrider, key_in_params: false )
+          @result_1 = assert_pass( Ctx({current_user: current_user, params: {band: "Rancid"}}, key_in_params: false, default_ctx: {params: {title: "Timebomb"}}), {band: "Rancid"}, operation: Overrider, key_in_params: false )
         end
 
         # 10) Assertion errors because of valid input.
         it { assert_fail( {band: "NOFX"}, {title: "The Brews"} ) }
 
         # 11) We use wtf?
-        it { assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"}, :wtf ) }
+        it { assert_pass?( {title: "Ruby Soho"}, {title: "Ruby Soho"} ) }
         # 12) we DON'T use wtf?
         it { assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} ) }
         # 13) assert_fail uses wtf?
-        it { assert_fail( {title: ""}, [:title], :wtf ) }
+        it { assert_fail?( {title: ""}, [:title] ) }
         # 14) assert_fail DOESN'T use {wtf?} per default
         it { assert_fail( {title: ""}, [:title] ) }
 
@@ -476,6 +474,12 @@ class DocsPassFailAssertionsTest < OperationSpec
         it { @result = assert_fail( {band: ""}, [:band] ) }
         # 19) {assert_fail} with block returns result
         it { @result = assert_fail( {band: ""}, [:band] ) { |result| assert result } }
+
+        # DISCUSS: do we want to allow this keyword interface for {#assert_pass}?
+        # # 20) {assert_pass} with expected_attributes as kwargs
+        # it { @result = assert_pass( {}, title: "Cocktails") }
+        # # 21) {assert_pass?} with wtf?
+        # it { @result = assert_pass?( {}, title: "Cocktails") }
 
       } # Test
 
@@ -651,6 +655,17 @@ Expected: {:band=>[\"here is an error\"]}
       assert_nil failures[0]
       assert_equal 3, test_19.instance_variable_get(:@assertions)
       assert_equal %{Trailblazer::Operation::Railway::Result}, test_19.instance_variable_get(:@result).class.inspect
+
+  # DISCUSS: do we want to allow this keyword interface for {#assert_pass}?
+  # test_20 = test.new(:test_0020_anonymous)
+  #     output = capture_io { failures = test_20.() }
+  #     assert_equal %{}, output.join("")
+  #     assert_nil failures[0]
+
+  #   test_21 = test.new(:test_0021_anonymous)
+  #     output = capture_io { failures = test_21.() }
+  #     assert_equal %{}, output.join("")
+  #     assert_nil failures[0]
   end
 end
 

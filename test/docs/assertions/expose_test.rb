@@ -1,16 +1,14 @@
 require "test_helper"
 
 class ExposesUnitTest < Minitest::Spec
-  include Trailblazer::Test::Assertions
-
-  let(:ass) { Trailblazer::Test::Assertions::Assert }
+  let(:ass) { Trailblazer::Test::Assertion::AssertExposes::Assert }
 
   let(:model) { Struct.new(:title, :band).new("__Timebomb__", "__Rancid__") }
 
 
   describe "{Assert.expected_attributes_for}" do
     it "what" do
-      expected = Trailblazer::Test::Operation::Assertions::Assert.expected_attributes_for({title: "Timebomb", class: Object},
+      expected = Trailblazer::Test::Assertion::Suite::Assert.expected_attributes_for({title: "Timebomb", class: Object},
         expected_attributes: {title: "The Brews", duration: 999},
         deep_merge: false,
       )
@@ -62,11 +60,11 @@ class DocsExposeTest < Minitest::Spec
 
     def call
       run
-      puts self.inspect
+      # puts self.inspect
       @_assertions
     end
 
-    include Trailblazer::Test::Assertions
+    include Trailblazer::Test::Assertion::AssertExposes
   end
 
   it do

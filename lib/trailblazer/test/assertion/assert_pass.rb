@@ -15,8 +15,6 @@ module Trailblazer
 
             test.assert_equal(*arguments_for_assert_pass(result), error_message_for_assert_pass(result, **options))
             test.send(:assert_exposes, model(result, **options), expected_model_attributes)
-
-            result
           end
         end
 

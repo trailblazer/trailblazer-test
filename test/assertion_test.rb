@@ -141,6 +141,14 @@ Expected: 2
           assert_pass create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", model_at: :song
           # assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, {invoke_method: :wtf?, model_at: }, {...} # DISCUSS: this would be an alternative syntax.
         end
+
+        # test_0007_anonymous
+        # {#assert_pass} returns {result}.
+        it do
+          result = assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
+
+          assert_equal result[:model].title, "Somewhere Far Beyond"
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -176,18 +184,21 @@ Expected: 1
     test_6 = test.new(:test_0006_anonymous)
     failures = test_6.()
     assert_equal failures.size, 0
+
+    test_7 = test.new(:test_0007_anonymous)
+    failures = test_7.()
+    assert_equal failures.size, 0
   end
 
-          include Trailblazer::Test::Assertion
+          # include Trailblazer::Test::Assertion
   it "#assert_fail" do
-        assert_fail Update, {params: {bla: 1}}, [:title]
+        # assert_fail Update, {params: {bla: 1}}, [:title]
         # assert_fail Update, {params: {bla: 1}} do |result|
         # end
 
     test =
       Class.new(Test) do
         include Trailblazer::Test::Assertion
-        # include Trailblazer::Test::Assertion::AssertExposes
 
         # test_0001_anonymous
         it do
@@ -255,6 +266,13 @@ Expected: 1
 
           assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
         end
+
+        # test_0010_anonymous
+        # {#assert_fail} returns {result}.
+        it do
+          result = assert_fail Update, {params: {title: nil}}, [:title]
+          assert_equal CU.inspect(result[:"contract.default"].errors.messages), %({:title=>[\"is missing\"]})
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -307,6 +325,10 @@ Expected: [:title_XXX]
 
     test_9 = test.new(:test_0009_anonymous)
     failures = test_9.()
+    assert_equal failures.size, 0
+
+    test_10 = test.new(:test_0010_anonymous)
+    failures = test_10.()
     assert_equal failures.size, 0
   end
 end

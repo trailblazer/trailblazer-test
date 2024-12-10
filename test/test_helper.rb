@@ -8,8 +8,8 @@ require "trailblazer/operation"
 require "trailblazer/activity/testing"
 require "trailblazer/test"
 require "trailblazer/test/testing" # {Song} and {Song::Operation::Create} etc
+require "trailblazer/core"
 
 Activity  = Trailblazer::Activity
 Testing   = Trailblazer::Activity::Testing
-
-
+CU = Trailblazer::Core::Utils

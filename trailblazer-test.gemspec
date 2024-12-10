@@ -32,6 +32,5 @@ Gem::Specification.new do |spec|
   # spec.add_development_dependency "reform-rails"
   spec.add_development_dependency "dry-validation"
 
-  spec.add_dependency "trailblazer-activity", ">= 0.10.0"
-  spec.add_dependency "trailblazer-activity-dsl-linear", ">= 0.2.5"
+  spec.add_dependency "trailblazer-activity-dsl-linear", ">= 1.2.6"
 end

@@ -1,10 +1,10 @@
 require "test_helper"
 
-class DocsMockingTest < MiniTest::Spec
+class DocsMockingTest < Minitest::Spec
   #:mock-show-operation
-  class Show < Trailblazer::Activity::FastTrack
-    class Complexity < Trailblazer::Activity::FastTrack
-      class ExternalApi < Trailblazer::Activity::FastTrack
+  class Show < Trailblazer::Operation
+    class Complexity < Trailblazer::Operation
+      class ExternalApi < Trailblazer::Operation
         step :make_call
         #~method
         include Testing.def_steps(:make_call)
@@ -26,6 +26,8 @@ class DocsMockingTest < MiniTest::Spec
   end
   #:mock-show-operation end
 
+  include Trailblazer::Test::Assertion
+  include Trailblazer::Test::Assertion::AssertExposes
   include Trailblazer::Test::Operation::Helper
 
   describe "#mock_step" do
@@ -34,15 +36,15 @@ class DocsMockingTest < MiniTest::Spec
 
     #:simple-mock-step
     it "mocks loading user" do
-      new_activity = mock_step(Show, id: :load_user) do |ctx|
+      mocked_show = mock_step(Show, path: [:load_user]) do |ctx|
         ctx[:user] = Struct.new(:name).new('Mocky')
       end
 
-      assert_pass new_activity, default_params, {} do |(signal, (ctx, flow_options))|
-        assert_equal ctx[:user].name, 'Mocky'
+      assert_pass mocked_show, default_params, **{}  do |result|
+        assert_equal result[:user].name, 'Mocky'
 
         #~method
-        assert_equal ctx[:seq], [:some_complex_task, :make_call]
+        assert_equal result[:seq], [:some_complex_task, :make_call]
         #~method end
       end
     end
@@ -50,43 +52,44 @@ class DocsMockingTest < MiniTest::Spec
 
     it "mocks subprocess" do
       #:mock-subprocess
-      new_activity = mock_step(Show, id: Show::Complexity) do
+      new_activity = mock_step(Show, path: [Show::Complexity]) do
         true # no-op to avoid any Complexity
       end
       #:mock-subprocess end
 
       #~method
-      assert_pass new_activity, default_params, {} do |(signal, (ctx, flow_options))|
-        assert_equal ctx[:seq], [:load_user]
+      assert_pass new_activity, default_params, **{} do |result|
+        assert_equal result[:seq], [:load_user]
       end
       #~method end
     end
 
     it "mocks subprocess step" do
       #:mock-subprocess-step
-      new_activity = mock_step(Show, id: :some_complex_task, subprocess: Show::Complexity) do
+      new_activity = mock_step(Show, path: [Show::Complexity, :some_complex_task]) do
         # Mock only single step from nested activity to do nothing
         true
       end
       #:mock-subprocess-step end
 
       #~method
-      assert_pass new_activity, default_params, {} do |(signal, (ctx, flow_options))|
-        assert_equal ctx[:seq], [:load_user, :make_call]
+      assert_pass new_activity, default_params, **{} do |result|
+        assert_equal result[:seq], [:load_user, :make_call]
       end
       #~method end
     end
 
     it "mocks nested subprocess step" do
       #:mock-nested-subprocess-step
-      new_activity = mock_step(Show, id: :make_call, subprocess: Show::Complexity, subprocess_path: [Show::Complexity::ExternalApi]) do
+      new_activity = mock_step(Show, path: [Show::Complexity, Show::Complexity::ExternalApi, :make_call]) do
         # Some JSON response
+        true
       end
       #:mock-nested-subprocess-step end
 
       #~method
-      assert_pass new_activity, default_params, {} do |(signal, (ctx, flow_options))|
-        assert_equal ctx[:seq], [:load_user, :some_complex_task]
+      assert_pass new_activity, default_params, **{} do |result|
+        assert_equal result[:seq], [:load_user, :some_complex_task]
       end
       #~method end
     end

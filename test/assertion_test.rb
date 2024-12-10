@@ -124,7 +124,7 @@ Expected: 2
             assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke_method: :wtf?
           end
 
-          assert_equal stdout, %(`-- AssertionsTest::Create\n    |-- \e[32mStart.default\e[0m\n    |-- \e[32mmodel\e[0m\n    `-- End.success\n)
+          assert_equal stdout, %(AssertionsTest::Create\n|-- \e[32mStart.default\e[0m\n|-- \e[32mmodel\e[0m\n`-- End.success\n)
         end
 
         # test_0006_anonymous
@@ -253,7 +253,7 @@ Expected: 1
             assert_fail Update, {params: {title: nil}}, [:title], invoke_method: :wtf?
           end
 
-          assert_equal stdout, %(`-- AssertionsTest::Update\n    |-- \e[32mStart.default\e[0m\n    |-- \e[33mvalidate\e[0m\n    `-- End.failure\n)
+          assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
         end
       end
 

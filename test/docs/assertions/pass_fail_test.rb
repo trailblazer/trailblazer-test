@@ -585,7 +585,19 @@ test_11 = test.new(:test_0011_anonymous)
         failures = test_11.()
       end
 
-      assert_equal %{`-- Trailblazer::Test::Testing::Song::Operation::Create\n    |-- \e[32mStart.default\e[0m\n    |-- \e[32mmodel.build\e[0m\n    |-- \e[32mcontract.build\e[0m\n    |-- contract.default.validate\n    |   |-- \e[32mStart.default\e[0m\n    |   |-- \e[32mcontract.default.params_extract\e[0m\n    |   |-- \e[32mcontract.default.call\e[0m\n    |   `-- End.success\n    |-- \e[32mparse_duration\e[0m\n    |-- \e[32mpersist.save\e[0m\n    `-- End.success\n},
+      assert_equal %(Trailblazer::Test::Testing::Song::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mmodel.build\e[0m
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[32mcontract.default.call\e[0m
+|   `-- End.success
+|-- \e[32mparse_duration\e[0m
+|-- \e[32mpersist.save\e[0m
+`-- End.success
+),
         output.join("")
       assert_nil failures[0]
       assert_equal 1, test_11.instance_variable_get(:@assertions)
@@ -599,17 +611,17 @@ test_12 = test.new(:test_0012_anonymous)
 test_13 = test.new(:test_0013_anonymous)
       output = capture_io { failures = test_13.() }
 
-      assert_equal %{`-- Trailblazer::Test::Testing::Song::Operation::Create
-    |-- \e[32mStart.default\e[0m
-    |-- \e[32mmodel.build\e[0m
-    |-- \e[32mcontract.build\e[0m
-    |-- contract.default.validate
-    |   |-- \e[32mStart.default\e[0m
-    |   |-- \e[32mcontract.default.params_extract\e[0m
-    |   |-- \e[33mcontract.default.call\e[0m
-    |   `-- End.failure
-    `-- End.failure
-}, output.join("")
+      assert_equal %(Trailblazer::Test::Testing::Song::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mmodel.build\e[0m
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[33mcontract.default.call\e[0m
+|   `-- End.failure
+`-- End.failure
+), output.join("")
       assert_nil failures[0]
       assert_equal 2, test_13.instance_variable_get(:@assertions)
 test_14 = test.new(:test_0014_anonymous)

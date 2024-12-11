@@ -56,29 +56,38 @@ module Trailblazer
 
       # Assertions for Activity, not for Operation.
       module Activity
-
         def self.invoke_activity(ctx, operation:, **)
           signal, (ctx, _) = operation.call([ctx, {}]) # call with circuit interface. https://trailblazer.to/2.1/docs/operation/#operation-internals-circuit-interface
 
           return signal, ctx
         end
 
-        def self.invoke_activity_with_wtf(ctx, operation:, **)
+        def self.invoke_activity_with_tracing(ctx, operation:, **)
           raise
         end
 
         module Assert
-          def assert_pass(*args, **options, &block)
-            super(*args, **options, invoke: Activity.method(:invoke_activity), &block)
+          def assert_pass(*args, invoke: Activity.method(:invoke_activity), **options, &block)
+            super(*args, **options, invoke: invoke, &block)
           end
 
-          def assert_fail(*args, **options, &block)
-            super(*args, **options, invoke: Activity.method(:invoke_activity), &block)
+          def assert_fail(*args, invoke: Activity.method(:invoke_activity), **options, &block)
+            super(*args, **options, invoke: invoke, &block)
           end
+
+# DISCUSS: only for Suite API so far.
+          def assert_pass?(*args, **options, &block)
+            assert_pass(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
+          end
+
+          def assert_fail?(*args, **options, &block)
+            assert_fail(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
+          end
+          # TODO: test {#assert_fail?}
         end
 
-        include Assertion # from Test::Assert, top-level
-        include Assert # our assert_* versions.
+        # include Assertion # from Test::Assert, top-level
+        # include Assert # our assert_* versions.
       end
     end
   end

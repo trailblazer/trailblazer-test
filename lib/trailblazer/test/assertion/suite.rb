@@ -31,11 +31,11 @@ module Trailblazer
         end
 
         def assert_pass?(*args, **kws, &block)
-          assert_pass(*args, **kws, use_wtf: true, &block)
+          assert_pass(*args, **kws, invoke: Assertion::Wtf.method(:invoke_activity), &block)
         end
 
         def assert_fail?(*args, **kws, &block)
-          assert_fail(*args, **kws, use_wtf: true, &block)
+          assert_fail(*args, **kws, invoke: Assertion::Wtf.method(:invoke_activity), &block)
         end
 
         # Provide {Assert.assert_pass} which decouples the assertion logic from the actual test framework.
@@ -87,7 +87,8 @@ module Trailblazer
               contract_name:        contract_name,
               model_at:             model_at,
               user_block:           user_block,
-              invoke:               use_wtf ? Assertion::Wtf.method(:invoke_activity) : invoke,
+              # invoke:               use_wtf ? Assertion::Wtf.method(:invoke_activity) : invoke,
+              invoke: invoke,
 
               **normalize_kws_for_ctx(test: test, **options)
             }

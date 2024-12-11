@@ -349,11 +349,39 @@ class AssertionActivityTest < Minitest::Spec
     end
   end
 
-  include Trailblazer::Test::Assertion::Activity
+  include Trailblazer::Test::Assertion
+  include Trailblazer::Test::Assertion::Activity::Assert
   include Trailblazer::Test::Assertion::AssertExposes
 
   it do
     assert_pass Create, {params: {title: "Roxanne"}},
       title: "Roxanne"
+  end
+end
+
+class AssertionActivitySuiteTest < Minitest::Spec
+  Record = AssertionsTest::Record
+
+  class Create < Trailblazer::Activity::FastTrack
+    step :validate
+    step :model
+
+    def validate(ctx, params:, **)
+      params[:title]
+    end
+
+    def model(ctx, params:, **)
+      ctx[:model] = Record.new(**params)
+    end
+  end
+
+  include Trailblazer::Test::Assertion::Suite
+  include Trailblazer::Test::Assertion::Activity::Assert
+  include Trailblazer::Test::Assertion::AssertExposes
+
+  let(:operation) { Create }
+
+  it do
+    assert_pass?({params: {title: "Roxanne"}}, {title: "Roxanne"})
   end
 end

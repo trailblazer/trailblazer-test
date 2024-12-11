@@ -7,8 +7,8 @@ module Trailblazer
         extend AssertPass::Utils
 
         # {expected_errors} can be nil when using the {#assert_fail} block syntax.
-        def call(activity, ctx, expected_errors=nil, test:, invoke_method: :call, invoke:, **kws)
-          signal, ctx, _ = invoke.(ctx, operation: activity, invoke_method: invoke_method) # FIXME: remove kws?
+        def call(activity, ctx, expected_errors=nil, test:, invoke:, **kws)
+          signal, ctx, _ = invoke.(ctx, operation: activity) # FIXME: remove kws?
 
           assert_fail_with_model(signal, ctx, expected_errors: expected_errors, test: test, operation: activity, **kws)
         end

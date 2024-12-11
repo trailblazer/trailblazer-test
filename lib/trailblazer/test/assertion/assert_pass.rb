@@ -4,55 +4,50 @@ module Trailblazer
       module AssertPass
         module_function
 
-        def call(activity, ctx, invoke_method: :call, model_at: :model, test:, user_block:, expected_model_attributes:)
-          result, ctx, kws = call_operation(ctx, operation: activity, invoke_method: invoke_method)
+        def call(activity, ctx, invoke:, model_at: :model, test:, user_block:, expected_model_attributes:)
+          signal, ctx, _ = invoke.(ctx, operation: activity)
 
-          assert_pass_with_model(result, ctx, expected_model_attributes: expected_model_attributes, test: test, user_block: user_block, model_at: model_at, operation: activity)
+          assert_pass_with_model(signal, ctx, expected_model_attributes: expected_model_attributes, test: test, user_block: user_block, model_at: model_at, operation: activity)
         end
 
-        def assert_pass_with_model(result, ctx, expected_model_attributes: {}, test:, **options)
-          assert_after_call(result, **options) do |result|
+        def assert_pass_with_model(signal, ctx, expected_model_attributes: {}, test:, **options)
+          assert_after_call(ctx, **options) do |ctx|
+            test.assert_equal(*arguments_for_assert_pass(signal), error_message_for_assert_pass(signal, ctx, **options))
 
-            test.assert_equal(*arguments_for_assert_pass(result), error_message_for_assert_pass(result, **options))
-            test.send(:assert_exposes, model(result, **options), expected_model_attributes)
+            test.send(:assert_exposes, model(ctx, **options), expected_model_attributes)
           end
         end
 
         # What needs to be compared?
-        def arguments_for_assert_pass(result)
-          return true, result.success?
+        def arguments_for_assert_pass(signal)
+          return true, Assertion::SUCCESS_TERMINI.include?(signal.to_h[:semantic])
         end
 
-        def model(result, model_at:, **)
-          result[model_at]
+        def model(ctx, model_at:, **)
+          ctx[model_at]
         end
 
-        def error_message_for_assert_pass(result, operation:, **)
-          colored_errors = colored_errors_for(result)
+        def error_message_for_assert_pass(signal, ctx, operation:, **)
+          colored_errors = colored_errors_for(ctx)
 
           %{{#{operation}} failed: #{colored_errors}} # FIXME: only if contract's there!
         end
 
         module Utils
-
-          def call_operation(ctx, operation:, invoke_method:, **)
-            operation.send(invoke_method, ctx)
-          end
-
           # @private
-          def assert_after_call(result, user_block:, **kws)
-            yield(result)
+          def assert_after_call(ctx, user_block:, **kws)
+            yield(ctx)
 
-            user_block.call(result) if user_block
+            user_block.call(ctx) if user_block
 
-            result
+            ctx
           end
 
-          def colored_errors_for(result)
+          def colored_errors_for(ctx)
             # TODO: generic errors object "finding"
             errors =
-              if result[:"contract.default"]
-                result[:"contract.default"].errors.messages.inspect
+              if ctx[:"contract.default"]
+                ctx[:"contract.default"].errors.messages.inspect
               else
                 ""
               end

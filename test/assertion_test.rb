@@ -74,7 +74,7 @@ Expected: 2
         include Trailblazer::Test::Assertion::AssertExposes
   it "#assert_pass" do
 # FIXME: test that assert_* returns {ctx}
-# assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke_method: :wtf?
+# assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke: Trailblazer::Test::Assertion::Wtf.method(:invoke_activity)
 
     test =
       Class.new(Test) do
@@ -121,7 +121,7 @@ Expected: 2
         # We accept {:invoke_method} as a first level kw arg, currently.
         it do
           stdout, _ = capture_io do
-            assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke_method: :wtf?
+            assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke: Trailblazer::Test::Assertion::Wtf.method(:invoke_activity)
           end
 
           assert_equal stdout, %(AssertionsTest::Create\n|-- \e[32mStart.default\e[0m\n|-- \e[32mmodel\e[0m\n`-- End.success\n)
@@ -261,7 +261,7 @@ Expected: 1
         # test_0009_anonymous
         it do
           stdout, _ = capture_io do
-            assert_fail Update, {params: {title: nil}}, [:title], invoke_method: :wtf?
+            assert_fail Update, {params: {title: nil}}, [:title], invoke: Trailblazer::Test::Assertion::Wtf.method(:invoke_activity)
           end
 
           assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
@@ -330,5 +330,30 @@ Expected: [:title_XXX]
     test_10 = test.new(:test_0010_anonymous)
     failures = test_10.()
     assert_equal failures.size, 0
+  end
+end
+
+class AssertionActivityTest < Minitest::Spec
+  Record = AssertionsTest::Record
+
+  class Create < Trailblazer::Activity::FastTrack
+    step :validate
+    step :model
+
+    def validate(ctx, params:, **)
+      params[:title]
+    end
+
+    def model(ctx, params:, **)
+      ctx[:model] = Record.new(**params)
+    end
+  end
+
+  include Trailblazer::Test::Assertion::Activity
+  include Trailblazer::Test::Assertion::AssertExposes
+
+  it do
+    assert_pass Create, {params: {title: "Roxanne"}},
+      title: "Roxanne"
   end
 end

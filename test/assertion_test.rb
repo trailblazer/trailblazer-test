@@ -440,8 +440,10 @@ class EndpointTest < Minitest::Spec
 
 require "trailblazer/endpoint"
   it "Activity invoked via endpoint" do
-    assert_pass Create, {params: {title: "Roxanne"}},
+    ctx = assert_pass Create, {params: {title: "Roxanne"}},
       title: "Roxanne"
+
+    assert_equal ctx[:object].title, "Roxanne"
   end
 end
 

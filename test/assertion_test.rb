@@ -341,7 +341,10 @@ class AssertionActivityTest < Minitest::Spec
     step :model
 
     def validate(ctx, params:, **)
-      params[:title]
+      return true if params[:title]
+
+      ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({:title => ["is missing"]}))
+      false
     end
 
     def model(ctx, params:, **)
@@ -357,23 +360,16 @@ class AssertionActivityTest < Minitest::Spec
     assert_pass Create, {params: {title: "Roxanne"}},
       title: "Roxanne"
   end
+
+  it do
+    assert_fail Create, {params: {}}, [:title]
+  end
 end
 
+# Test with the Assertion::Suite "DSL" module.
 class AssertionActivitySuiteTest < Minitest::Spec
   Record = AssertionsTest::Record
-
-  class Create < Trailblazer::Activity::FastTrack
-    step :validate
-    step :model
-
-    def validate(ctx, params:, **)
-      params[:title]
-    end
-
-    def model(ctx, params:, **)
-      ctx[:model] = Record.new(**params)
-    end
-  end
+  Create = AssertionActivityTest::Create
 
   include Trailblazer::Test::Assertion::Suite
   include Trailblazer::Test::Assertion::Activity::Assert
@@ -382,6 +378,27 @@ class AssertionActivitySuiteTest < Minitest::Spec
   let(:operation) { Create }
 
   it do
-    assert_pass?({params: {title: "Roxanne"}}, {title: "Roxanne"})
+    out, _ = capture_io do
+      assert_pass?({title: "Roxanne"}, {title: "Roxanne"})
+    end
+
+    assert_equal out, %(AssertionActivityTest::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mvalidate\e[0m
+|-- \e[32mmodel\e[0m
+`-- End.success
+)
+  end
+
+  it "{#assert_fail} with wtf?" do
+    out, _ = capture_io do
+      assert_fail?({title: nil}, [:title])
+    end
+
+    assert_equal out, %(AssertionActivityTest::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[33mvalidate\e[0m
+`-- End.failure
+)
   end
 end

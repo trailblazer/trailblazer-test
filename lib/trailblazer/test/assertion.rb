@@ -63,7 +63,9 @@ module Trailblazer
         end
 
         def self.invoke_activity_with_tracing(ctx, operation:, **)
-          raise
+          signal, (ctx, _) = Developer::Wtf.invoke(operation, [ctx, {}])
+
+          return signal, ctx
         end
 
         module Assert

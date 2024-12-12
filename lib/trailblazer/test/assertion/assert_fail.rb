@@ -38,7 +38,7 @@ module Trailblazer
 
           raise ExpectedErrorsTypeError, "expected_errors has to be an Array or Hash" unless expected_errors.is_a?(Array) || with_messages # TODO: test me!
 
-          errors = ctx["contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
+          errors = ctx[:"contract.#{contract_name}"].errors.messages # TODO: this will soon change with the operation Errors object.
 
           if with_messages
             expected_errors = expected_errors.collect { |k, v| [k, Array(v)] }.to_h

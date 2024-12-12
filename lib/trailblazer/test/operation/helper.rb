@@ -3,7 +3,6 @@ module Trailblazer::Test::Operation
     def mock_step(activity, path:, &block)
       raise ArgumentError, "Missing block: `#mock_step` requires a block." unless block_given?
 
-      # raise path.last.inspect
       mocked_step_id, path = path.last, path[0..-2]
 
       mock_step = ->(ctx, **) { yield(ctx) }
@@ -15,5 +14,4 @@ module Trailblazer::Test::Operation
   end
 end
 
-
-      # [:delete_assets] => -> { step Destroy.method(:tidy_storage), before: :rm_uploads }
+# [:delete_assets] => -> { step Destroy.method(:tidy_storage), before: :rm_uploads }

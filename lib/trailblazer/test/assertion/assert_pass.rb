@@ -5,7 +5,7 @@ module Trailblazer
         module_function
 
         def call(activity, ctx, invoke:, model_at: :model, test:, user_block:, expected_model_attributes:)
-          signal, ctx, _ = invoke.(ctx, operation: activity)
+          signal, ctx, _ = invoke.(activity, ctx)
 
           assert_pass_with_model(signal, ctx, expected_model_attributes: expected_model_attributes, test: test, user_block: user_block, model_at: model_at, operation: activity)
         end

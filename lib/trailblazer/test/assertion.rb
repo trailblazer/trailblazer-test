@@ -7,7 +7,7 @@ module Trailblazer
 
       # @private
       # Invoker for Operation
-      def self.invoke_activity(ctx, operation:, **)
+      def self.invoke_activity(operation, ctx)
         result = operation.call(ctx)
 
         return result.terminus, result # translate the holy {Operation::Result} object back to a normal "circuit interface" return value.
@@ -16,7 +16,7 @@ module Trailblazer
       module Wtf
         # @private
         # Invoker with debugging for Operation
-        def self.invoke_activity(ctx, operation:, **)
+        def self.invoke_activity(operation, ctx)
           result = operation.wtf?(ctx)
 
           return result.terminus, result
@@ -56,14 +56,14 @@ module Trailblazer
 
       # Assertions for Activity, not for Operation.
       module Activity
-        def self.invoke_activity(ctx, operation:, **)
-          signal, (ctx, _) = operation.call([ctx, {}]) # call with circuit interface. https://trailblazer.to/2.1/docs/operation/#operation-internals-circuit-interface
+        def self.invoke_activity(activity, ctx)
+          signal, (ctx, _) = activity.call([ctx, {}]) # call with circuit interface. https://trailblazer.to/2.1/docs/operation/#operation-internals-circuit-interface
 
           return signal, ctx
         end
 
-        def self.invoke_activity_with_tracing(ctx, operation:, **)
-          signal, (ctx, _) = Developer::Wtf.invoke(operation, [ctx, {}])
+        def self.invoke_activity_with_tracing(activity, ctx)
+          signal, (ctx, _) = Developer::Wtf.invoke(activity, [ctx, {}])
 
           return signal, ctx
         end

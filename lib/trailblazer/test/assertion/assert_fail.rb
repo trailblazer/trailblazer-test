@@ -8,7 +8,7 @@ module Trailblazer
 
         # {expected_errors} can be nil when using the {#assert_fail} block syntax.
         def call(activity, ctx, expected_errors=nil, test:, invoke:, **kws)
-          signal, ctx, _ = invoke.(ctx, operation: activity) # FIXME: remove kws?
+          signal, ctx, _ = invoke.(activity, ctx)
 
           assert_fail_with_model(signal, ctx, expected_errors: expected_errors, test: test, operation: activity, **kws)
         end

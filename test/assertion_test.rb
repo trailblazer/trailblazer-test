@@ -273,6 +273,18 @@ Expected: 1
           result = assert_fail Update, {params: {title: nil}}, [:title]
           assert_equal CU.inspect(result[:"contract.default"].errors.messages), %({:title=>[\"is missing\"]})
         end
+
+        # test_0011_anonymous
+        # {#assert_fail} can be used without contract errors.
+        it do
+          operation = Class.new(Trailblazer::Operation) do
+            step ->(ctx, **) { false }
+          end
+
+          result = assert_fail operation, {params: {title: nil}}
+
+          assert_equal result.keys.inspect, %([:params])
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -329,6 +341,10 @@ Expected: [:title_XXX]
 
     test_10 = test.new(:test_0010_anonymous)
     failures = test_10.()
+    assert_equal failures.size, 0
+
+    test_11 = test.new(:test_0011_anonymous)
+    failures = test_11.()
     assert_equal failures.size, 0
   end
 end
@@ -443,12 +459,14 @@ class EndpointWithActivityTest < Minitest::Spec
     return signal, ctx # DISCUSS: should we provide a Result object here?
   end
 
-  it "{Activity} invoked via endpoint" do
+  it "{#assert_pass} {Activity} invoked via endpoint" do
     ctx = assert_pass Create, {params: {title: "Roxanne"}},
       title: "Roxanne"
 
     assert_equal ctx[:object].title, "Roxanne" # aliasing only works through endpoint.
+  end
 
+  it "{#assert_fail} with activity via endpoint" do
     ctx = assert_fail Create, {params: {}}, [:title]
 
     assert_equal ctx.class, Trailblazer::Context::Container::WithAliases

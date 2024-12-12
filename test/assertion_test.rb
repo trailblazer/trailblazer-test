@@ -403,7 +403,8 @@ class AssertionActivitySuiteTest < Minitest::Spec
   end
 end
 
-class EndpointTest < Minitest::Spec
+require "trailblazer/endpoint"
+class EndpointWithActivityTest < Minitest::Spec
   Record = AssertionsTest::Record
   Create = AssertionActivityTest::Create
 
@@ -413,13 +414,17 @@ class EndpointTest < Minitest::Spec
 
   module Endpoint
     def assert_pass(*args, **options, &block)
-      super(*args, **options, invoke: method(:__), &block)
+      super(*args, **options, invoke: EndpointWithActivityTest.method(:__), &block)
+    end
+
+    def assert_fail(*args, **options, &block)
+      super(*args, **options, invoke: EndpointWithActivityTest.method(:__), &block)
     end
   end
   include Endpoint
 
 
-  def _flow_options
+  def self._flow_options
     {
       context_options: {
         aliases: {"model": :object},
@@ -428,7 +433,7 @@ class EndpointTest < Minitest::Spec
     }
   end
 
-  def __(activity, options, &block) # TODO: move this to endpoint.
+  def self.__(activity, options, &block) # TODO: move this to endpoint.
     signal, (ctx, flow_options) = Trailblazer::Endpoint::Runtime.(
       activity, options,
       flow_options: _flow_options(),
@@ -438,12 +443,15 @@ class EndpointTest < Minitest::Spec
     return signal, ctx # DISCUSS: should we provide a Result object here?
   end
 
-require "trailblazer/endpoint"
-  it "Activity invoked via endpoint" do
+  it "{Activity} invoked via endpoint" do
     ctx = assert_pass Create, {params: {title: "Roxanne"}},
       title: "Roxanne"
 
-    assert_equal ctx[:object].title, "Roxanne"
+    assert_equal ctx[:object].title, "Roxanne" # aliasing only works through endpoint.
+
+    ctx = assert_fail Create, {params: {}}, [:title]
+
+    assert_equal ctx.class, Trailblazer::Context::Container::WithAliases
   end
 end
 

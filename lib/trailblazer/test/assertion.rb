@@ -43,6 +43,14 @@ module Trailblazer
         assertion.(activity, options, *args, test: self, user_block: block, invoke: invoke, **kws) # Forward {#assert_fail} to {AssertFail.call} or wherever your implementation sits.
       end
 
+      def assert_pass?(*args, **options, &block)
+        assert_pass(*args, **options, invoke: Assertion::Wtf.method(:invoke_activity), &block)
+      end
+
+      def assert_fail?(*args, **options, &block)
+        assert_fail(*args, **options, invoke: Assertion::Wtf.method(:invoke_activity), &block)
+      end
+
       # Evaluate value if it's a lambda, and let the caller know whether we need an
       # assert_equal or an assert.
       def self.expected(asserted, value, actual)

@@ -74,7 +74,7 @@ Expected: 2
         include Trailblazer::Test::Assertion::AssertExposes
   it "#assert_pass" do
 # FIXME: test that assert_* returns {ctx}
-# assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke: Trailblazer::Test::Assertion::Wtf.method(:invoke_activity)
+assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
 
     test =
       Class.new(Test) do
@@ -149,6 +149,22 @@ Expected: 2
 
           assert_equal result[:model].title, "Somewhere Far Beyond"
         end
+
+        # test_0008_anonymous
+        # {#assert_pass?}
+        it do
+          out, _ = capture_io do
+            result = assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
+
+            assert_equal result[:model].title, "Somewhere Far Beyond"
+          end
+
+          assert_equal out, %(AssertionsTest::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mmodel\e[0m
+`-- End.success
+)
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -187,6 +203,10 @@ Expected: 1
 
     test_7 = test.new(:test_0007_anonymous)
     failures = test_7.()
+    assert_equal failures.size, 0
+
+    test_8 = test.new(:test_0008_anonymous)
+    failures = test_8.()
     assert_equal failures.size, 0
   end
 
@@ -285,6 +305,15 @@ Expected: 1
 
           assert_equal result.keys.inspect, %([:params])
         end
+
+        # test_0012_anonymous
+        it do
+          stdout, _ = capture_io do
+            assert_fail? Update, {params: {title: nil}}, [:title]
+          end
+
+          assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
+        end
       end
 
     test_1 = test.new(:test_0001_anonymous)
@@ -345,6 +374,10 @@ Expected: [:title_XXX]
 
     test_11 = test.new(:test_0011_anonymous)
     failures = test_11.()
+    assert_equal failures.size, 0
+
+    test_12 = test.new(:test_0012_anonymous)
+    failures = test_12.()
     assert_equal failures.size, 0
   end
 end

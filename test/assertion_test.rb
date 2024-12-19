@@ -462,12 +462,20 @@ class EndpointWithActivityTest < Minitest::Spec
   include Trailblazer::Test::Assertion::AssertExposes
 
   module Endpoint
-    def assert_pass(*args, **options, &block)
-      super(*args, **options, invoke: EndpointWithActivityTest.method(:__), &block)
+    def assert_pass(*args, invoke: EndpointWithActivityTest.method(:__), **options, &block)
+      super(*args, **options, invoke: invoke, &block)
     end
 
-    def assert_fail(*args, **options, &block)
-      super(*args, **options, invoke: EndpointWithActivityTest.method(:__), &block)
+    def assert_fail(*args, invoke: EndpointWithActivityTest.method(:__), **options, &block)
+      super(*args, **options, invoke: invoke, &block)
+    end
+
+    def assert_pass?(*args, **options, &block)
+      assert_pass(*args, **options, invoke: EndpointWithActivityTest.method(:__?), &block)
+    end
+
+    def assert_fail?(*args, **options, &block)
+      assert_fail(*args, **options, invoke: EndpointWithActivityTest.method(:__?), &block)
     end
   end
   include Endpoint
@@ -482,14 +490,19 @@ class EndpointWithActivityTest < Minitest::Spec
     }
   end
 
-  def self.__(activity, options, &block) # TODO: move this to endpoint.
+  def self.__(activity, options, **kws, &block) # TODO: move this to endpoint.
     signal, (ctx, flow_options) = Trailblazer::Endpoint::Runtime.(
       activity, options,
       flow_options: _flow_options(),
+      **kws,
       &block
     )
 
     return signal, ctx # DISCUSS: should we provide a Result object here?
+  end
+
+  def self.__?(*args, &block)
+    __(*args, invoke_method: Trailblazer::Developer::Wtf.method(:invoke), &block)
   end
 
   it "{#assert_pass} {Activity} invoked via endpoint" do
@@ -503,6 +516,22 @@ class EndpointWithActivityTest < Minitest::Spec
     ctx = assert_fail Create, {params: {}}, [:title]
 
     assert_equal ctx.class, Trailblazer::Context::Container::WithAliases
+  end
+
+  it "{#assert_pass?}" do
+    out, _ = capture_io do
+      ctx = assert_pass? Create, {params: {title: "Roxanne"}},
+        title: "Roxanne"
+
+      assert_equal ctx[:object].title, "Roxanne" # aliasing only works through endpoint.
+    end
+
+    assert_equal out, %(AssertionActivityTest::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mvalidate\e[0m
+|-- \e[32mmodel\e[0m
+`-- End.success
+)
   end
 end
 

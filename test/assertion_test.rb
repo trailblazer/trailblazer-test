@@ -453,6 +453,7 @@ class AssertionActivitySuiteTest < Minitest::Spec
 end
 
 require "trailblazer/endpoint"
+require "trailblazer/test/endpoint"
 class EndpointWithActivityTest < Minitest::Spec
   Record = AssertionsTest::Record
   Create = AssertionActivityTest::Create
@@ -460,35 +461,6 @@ class EndpointWithActivityTest < Minitest::Spec
   include Trailblazer::Test::Assertion
   include Trailblazer::Test::Assertion::Activity::Assert
   include Trailblazer::Test::Assertion::AssertExposes
-
-  module Endpoint
-    def assert_pass(*args, invoke: EndpointWithActivityTest.method(:__), **options, &block)
-      super(*args, **options, invoke: invoke, &block)
-    end
-
-    def assert_fail(*args, invoke: EndpointWithActivityTest.method(:__), **options, &block)
-      super(*args, **options, invoke: invoke, &block)
-    end
-
-    def assert_pass?(*args, **options, &block)
-      assert_pass(*args, **options, invoke: EndpointWithActivityTest.method(:__?), &block)
-    end
-
-    def assert_fail?(*args, **options, &block)
-      assert_fail(*args, **options, invoke: EndpointWithActivityTest.method(:__?), &block)
-    end
-  end
-  include Endpoint
-
-
-  def self._flow_options
-    {
-      context_options: {
-        aliases: {"model": :object},
-        container_class: Trailblazer::Context::Container::WithAliases,
-      }
-    }
-  end
 
   def self.__(activity, options, **kws, &block) # TODO: move this to endpoint.
     signal, (ctx, flow_options) = Trailblazer::Endpoint::Runtime.(
@@ -504,6 +476,18 @@ class EndpointWithActivityTest < Minitest::Spec
   def self.__?(*args, &block)
     __(*args, invoke_method: Trailblazer::Developer::Wtf.method(:invoke), &block)
   end
+  include Trailblazer::Test::Endpoint.module(self, invoke_method: method(:__), invoke_method_wtf: method(:__?))
+
+
+  def self._flow_options
+    {
+      context_options: {
+        aliases: {"model": :object},
+        container_class: Trailblazer::Context::Container::WithAliases,
+      }
+    }
+  end
+
 
   it "{#assert_pass} {Activity} invoked via endpoint" do
     ctx = assert_pass Create, {params: {title: "Roxanne"}},

@@ -533,5 +533,17 @@ class EndpointWithActivityTest < Minitest::Spec
 `-- End.success
 )
   end
+
+  it "{#assert_fail?}" do
+    out, _ = capture_io do
+      ctx = assert_fail? Create, {params: {}}, [:title]
+    end
+
+    assert_equal out, %(AssertionActivityTest::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[33mvalidate\e[0m
+`-- End.failure
+)
+  end
 end
 

@@ -80,7 +80,6 @@ module Trailblazer
           # Gather all test case configuration. This involves reading all test `let` directives.
           def normalize_kws(user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, invoke: Assertion.method(:invoke_operation), **options)
             kws = {
-              # user_block:           user_block,
               operation:            operation,
               expected_attributes:  expected_attributes,
               test:                 test,

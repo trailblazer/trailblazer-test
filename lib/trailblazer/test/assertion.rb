@@ -82,7 +82,6 @@ module Trailblazer
             super(*args, **options, invoke: invoke, &block)
           end
 
-# DISCUSS: only for Suite API so far.
           def assert_pass?(*args, **options, &block)
             assert_pass(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
           end
@@ -90,11 +89,7 @@ module Trailblazer
           def assert_fail?(*args, **options, &block)
             assert_fail(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
           end
-          # TODO: test {#assert_fail?}
         end
-
-        # include Assertion # from Test::Assert, top-level
-        # include Assert # our assert_* versions.
       end
     end
   end

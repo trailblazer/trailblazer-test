@@ -7,25 +7,23 @@ module Trailblazer
 
       # @private
       # Invoker for Operation
-      def self.invoke_activity(operation, ctx)
+      def self.invoke_operation(operation, ctx)
         result = operation.call(ctx)
 
         return result.terminus, result # translate the holy {Operation::Result} object back to a normal "circuit interface" return value.
       end
 
-      module Wtf
-        # @private
-        # Invoker with debugging for Operation
-        def self.invoke_activity(operation, ctx)
-          result = operation.wtf?(ctx)
+      # @private
+      # Invoker with debugging for Operation
+      def self.invoke_operation_with_wtf(operation, ctx)
+        result = operation.wtf?(ctx)
 
-          return result.terminus, result
-        end
+        return result.terminus, result
       end
 
       # DISCUSS: move to Assertion::Minitest?
       # Test case instance method. Specific to Minitest.
-      def assert_pass(activity, options, assertion: AssertPass, invoke: Assertion.method(:invoke_activity), model_at: :model, **kws, &block)
+      def assert_pass(activity, options, assertion: AssertPass, invoke: Assertion.method(:invoke_operation), model_at: :model, **kws, &block)
         # DISCUSS: remove the injectable {:assertion} keyword for both assertions?
         # DISCUSS: {:model_at} and {:invoke_method} block actual attributes.
         assertion.(activity, options,
@@ -39,16 +37,16 @@ module Trailblazer
 
       # DISCUSS: move to Assertion::Minitest?
       # Test case instance method. Specific to Minitest.
-      def assert_fail(activity, options, *args, assertion: AssertFail, invoke: Assertion.method(:invoke_activity), **kws, &block)
+      def assert_fail(activity, options, *args, assertion: AssertFail, invoke: Assertion.method(:invoke_operation), **kws, &block)
         assertion.(activity, options, *args, test: self, user_block: block, invoke: invoke, **kws) # Forward {#assert_fail} to {AssertFail.call} or wherever your implementation sits.
       end
 
       def assert_pass?(*args, **options, &block)
-        assert_pass(*args, **options, invoke: Assertion::Wtf.method(:invoke_activity), &block)
+        assert_pass(*args, **options, invoke: Assertion.method(:invoke_operation_with_wtf), &block)
       end
 
       def assert_fail?(*args, **options, &block)
-        assert_fail(*args, **options, invoke: Assertion::Wtf.method(:invoke_activity), &block)
+        assert_fail(*args, **options, invoke: Assertion.method(:invoke_operation_with_wtf), &block)
       end
 
       # Evaluate value if it's a lambda, and let the caller know whether we need an

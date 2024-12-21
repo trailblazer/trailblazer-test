@@ -1,7 +1,7 @@
 module Trailblazer
   module Test
     # Top-level entry points for end users.
-    # These methods expose the syntax sugar, not the logic.
+    # These methods expose the end user syntax, not the logic.
     module Assertion
       SUCCESS_TERMINI = [:success, :pass_fast] # DISCUSS: where should this be defined?
 
@@ -23,10 +23,9 @@ module Trailblazer
 
       # DISCUSS: move to Assertion::Minitest?
       # Test case instance method. Specific to Minitest.
-      def assert_pass(activity, options, assertion: AssertPass, invoke: Assertion.method(:invoke_operation), model_at: :model, **kws, &block)
-        # DISCUSS: remove the injectable {:assertion} keyword for both assertions?
+      def assert_pass(activity, options, invoke: Assertion.method(:invoke_operation), model_at: :model, **kws, &block)
         # DISCUSS: {:model_at} and {:invoke_method} block actual attributes.
-        assertion.(activity, options,
+        AssertPass.(activity, options,
           test: self,
           user_block: block,
           expected_model_attributes: kws,
@@ -37,8 +36,8 @@ module Trailblazer
 
       # DISCUSS: move to Assertion::Minitest?
       # Test case instance method. Specific to Minitest.
-      def assert_fail(activity, options, *args, assertion: AssertFail, invoke: Assertion.method(:invoke_operation), **kws, &block)
-        assertion.(activity, options, *args, test: self, user_block: block, invoke: invoke, **kws) # Forward {#assert_fail} to {AssertFail.call} or wherever your implementation sits.
+      def assert_fail(activity, options, *args, invoke: Assertion.method(:invoke_operation), **kws, &block)
+        AssertFail.(activity, options, *args, test: self, user_block: block, invoke: invoke, **kws) # Forward {#assert_fail} to {AssertFail.call} or wherever your implementation sits.
       end
 
       def assert_pass?(*args, **options, &block)

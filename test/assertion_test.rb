@@ -121,7 +121,7 @@ assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewher
         # We accept {:invoke_method} as a first level kw arg, currently.
         it do
           stdout, _ = capture_io do
-            assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke: Trailblazer::Test::Assertion::Wtf.method(:invoke_activity)
+            assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
           end
 
           assert_equal stdout, %(AssertionsTest::Create\n|-- \e[32mStart.default\e[0m\n|-- \e[32mmodel\e[0m\n`-- End.success\n)
@@ -281,7 +281,7 @@ Expected: 1
         # test_0009_anonymous
         it do
           stdout, _ = capture_io do
-            assert_fail Update, {params: {title: nil}}, [:title], invoke: Trailblazer::Test::Assertion::Wtf.method(:invoke_activity)
+            assert_fail Update, {params: {title: nil}}, [:title], invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
           end
 
           assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)

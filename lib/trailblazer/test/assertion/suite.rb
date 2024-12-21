@@ -31,11 +31,11 @@ module Trailblazer
         end
 
         def assert_pass?(*args, **kws, &block)
-          assert_pass(*args, **kws, invoke: Assertion::Wtf.method(:invoke_activity), &block)
+          assert_pass(*args, **kws, invoke: Assertion.method(:invoke_operation_with_wtf), &block)
         end
 
         def assert_fail?(*args, **kws, &block)
-          assert_fail(*args, **kws, invoke: Assertion::Wtf.method(:invoke_activity), &block)
+          assert_fail(*args, **kws, invoke: Assertion.method(:invoke_operation_with_wtf), &block)
         end
 
         # Provide {Assert.assert_pass} which decouples the assertion logic from the actual test framework.
@@ -78,7 +78,7 @@ module Trailblazer
 
           # @private
           # Gather all test case configuration. This involves reading all test `let` directives.
-          def normalize_kws(user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, use_wtf: false, invoke: Assertion.method(:invoke_activity), **options)
+          def normalize_kws(user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, invoke: Assertion.method(:invoke_operation), **options)
             kws = {
               # user_block:           user_block,
               operation:            operation,
@@ -87,7 +87,6 @@ module Trailblazer
               contract_name:        contract_name,
               model_at:             model_at,
               user_block:           user_block,
-              # invoke:               use_wtf ? Assertion::Wtf.method(:invoke_activity) : invoke,
               invoke: invoke,
 
               **normalize_kws_for_ctx(test: test, **options)

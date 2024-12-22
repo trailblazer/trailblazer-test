@@ -4,8 +4,7 @@ require "test_helper"
 # ...
 
 class OperationSpec < Minitest::Spec
-  # include Trailblazer::Test::Assertions
-  include Trailblazer::Test::Assertion::Suite
+  Trailblazer::Test::Assertion.module!(self, suite: true)
 end
 #:operation-spec end
 
@@ -380,14 +379,12 @@ class DocsPassFailAssertionsTest < OperationSpec
       @failures
     end
 
-    include Trailblazer::Test::Assertion::Suite
+    Trailblazer::Test::Assertion.module!(self, suite: true)
   end
 
   it "gives colored error messages for {assert_pass} and {assert_fail}" do
     test =
       Class.new(Test) {
-        include Trailblazer::Test::Assertion::Suite
-
         # What are we passing into the operation?
         let(:default_ctx) do
           {

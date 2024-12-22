@@ -3,6 +3,21 @@ module Trailblazer
     # Top-level entry points for end users.
     # These methods expose the end user syntax, not the logic.
     module Assertion
+      def self.module!(receiver, activity: false, suite: false)
+        modules =
+          if activity && suite
+            [AssertExposes, Suite, Assertion::Activity]
+          elsif activity
+            [AssertExposes, Assertion, Assertion::Activity]
+          elsif suite # operation
+            [AssertExposes, Suite]
+          else
+            [AssertExposes, Assertion]
+          end
+
+        receiver.include(*modules.reverse)
+      end
+
       SUCCESS_TERMINI = [:success, :pass_fast] # DISCUSS: where should this be defined?
 
       # @private
@@ -19,6 +34,17 @@ module Trailblazer
         result = operation.wtf?(ctx)
 
         return result.terminus, result
+      end
+
+      # Evaluate value if it's a lambda, and let the caller know whether we need an
+      # assert_equal or an assert.
+      def self.expected(asserted, value, actual)
+        value.is_a?(Proc) ? [value.(actual: actual, asserted: asserted), false] : [value, true]
+      end
+
+      # # Read the actual value from the asserted object (e.g. a model).
+      def self.actual(asserted, reader, name)
+        reader ? asserted.public_send(reader, name) : asserted.public_send(name)
       end
 
       # DISCUSS: move to Assertion::Minitest?
@@ -48,17 +74,6 @@ module Trailblazer
         assert_fail(*args, **options, invoke: Assertion.method(:invoke_operation_with_wtf), &block)
       end
 
-      # Evaluate value if it's a lambda, and let the caller know whether we need an
-      # assert_equal or an assert.
-      def self.expected(asserted, value, actual)
-        value.is_a?(Proc) ? [value.(actual: actual, asserted: asserted), false] : [value, true]
-      end
-
-      # # Read the actual value from the asserted object (e.g. a model).
-      def self.actual(asserted, reader, name)
-        reader ? asserted.public_send(reader, name) : asserted.public_send(name)
-      end
-
       # Assertions for Activity, not for Operation.
       module Activity
         def self.invoke_activity(activity, ctx)
@@ -73,22 +88,20 @@ module Trailblazer
           return signal, ctx
         end
 
-        module Assert
-          def assert_pass(*args, invoke: Activity.method(:invoke_activity), **options, &block)
-            super(*args, **options, invoke: invoke, &block)
-          end
+        def assert_pass(*args, invoke: Activity.method(:invoke_activity), **options, &block)
+          super(*args, **options, invoke: invoke, &block)
+        end
 
-          def assert_fail(*args, invoke: Activity.method(:invoke_activity), **options, &block)
-            super(*args, **options, invoke: invoke, &block)
-          end
+        def assert_fail(*args, invoke: Activity.method(:invoke_activity), **options, &block)
+          super(*args, **options, invoke: invoke, &block)
+        end
 
-          def assert_pass?(*args, **options, &block)
-            assert_pass(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
-          end
+        def assert_pass?(*args, **options, &block)
+          assert_pass(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
+        end
 
-          def assert_fail?(*args, **options, &block)
-            assert_fail(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
-          end
+        def assert_fail?(*args, **options, &block)
+          assert_fail(*args, **options, invoke: Activity.method(:invoke_activity_with_tracing), &block)
         end
       end
     end

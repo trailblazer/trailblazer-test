@@ -8,11 +8,8 @@ class AssertionsTest < Minitest::Spec
       run
       @failures
     end
-
-    # include Trailblazer::Test::Assertions
   end
 
-  # Create = Trailblazer::Test::Testing::Song::Operation::Create
   class Create < Trailblazer::Operation
     step :model
 
@@ -37,7 +34,6 @@ class AssertionsTest < Minitest::Spec
     test =
       Class.new(Test) do
         include Trailblazer::Test::Assertion::AssertExposes
-        # include Trailblazer::Test::Operation::Assertions
 
         # test_0001_anonymous
         it do
@@ -70,16 +66,14 @@ Expected: 2
   Actual: 1>)
   end
 
-        include Trailblazer::Test::Assertion
-        include Trailblazer::Test::Assertion::AssertExposes
+        Trailblazer::Test::Assertion.module!(self)
   it "#assert_pass" do
 # FIXME: test that assert_* returns {ctx}
 assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
 
     test =
       Class.new(Test) do
-        include Trailblazer::Test::Assertion
-        include Trailblazer::Test::Assertion::AssertExposes
+        Trailblazer::Test::Assertion.module!(self)
 
         # test_0001_anonymous
         it do
@@ -218,7 +212,7 @@ Expected: 1
 
     test =
       Class.new(Test) do
-        include Trailblazer::Test::Assertion
+        Trailblazer::Test::Assertion.module!(self)
 
         # test_0001_anonymous
         it do
@@ -383,6 +377,8 @@ Expected: [:title_XXX]
 end
 
 class AssertionActivityTest < Minitest::Spec
+  Trailblazer::Test::Assertion.module!(self, activity: true)
+
   Record = AssertionsTest::Record
 
   class Create < Trailblazer::Activity::FastTrack
@@ -401,10 +397,6 @@ class AssertionActivityTest < Minitest::Spec
     end
   end
 
-  include Trailblazer::Test::Assertion
-  include Trailblazer::Test::Assertion::Activity::Assert
-  include Trailblazer::Test::Assertion::AssertExposes
-
   it do
     assert_pass Create, {params: {title: "Roxanne"}},
       title: "Roxanne"
@@ -416,13 +408,10 @@ class AssertionActivityTest < Minitest::Spec
 end
 
 # Test with the Assertion::Suite "DSL" module.
-class AssertionActivitySuiteTest < Minitest::Spec
+class SuiteWithActivityTest < Minitest::Spec
+  Trailblazer::Test::Assertion.module!(self, activity: true, suite: true)
   Record = AssertionsTest::Record
   Create = AssertionActivityTest::Create
-
-  include Trailblazer::Test::Assertion::Suite
-  include Trailblazer::Test::Assertion::Activity::Assert
-  include Trailblazer::Test::Assertion::AssertExposes
 
   let(:operation) { Create }
 
@@ -459,7 +448,7 @@ class EndpointWithActivityTest < Minitest::Spec
   Create = AssertionActivityTest::Create
 
   include Trailblazer::Test::Assertion
-  include Trailblazer::Test::Assertion::Activity::Assert
+  include Trailblazer::Test::Assertion::Activity
   include Trailblazer::Test::Assertion::AssertExposes
 
   def self.__(activity, options, **kws, &block) # TODO: move this to endpoint.

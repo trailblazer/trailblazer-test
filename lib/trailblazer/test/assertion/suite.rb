@@ -14,12 +14,10 @@ module Trailblazer
           includer.let(:key_in_params)        { false }
           includer.let(:expected_attributes)  { {} } # You need to override this in your tests.
           includer.let(:default_ctx)          { {} }
-
-          include AssertExposes
         end
 
-        def assert_pass(params_fragment, expected_attributes_to_merge={}, assertion: AssertPass, **options, &block)
-          Assert.assert_pass(params_fragment, test: self, user_block: block, assertion: assertion, expected_attributes_to_merge: expected_attributes_to_merge, **options)
+        def assert_pass(params_fragment, expected_attributes_to_merge={}, assertion: AssertPass, **kws, &block)
+          Assert.assert_pass(params_fragment, test: self, user_block: block, assertion: assertion, expected_attributes_to_merge: expected_attributes_to_merge, **kws)
         end
 
         def assert_fail(params_fragment, expected_errors, assertion: AssertFail, **kws, &block)

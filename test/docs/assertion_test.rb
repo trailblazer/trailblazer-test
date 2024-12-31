@@ -35,10 +35,41 @@ class DocsAssertionTest < Minitest::Spec
     end
   end
 
-  it "what" do
+  it "passes with correct params" do
     assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}},
-      title: "Todo",
+      title:      "Todo",
       persisted?: true,
-      id: ->(asserted:, **) { asserted.id > 0 }
+      id:         ->(asserted:, **) { asserted.id > 0 } # dynamic assertion.
+  end
+
+  it "returns result" do
+    result = assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}}
+
+    assert_equal result[:model].title, "Todo"
+  end
+
+  it "block syntax" do
+    assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}} do |result|
+      assert_equal result[:model].title, "Todo"
+    end
+
+    # Note that you may combine attrs and block syntax.
+  end
+
+  class ModelAtTest < Minitest::Spec
+    Trailblazer::Test::Assertion.module!(self)
+
+    module Memo
+      module Operation
+        class Create < Trailblazer::Operation
+          step ->(ctx, **) { ctx[:record] = DocsAssertionTest::Memo.new(1, "Todo") }
+        end
+      end
+    end
+
+    it "{:model_at}" do
+      assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}}, model_at: :record,
+        title:      "Todo"
+    end
   end
 end

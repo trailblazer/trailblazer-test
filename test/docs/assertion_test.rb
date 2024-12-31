@@ -22,7 +22,7 @@ class DocsAssertionTest < Minitest::Spec
           validation do
            params do
               required(:title).filled
-              required(:content).value(min_size?: 8)
+              required(:content).filled(min_size?: 8)
             end
           end
         end
@@ -35,6 +35,10 @@ class DocsAssertionTest < Minitest::Spec
     end
   end
 
+  it "just check if operation passes" do
+    assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}}
+  end
+
   it "passes with correct params" do
     assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}},
       title:      "Todo",
@@ -43,7 +47,7 @@ class DocsAssertionTest < Minitest::Spec
   end
 
   it "returns result" do
-    result = assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}}
+    result = assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}} #, {title: "Todo"}
 
     assert_equal result[:model].title, "Todo"
   end
@@ -72,4 +76,35 @@ class DocsAssertionTest < Minitest::Spec
         title:      "Todo"
     end
   end
+
+  it "{#assert_fail} simply fails" do
+    assert_fail Memo::Operation::Create, {params: {memo: {}}}
+  end
+
+  it "{#assert_fail} with contract errors, short-form" do
+    assert_fail Memo::Operation::Create, {params: {memo: {}}}, [:title, :content]
+  end
+
+  it "{#assert_fail} with contract errors, with error messages" do
+    assert_fail Memo::Operation::Create, {params: {memo: {}}},
+      # error messages from contract:
+      {
+        title: ["must be filled"],
+        content: ["must be filled", "size cannot be less than 8"]
+      }
+  end
+
+  it "{#assert_fail} returns result" do
+    result = assert_fail Memo::Operation::Create, {params: {memo: {}}}#, [:title, :content]
+    assert_equal result[:"contract.default"].errors.size, 2
+  end
+
+  it "{#assert_fail} block form" do
+    assert_fail Memo::Operation::Create, {params: {memo: {}}} do |result|
+      assert_equal result[:"contract.default"].errors.size, 2
+    end
+  end
+
+  # mock_step
+  # run (???)
 end

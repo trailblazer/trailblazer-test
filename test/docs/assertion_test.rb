@@ -107,8 +107,8 @@ class DocsAssertionTest < Minitest::Spec
 
   # mock_step
   class MockStepTest < Minitest::Spec
-    include Trailblazer::Test::Assertion
-    include Trailblazer::Test::Helper::MockStep
+    Trailblazer::Test::Assertion.module!(self)
+    include Trailblazer::Test::Helper::MockStep # FIXME.
 
     Memo = Class.new(DocsAssertionTest::Memo)
 
@@ -136,9 +136,17 @@ class DocsAssertionTest < Minitest::Spec
       end
 
       result = create_operation.(seq: [])
-      pp result
+      assert_equal result[:seq].inspect, %([:model, :check_params, :verify_content])
+      assert_equal result[:saved], true
 
-      assert_pass create_operation, {seq: []}
+      result =
+      assert_pass create_operation, {
+        #~skip
+        seq: []
+        #~skip end
+      }
+
+      assert_equal result[:saved], true
     end
 
   end

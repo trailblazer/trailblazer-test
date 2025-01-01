@@ -106,5 +106,41 @@ class DocsAssertionTest < Minitest::Spec
   end
 
   # mock_step
+  class MockStepTest < Minitest::Spec
+    include Trailblazer::Test::Assertion
+    include Trailblazer::Test::Helper::MockStep
+
+    Memo = Class.new(DocsAssertionTest::Memo)
+
+    module Memo::Operation
+      class Validate < Trailblazer::Operation
+        step :check_params
+        step :verify_content
+
+        include Testing.def_steps(:check_params, :verify_content)
+      end
+
+      class Create < Trailblazer::Operation
+        step :model
+        step Subprocess(Validate)
+        step :save
+
+        include Testing.def_steps(:model, :save)
+      end
+    end
+
+    it "allows mocking steps on first level" do
+      create_operation = mock_step(Memo::Operation::Create, path: [:save]) do |ctx, **|
+        # new logic for {save}.
+        ctx[:saved] = true
+      end
+
+      result = create_operation.(seq: [])
+      pp result
+
+      assert_pass create_operation, {seq: []}
+    end
+
+  end
   # run (???)
 end

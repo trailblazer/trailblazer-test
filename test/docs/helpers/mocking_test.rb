@@ -28,7 +28,7 @@ class DocsMockingTest < Minitest::Spec
 
   include Trailblazer::Test::Assertion
   include Trailblazer::Test::Assertion::AssertExposes
-  include Trailblazer::Test::Operation::Helper
+  include Trailblazer::Test::Helper::MockStep
 
   describe "#mock_step" do
     let(:default_params) { { seq: [] } }

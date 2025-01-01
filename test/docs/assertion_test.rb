@@ -122,7 +122,7 @@ class DocsAssertionTest < Minitest::Spec
 
       class Create < Trailblazer::Operation
         step :model
-        step Subprocess(Validate)
+        step Subprocess(Validate), id: :validate
         step :save
 
         include Testing.def_steps(:model, :save)
@@ -147,6 +147,26 @@ class DocsAssertionTest < Minitest::Spec
       }
 
       assert_equal result[:saved], true
+    end
+
+    it "allows mocking steps any level" do
+      create_operation = mock_step(Memo::Operation::Create, path: [:validate, :verify_content]) do |ctx, **|
+        # new logic for {Validate#verify_content}.
+        ctx[:is_verified] = true
+      end
+
+      result = create_operation.(seq: [])
+      assert_equal result[:seq].inspect, %([:model, :check_params, :save])
+      assert_equal result[:is_verified], true
+
+      result =
+      assert_pass create_operation, {
+        #~skip
+        seq: []
+        #~skip end
+      }
+
+      assert_equal result[:is_verified], true
     end
 
   end

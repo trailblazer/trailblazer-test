@@ -35,27 +35,46 @@ class DocsAssertionTest < Minitest::Spec
     end
   end
 
+  #:pass-pass
   it "just check if operation passes" do
-    assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}}
+    input = {params: {memo: {title: "Todo", content: "Buy beer"}}}
+
+    assert_pass Memo::Operation::Create, input
   end
+  #:pass-pass end
 
   it "passes with correct params" do
+    #:pass-model
     assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}},
       title:      "Todo",
       persisted?: true,
       id:         ->(asserted:, **) { asserted.id > 0 } # dynamic assertion.
-  end
+    #:pass-model end
 
-  it "returns result" do
-    result = assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}} #, {title: "Todo"}
-
+    #:pass-model-manual
     assert_equal result[:model].title, "Todo"
+    assert_equal result[:model].persisted?, true
+    assert_equal result[:model].id > 0
+    #:pass-model-manual end
   end
+
+  #:pass-return
+  it "returns result" do
+    #~skip
+    input = {params: {memo: {title: "Todo", content: "Buy beer"}}} #, {title: "Todo"}
+    #~skip end
+    result = assert_pass Memo::Operation::Create, input
+
+    assert_equal result[:model].title, "Todo" # your own assertion
+  end
+  #:pass-return end
 
   it "block syntax" do
+    #:pass-block
     assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}} do |result|
       assert_equal result[:model].title, "Todo"
     end
+    #:pass-block end
 
     # Note that you may combine attrs and block syntax.
   end
@@ -72,8 +91,13 @@ class DocsAssertionTest < Minitest::Spec
     end
 
     it "{:model_at}" do
-      assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}}, model_at: :record,
+      #:pass-model-at
+      #~skip
+      input = {params: {memo: {title: "Todo", content: "Buy beer"}}}
+      #~skip end
+      assert_pass Memo::Operation::Create, input, model_at: :record,
         title:      "Todo"
+      #:pass-model-at end
     end
   end
 

@@ -44,18 +44,21 @@ class DocsAssertionTest < Minitest::Spec
   #:pass-pass end
 
   it "passes with correct params" do
+    input = {params: {memo: {title: "Todo", content: "Buy beer"}}}
     #:pass-model
-    assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}},
+    assert_pass Memo::Operation::Create, input,
       title:      "Todo",
       persisted?: true,
-      id:         ->(asserted:, **) { asserted.id > 0 } # dynamic assertion.
+      id:         ->(asserted:, **) { asserted.id > 0 } # dynamic test.
     #:pass-model end
 
+=begin
     #:pass-model-manual
     assert_equal result[:model].title, "Todo"
     assert_equal result[:model].persisted?, true
     assert_equal result[:model].id > 0
     #:pass-model-manual end
+=end
   end
 
   #:pass-return
@@ -70,13 +73,24 @@ class DocsAssertionTest < Minitest::Spec
   #:pass-return end
 
   it "block syntax" do
+    input = {params: {memo: {title: "Todo", content: "Buy beer"}}}
     #:pass-block
-    assert_pass Memo::Operation::Create, {params: {memo: {title: "Todo", content: "Buy beer"}}} do |result|
+    assert_pass Memo::Operation::Create, input do |result|
       assert_equal result[:model].title, "Todo"
     end
     #:pass-block end
 
     # Note that you may combine attrs and block syntax.
+  end
+
+  it "wtf?" do
+    input = {params: {memo: {title: "Todo", content: "Buy beer"}}}
+    # out, _ = capture_io do
+      #:pass-wtf
+      assert_pass? Memo::Operation::Create, input
+      #:pass-wtf end
+    # end
+
   end
 
   class ModelAtTest < Minitest::Spec

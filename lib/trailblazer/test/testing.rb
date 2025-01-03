@@ -7,7 +7,7 @@ require "trailblazer/operation"
 module Trailblazer::Test
   # Test components we need in other gems, too.
   module Testing
-    class Memo < Struct.new(:id, :title, :content, :persisted?, :errors)
+    class Memo < Struct.new(:id, :title, :content, :tag_list, :persisted?, :errors)
       def save
         self[:persisted?] = true
         self[:id] = 1
@@ -21,11 +21,13 @@ module Trailblazer::Test
 
             property :title
             property :content
+            property :tag_list
 
             validation do
-             params do
+              params do
                 required(:title).filled
                 required(:content).filled(min_size?: 8)
+                optional(:tag_list).maybe(type?: String)
               end
             end
           end
@@ -33,7 +35,19 @@ module Trailblazer::Test
           step Model::Build(Memo, :new)
           step Contract::Build(constant: Form)
           step Contract::Validate(key: :memo)
+          step :parse_tag_list
           step Contract::Persist()
+
+          def parse_tag_list(ctx, **)
+            tag_list = ctx["contract.default"].tag_list or return true
+
+            tags = tag_list.split(",")
+
+            ctx["contract.default"].tag_list = tags
+          end
+        end # Create
+
+        class Update < Create
         end
       end
     end

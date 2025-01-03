@@ -8,26 +8,27 @@ class OperationSpec < Minitest::Spec
 end
 #:operation-spec end
 
-# {Song}, {Song::Operation::Create} etc is from lib/trailblazer/test/testing.rb.
-class DocsPassFailAssertionsTest < OperationSpec
+# {Memo}, {Memo::Operation::Create} etc is from lib/trailblazer/test/testing.rb.
+class DocsSuiteAssertionsTest < Minitest::Spec
+  Memo = Trailblazer::Test::Testing::Memo
   Song = Trailblazer::Test::Testing::Song
-
-  # include Trailblazer::Test::Assertions
-  # include Trailblazer::Test::Assertion::Suite
+  Trailblazer::Test::Assertion.module!(self, suite: true)
 
   #:test
-  # test/operation/song_operation_test.rb
-  class SongOperationTest < OperationSpec
+  #:install
+  class MemoOperationTest < Minitest::Spec  # test/memo/operation_test.rb
+    #~zoom
+    Trailblazer::Test::Assertion.module!(self, suite: true)
+  #:install end
 
     # The default ctx passed into the tested operation.
     #:default-ctx
     let(:default_ctx) do
       {
         params: {
-          song: { # Note the {song} key here!
-            band:  "Rancid",
-            title: "Timebomb",
-            # duration not present
+          memo: { # Note the {:memo} key here!
+            title:   "Todo",
+            content: "Stock up beer",
           }
         }
       }
@@ -38,141 +39,49 @@ class DocsPassFailAssertionsTest < OperationSpec
     # What will the model look like after running the operation?
     let(:expected_attributes) do
       {
-        band:   "Rancid",
-        title:  "Timebomb",
+        title:   "Todo",
+        content:  "Stock up beer",
       }
     end
     #:expected-attrs end
 
     #:let-operation
-    let(:operation)     { Song::Operation::Create }
+    let(:operation)     { Memo::Operation::Create }
     #:let-operation end
     #:let-key-in-params
-    let(:key_in_params) { :song }
+    let(:key_in_params) { :memo }
     #:let-key-in-params end
 
+    #:assert-pass
+    it "accepts {tag_list} and converts it to an array" do
+      assert_pass( {tag_list: "fridge,todo"}, {tag_list: ["fridge", "todo"]} )
+    end
+    #:assert-pass end
+    #~zoom end
+
     #:assert-pass-empty
-    it "passes with valid input, {duration} is optional" do
+    it "passes with valid input, {tag_list} is optional" do
       assert_pass( {}, {} )
     end
     #:assert-pass-empty end
 
-    #:assert-pass
-    it "converts {duration} to seconds" do
-      assert_pass( {duration: "2.24"}, {duration: 144} )
-    end
-    #:assert-pass end
-
     #:assert-pass-block
-    it "converts {duration} to seconds" do
-      assert_pass( {duration: "2.24"}, {duration: 144} ) do |result|
+    it "converts {tag_list} and converts it to an array" do
+      assert_pass( {tag_list: "fridge,todo"}, {tag_list: ["fridge", "todo"]} ) do |result|
         assert_equal true, result[:model].persisted?
       end
     end
     #:assert-pass-block end
 
-    #:assert-pass-result
-    it "converts {duration} to seconds" do
-      result = assert_pass( {duration: "2.24"}, {duration: 144} ) # with our without a block
-
-      assert_equal true, result[:model].persisted?
-    end
-    #:assert-pass-result end
-
-    it "returns {result}" do
-      result = assert_pass( {}, {} )
-
-      assert_equal result[:model].title, %(Timebomb)
-    end
-
-    describe "we have {:song}, not {:model}" do
-      let(:operation) {
-        Class.new(Song::Operation::Create) do
-          step :set_song
-
-          def set_song(ctx, **)
-            ctx[:song]  = ctx[:model]
-            ctx[:model] = "i don't exist"
-          end
-        end
-      }
-
-      #:model-at
-      it "what" do
-        assert_pass( {duration: "2.24"}, {duration: 144}, model_at: :song )
-      end
-      #:model-at end
-    end
-
     #:assert-fail
-    it "fails with missing {title} and invalid {duration}" do
-      assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
+    it "fails with missing {title} and invalid {tag_list}" do
+      assert_fail({title: "", tag_list: []}, [:title, :tag_list] )
     end
     #:assert-fail end
-    #~meths
-    #:assert-fail-msg
-    it "fails with missing {title} and invalid {duration} with given error messages" do
-      assert_fail( {duration: 1222, title: ""},
-        {title: ["must be filled"], duration: ["must be String"]} # hash instead of array!
-      )
-    end
-    #:assert-fail-msg end
-    it "fails with missing {title} and invalid {duration} with given error messages" do
-      assert_fail( {duration: 1222, title: ""}, {title: "must be filled", duration: "must be String"} )
-    end
-    #:assert-fail-msg-array
-    it "fails with missing {title} and invalid {duration} with given error messages" do
-      assert_fail( {title: "", duration: "1222"}, {title: "must be filled"} )
-    end
-    #:assert-fail-msg-array end
-
-    #:assert-fail-block
-    it "fails with missing {title} and invalid {duration}" do
-      assert_fail( {duration: 1222, title: ""}, [:title, :duration] ) do |result|
-        assert_equal false, result[:model].persisted?
-        assert_equal 2,     result[:"contract.default"].errors.size
-      end
-    end
-    #:assert-fail-block end
-
-    #:assert-fail-result
-    it "fails with missing {title} and invalid {duration}" do
-      result = assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
-
-      assert_equal false, result[:model].persisted?
-    end
-    #:assert-fail-result end
-
-    it "{#assert_fail} returns result" do
-      result = assert_fail( {duration: 1222, title: ""}, [:title, :duration] )
-
-      assert_equal CU.inspect(result[:"contract.default"].errors.messages), %({:title=>[\"must be filled\"], :duration=>[\"must be String\"]})
-    end
-
-    #:wtf
-    it "fails with missing {title} and invalid {duration}" do
-      assert_fail?( {duration: 1222, title: ""}, [:title, :duration] )
-      #=>
-      # -- Song::Operation::Create
-      # |-- Start.default
-      # |-- model.build
-      # |-- contract.build
-      # |-- contract.default.validate
-      # |   |-- Start.default
-      # |   |-- contract.default.params_extract
-      # |   |-- contract.default.call
-      # |   `-- End.failure
-      # `-- End.failure
-    end
-    #:wtf end
-
-    class Song::Operation::Update < Trailblazer::Operation
-      step ->(ctx, params:, **) { ctx[:model] = Song.new(params[:song][:band], params[:song][:title], params[:song][:duration]) }
-    end
 
     #:option-operation
     it "Update allows integer {duration}" do
-      assert_pass( {duration: 2224}, {duration: 2224}, operation: Song::Operation::Update )
+      assert_pass({tag_list: "todo"}, {tag_list: ["todo"]}, operation: Memo::Operation::Update )
     end
     #:option-operation end
 
@@ -257,8 +166,8 @@ class DocsPassFailAssertionsTest < OperationSpec
 
     module Song::Operation
       class Create < Trailblazer::Operation
-        step Model(DocsPassFailAssertionsTest::Song, :new)
-        step Contract::Build(constant: DocsPassFailAssertionsTest::Song::Contract::Create)
+        step Model(DocsSuiteAssertionsTest::Song, :new)
+        step Contract::Build(constant: DocsSuiteAssertionsTest::Song::Contract::Create)
         step Contract::Validate()
         step Contract::Persist()
       end
@@ -405,7 +314,7 @@ class DocsPassFailAssertionsTest < OperationSpec
           }
         end
 
-        let(:operation)     { DocsPassFailAssertionsTest::Song::Operation::Create }
+        let(:operation)     { DocsSuiteAssertionsTest::Song::Operation::Create }
         let(:key_in_params) { :song }
 
         # Assertion fails since {:title} doesn't have errors set.

@@ -4,36 +4,7 @@ require "test_helper"
 class DocsAssertionTest < Minitest::Spec
   Trailblazer::Test::Assertion.module!(self)
 
-  class Memo < Struct.new(:id, :title, :content, :persisted?, :errors)
-    def save
-      self[:persisted?] = true
-      self[:id] = 1
-    end
-
-    module Operation
-      class Create < Trailblazer::Operation
-        class Form < Reform::Form
-          require "reform/form/dry"
-          include Reform::Form::Dry
-
-          property :title
-          property :content
-
-          validation do
-           params do
-              required(:title).filled
-              required(:content).filled(min_size?: 8)
-            end
-          end
-        end
-
-        step Model::Build(Memo, :new)
-        step Contract::Build(constant: Form)
-        step Contract::Validate(key: :memo)
-        step Contract::Persist()
-      end
-    end
-  end
+  Memo = Trailblazer::Test::Testing::Memo
 
   #:pass-pass
   it "just check if operation passes" do
@@ -116,31 +87,51 @@ class DocsAssertionTest < Minitest::Spec
   end
 
   it "{#assert_fail} simply fails" do
+    #:fail-basic
     assert_fail Memo::Operation::Create, {params: {memo: {}}}
+    #:fail-basic end
   end
 
   it "{#assert_fail} with contract errors, short-form" do
-    assert_fail Memo::Operation::Create, {params: {memo: {}}}, [:title, :content]
+    #:fail-array
+    assert_fail Memo::Operation::Create, {params: {memo: {}}},
+      [:title, :content] # fields with errors.
+    #:fail-array end
   end
 
   it "{#assert_fail} with contract errors, with error messages" do
+    #:fail-hash
     assert_fail Memo::Operation::Create, {params: {memo: {}}},
       # error messages from contract:
       {
         title: ["must be filled"],
         content: ["must be filled", "size cannot be less than 8"]
       }
+    #:fail-hash end
   end
 
   it "{#assert_fail} returns result" do
+    #:fail-return
     result = assert_fail Memo::Operation::Create, {params: {memo: {}}}#, [:title, :content]
+
     assert_equal result[:"contract.default"].errors.size, 2
+    #:fail-return end
   end
 
   it "{#assert_fail} block form" do
+    #:fail-block
     assert_fail Memo::Operation::Create, {params: {memo: {}}} do |result|
       assert_equal result[:"contract.default"].errors.size, 2
     end
+    #:fail-block end
+  end
+
+  it "{#assert_fail} wtf?" do
+    # out, _ = capture_io do
+      #:fail-wtf
+      assert_fail? Memo::Operation::Create, {params: {memo: {}}}
+      #:fail-wtf end
+    # end
   end
 
   # mock_step

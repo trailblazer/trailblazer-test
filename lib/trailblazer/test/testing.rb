@@ -7,6 +7,37 @@ require "trailblazer/operation"
 module Trailblazer::Test
   # Test components we need in other gems, too.
   module Testing
+    class Memo < Struct.new(:id, :title, :content, :persisted?, :errors)
+      def save
+        self[:persisted?] = true
+        self[:id] = 1
+      end
+
+      module Operation
+        class Create < Trailblazer::Operation
+          class Form < Reform::Form
+            require "reform/form/dry"
+            include Reform::Form::Dry
+
+            property :title
+            property :content
+
+            validation do
+             params do
+                required(:title).filled
+                required(:content).filled(min_size?: 8)
+              end
+            end
+          end
+
+          step Model::Build(Memo, :new)
+          step Contract::Build(constant: Form)
+          step Contract::Validate(key: :memo)
+          step Contract::Persist()
+        end
+      end
+    end
+
     Song = Struct.new(:band, :title, :duration) do
       def save()
         @save = true

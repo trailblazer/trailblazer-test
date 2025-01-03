@@ -310,6 +310,8 @@ Expected: 1
         end
       end
 
+      raise "what if assert_fail errors are only subset of user's?"
+
     test_1 = test.new(:test_0001_anonymous)
     failures = test_1.()
     assert_equal failures.size, 0

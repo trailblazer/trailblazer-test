@@ -54,7 +54,8 @@ class DocsSuiteAssertionsTest < Minitest::Spec
 
     #:assert-pass
     it "accepts {tag_list} and converts it to an array" do
-      assert_pass( {tag_list: "fridge,todo"}, {tag_list: ["fridge", "todo"]} )
+      assert_pass({tag_list: "fridge,todo"},
+        {tag_list: ["fridge", "todo"]}) # what we're expecting on the model.
     end
     #:assert-pass end
     #~zoom end
@@ -162,37 +163,39 @@ class DocsSuiteAssertionsTest < Minitest::Spec
 
   # No {key: :song}.
   class SongOperation_OMIT_KEY_Test < OperationSpec
-    module Song; end
+    module Memo; end
 
-    module Song::Operation
+    module Memo::Operation
       class Create < Trailblazer::Operation
-        step Model(DocsSuiteAssertionsTest::Song, :new)
-        step Contract::Build(constant: DocsSuiteAssertionsTest::Song::Contract::Create)
+        step Model(DocsSuiteAssertionsTest::Memo, :new)
+        step Contract::Build(constant: DocsSuiteAssertionsTest::Memo::Operation::Create::Form)
         step Contract::Validate()
         step Contract::Persist()
       end
     end
-    let(:operation) { Song::Operation::Create }
+    let(:operation) { Memo::Operation::Create }
+    #:key_in_params
+    let(:key_in_params) { false }
+    #:key_in_params end
+
+    # What will the model look like after running the operation?
     let(:expected_attributes) do
       {
-        band:   "Rancid",
-        title:  "Timebomb",
+        title:   "Todo",
+        content:  "Stock up beer",
       }
     end
 
     #:let-key-in-params-false
-    let(:key_in_params) { false }
-
     let(:default_ctx) do
       {
         params: {
-          band:  "Rancid",
-          title: "Timebomb",
+          title:   "Todo",
+          content: "Stock up beer",
         }
       }
     end
     #:let-key-in-params-false end
-
 
     it "passes with valid input, {duration} is optional" do
       assert_pass( {}, {} )
@@ -200,7 +203,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
 
     #:omit-key-it
     it "sets {title}" do
-      assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} )
+      assert_pass( {title: "Remember"}, {title: "Remember"} )
     end
     #:omit-key-it end
 
@@ -209,9 +212,9 @@ class DocsSuiteAssertionsTest < Minitest::Spec
     end
 
     it "Ctx()" do
-      assert_equal %{{:params=>{:band=>\"Rancid\"}}}, Ctx(exclude: [:title]).inspect
-      assert_equal %{{:params=>{:band=>\"Rancid\"}, :current_user=>Module}}, Ctx({current_user: Module}, exclude: [:title]).inspect
-      assert_equal %{{:params=>{:band=>\"Rancid\", :duration=>999}, :current_user=>Module}}, Ctx({current_user: Module, params: {duration: 999}}, exclude: [:title]).inspect
+      assert_equal %{{:params=>{:content=>\"Stock up beer\"}}}, Ctx(exclude: [:title]).inspect
+      assert_equal %{{:params=>{:content=>\"Stock up beer\"}, :current_user=>Module}}, Ctx({current_user: Module}, exclude: [:title]).inspect
+      assert_equal %{{:params=>{:content=>\"Stock up beer\", :duration=>999}, :current_user=>Module}}, Ctx({current_user: Module, params: {duration: 999}}, exclude: [:title]).inspect
     end
   end # SongOperation_OMIT_KEY_Test
 

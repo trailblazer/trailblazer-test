@@ -75,8 +75,8 @@ class DocsSuiteAssertionsTest < Minitest::Spec
     #:assert-pass-block end
 
     #:assert-fail
-    it "fails with missing {title} and invalid {tag_list}" do
-      assert_fail({title: "", tag_list: []}, [:title, :tag_list] )
+    it "fails with invalid {tag_list}" do
+      assert_fail({tag_list: []}, [:tag_list])
     end
     #:assert-fail end
 
@@ -97,56 +97,83 @@ class DocsSuiteAssertionsTest < Minitest::Spec
     #:ctx-example end
 
     #:ctx-pass
-    it "converts {duration} to seconds" do
-      assert_pass( Ctx({current_user: yogi}), {title: "Timebomb"} )
+    it "passes" do
+      assert_pass( Ctx({current_user: yogi}), {} )
     end
     #:ctx-pass end
 
     #:ctx-inject
-    it "provides {Ctx()}" do
+    it "passes with correct {current_user}" do
       ctx = Ctx({current_user: yogi}  )
-      #=> {:params=>{:song=>{:band=>"Rancid", :title=>"Timebomb"}},
-      #    :current_user=>#<User name="Yogi">}
+      puts ctx
+      #=> {:params=>{:memo=>{:title=>"Todo", :content=>"Stock up beer"}},
+      #    :current_user=>"Yogi"}
+
+      assert_pass ctx, {}
       #~skip
-      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\", :title=>\"Timebomb\"}}, :current_user=>\"Yogi\"}}, ctx.inspect
+      assert_equal %({:params=>{:memo=>{:title=>\"Todo\", :content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"}), ctx.inspect
       #~skip end
     end
     #:ctx-inject end
 
     # allows deep-merging additionnal {:params}
     #:ctx-merge
-    it "provides {Ctx()}" do
+    it "passes with correct tag_list for user" do
       ctx = Ctx(
         {
           current_user: yogi,
-          params: {song: {duration: 999}} # this is deep-merged!
+          # this is deep-merged with default_ctx!
+          params: {memo: {title: "Reminder"}}
         }
       )
-      #=> {:params=>{:song=>{:band=>"Rancid", :title=>"Timebomb", duration: 999}},
-      #    :current_user=>#<User name="Yogi">}
+
+      assert_pass ctx, {title: "Reminder"}
+    #:ctx-merge end
+=begin
+          #:ctx-merge-actual
+          {:params=>{
+            :memo=>{
+              :title=>"Reminder",
+              :content=>"Stock up beer"
+             }
+            },
+          :current_user=>"Yogi"}
+          #:ctx-merge-actual end
+=end
       #~skip
-      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\", :title=>\"Timebomb\", :duration=>999}}, :current_user=>\"Yogi\"}}, ctx.inspect
+      assert_equal ctx.inspect, %({:params=>{:memo=>{:title=>\"Reminder\", :content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"})
+
       #~skip end
     end
-    #:ctx-merge end
 
     #:ctx-exclude
     it "provides {Ctx()}" do
       ctx = Ctx(exclude: [:title])
-      #=> {:params=>{:song=>{:band=>"Rancid"}}}
+      #=> {:params=>{:memo=>{:content=>"Stock up beer"}}}
+
+      assert_fail ctx, [:title]
       #~skip
-      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\"}}}}, ctx.inspect
+      assert_equal %{{:params=>{:memo=>{:content=>\"Stock up beer\"}}}}, ctx.inspect
       #~skip end
     end
     #:ctx-exclude end
 
+    it "allows {:exclude} and merge into {params}" do
+      #:ctx-exclude-params-merge
+      ctx = Ctx({params: {memo: {tag_list: "todo"}}}, exclude: [:title])
+      #=> {:params=>{:memo=>{:content=>"Stock up beer", :tag_list=>"todo"}}}
+      #:ctx-exclude-params-merge end
+
+      assert_equal ctx.inspect, %({:params=>{:memo=>{:content=>"Stock up beer", :tag_list=>"todo"}}})
+    end
+
     #:ctx-exclude-merge
     it "provides {Ctx()}" do
       ctx = Ctx({current_user: yogi}, exclude: [:title])
-      #=> {:params=>{:song=>{:band=>"Rancid"}},
+      #=> {:params=>{:memo=>{:content=>"Stock up beer"}},
       #    :current_user=>#<User name="Yogi">}
       #~skip
-      assert_equal %{{:params=>{:song=>{:band=>\"Rancid\"}}, :current_user=>\"Yogi\"}}, ctx.inspect
+      assert_equal ctx.inspect, %({:params=>{:memo=>{:content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"})
       #~skip end
     end
     #:ctx-exclude-merge end

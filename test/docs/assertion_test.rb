@@ -137,7 +137,6 @@ class DocsAssertionTest < Minitest::Spec
   # mock_step
   class MockStepTest < Minitest::Spec
     Trailblazer::Test::Assertion.module!(self)
-    include Trailblazer::Test::Helper::MockStep # FIXME.
 
     Memo = Class.new(DocsAssertionTest::Memo)
 

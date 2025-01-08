@@ -6,13 +6,13 @@ module Trailblazer
       def self.module!(receiver, activity: false, suite: false)
         modules =
           if activity && suite
-            [AssertExposes, Suite, Assertion::Activity]
+            [Helper::MockStep, AssertExposes, Suite, Assertion::Activity]
           elsif activity
-            [AssertExposes, Assertion, Assertion::Activity]
+            [Helper::MockStep, AssertExposes, Assertion, Assertion::Activity]
           elsif suite # operation
-            [AssertExposes, Suite]
+            [Helper::MockStep, AssertExposes, Suite]
           else
-            [AssertExposes, Assertion]
+            [Helper::MockStep, AssertExposes, Assertion]
           end
 
         receiver.include(*modules.reverse)

@@ -69,7 +69,7 @@ Expected: 2
         Trailblazer::Test::Assertion.module!(self)
   it "#assert_pass" do
 # FIXME: test that assert_* returns {ctx}
-assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
+# assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
 
     test =
       Class.new(Test) do

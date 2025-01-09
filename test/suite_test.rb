@@ -11,9 +11,8 @@ class SuiteTest < Minitest::Spec
     end
   end
 
-        # Memo = Trailblazer::Test::Testing::Memo
         # Trailblazer::Test::Assertion.module!(self, suite: true)
-        # let(:operation) { CaptureInput }
+        # let(:operation) { Trailblazer::Test::Testing::Memo::Operation::Create }
         # let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
         # let(:expected_attributes) { {content: "Remember me!", persisted?: true} }
         # let(:key_in_params) { :memo }
@@ -21,7 +20,7 @@ class SuiteTest < Minitest::Spec
   it "#assert_pass" do
 # FIXME: test that assert_* returns {ctx}
 # assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
-# assert_pass({}, {})
+# assert_pass({}, {}, invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf))
 
     test =
       Class.new(Test) do
@@ -50,6 +49,7 @@ class SuiteTest < Minitest::Spec
           @result = assert_pass({title: ""}, {})
         end
 
+      # indirect assert_exposes tests
         # 03
         # differing input and default expected_attributes. (assert_exposes error)
         it do
@@ -74,82 +74,67 @@ class SuiteTest < Minitest::Spec
           @result = assert_pass({content: "don't forget"}, {content: "This is slightly different"})
         end
 
+        # DISCUSS: should we also test a "wrong" let(:expected_attributes)
 
-
-
-
-
-
-        # 06
-        #
-        it do
-          @result = assert_pass({}, {title: "deleted"})
-        end
-
-        # 02
+      # syntactical tests
+        # 07
         # returns {result}.
         it do
-          result = assert_pass({}, {})
+          @result = assert_pass({}, {})
 
-          assert_equal result[:model].title, "Note to self"
+          assert_equal @result[:model].title, "Note to self"
         end
 
-        # 03
+        # 08
         # we can override default_ctx variables and add new attributes.
         it do
-          result = assert_pass(
+          @result = assert_pass(
             {title: "Simple memo", tag_list: "todo,today"},
             {title: "Simple memo", tag_list: ["todo", "today"]}
           )
 
-          assert_equal result[:model].title, "Simple memo"
-          assert_equal result[:model].tag_list, ["todo", "today"]
+          assert_equal @result[:model].title, "Simple memo"
+          assert_equal @result[:model].tag_list, ["todo", "today"]
         end
 
-        # 04
+        # 09
         # allows block.
         it do
           assert_pass({}, {}) do |result|
+            @result = result # tests if this block is executed.
             assert_equal result[:model].title, "Note to self"
           end
         end
 
-
-
-        it do
-          assert_pass Create, {params: {title: "Somewhere Far Beyond"}},
-            # expected:
-            id: nil,
-            persisted?: nil,
-            title: "Somewhere Far Beyond",
-            genre: nil
-        end
-
-        # test_0003_anonymous
-        it do
-          assert_pass Create, {params: {title: "Somewhere Far Beyond"}} do |result|
-            @_m = result.keys.inspect
-
-            assert_equal result[:model].class, Record
-          end
-        end
-
-        # test_0004_anonymous
-        it do
-          assert_pass Create, {params: {title: "Somewhere Far Beyond"}} do |result|
-            assert_equal result[:model].class, "Song" # fails
-          end
-        end
-
-        # test_0005_anonymous
+        # 10
         # We accept {:invoke_method} as a first level kw arg, currently.
         it do
           stdout, _ = capture_io do
-            assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
+            @result = assert_pass({}, {}, invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf))
           end
 
-          assert_equal stdout, %(AssertionsTest::Create\n|-- \e[32mStart.default\e[0m\n|-- \e[32mmodel\e[0m\n`-- End.success\n)
+          stdout = stdout.sub(/0x\w+/, "XXX")
+
+          assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[32mcontract.default.call\e[0m
+|   `-- End.success
+|-- \e[32mparse_tag_list\e[0m
+|-- \e[32mpersist.save\e[0m
+`-- End.success
+)
         end
+
+          vvvvvvvvv
 
         # test_0006_anonymous
         # We accept {:model_at} as a first level kw arg, currently.
@@ -171,7 +156,7 @@ class SuiteTest < Minitest::Spec
         # {#assert_pass?}
         it do
           out, _ = capture_io do
-            result = assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
+            @result = assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
 
             assert_equal result[:model].title, "Somewhere Far Beyond"
           end
@@ -188,6 +173,7 @@ class SuiteTest < Minitest::Spec
       test_case = test.new(:"test_00#{number}_anonymous")
       failures, assertions, result = test_case.()
 
+      puts failures if failures.size > 0 # TODO: this is an automatic "debugger" :D
       assert_equal failures.size, 0
       # assert_equal assertions, assertion_count
 
@@ -213,10 +199,17 @@ Expected: \"Note to self\"
     assert_test_case_fails(test, "04", %(#<Minitest::Assertion: Property [title] mismatch.
 Expected: \"Forgot\"
   Actual: \"Note to self\">))
-    assert_test_case_passes(test, "05", input = %({:params=>{:memo=>{:title=>\"Note to self\", :content=>\"don't forget\"}}}))
+    assert_test_case_passes(test, "05", %({:params=>{:memo=>{:title=>\"Note to self\", :content=>\"don't forget\"}}}))
+    assert_test_case_fails(test, "06", %(#<Minitest::Assertion: Property [content] mismatch.
+Expected: \"This is slightly different\"
+  Actual: \"don't forget\">))
+    assert_test_case_passes(test, "07", input)
+    assert_test_case_passes(test, "08", %({:params=>{:memo=>{:title=>\"Simple memo\", :content=>\"Remember me!\", :tag_list=>\"todo,today\"}}}))
+    assert_test_case_passes(test, "09", input)
+    assert_test_case_passes(test, "10", input)
 
-    assert_test_case_passes(test, "03")
-    assert_test_case_passes(test, "04")
+
+
 
 
     test_1 = test.new(:test_0001_anonymous)

@@ -32,11 +32,16 @@ module Trailblazer::Test
             end
           end
 
+          step :capture
           step Model::Build(Memo, :new)
           step Contract::Build(constant: Form)
           step Contract::Validate(key: :memo)
           step :parse_tag_list
           step Contract::Persist()
+
+          def capture(ctx, **)
+            ctx[:captured] = CU.inspect(ctx.to_h)
+          end
 
           def parse_tag_list(ctx, **)
             tag_list = ctx["contract.default"].tag_list or return true

@@ -7,7 +7,7 @@ require "trailblazer/operation"
 module Trailblazer::Test
   # Test components we need in other gems, too.
   module Testing
-    class Memo < Struct.new(:id, :title, :content, :tag_list, :persisted?, :errors)
+    class Memo < Struct.new(:id, :title, :content, :tag_list, :persisted?, :errors, keyword_init: true)
       def save
         self[:persisted?] = true
         self[:id] = 1

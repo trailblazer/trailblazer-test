@@ -70,7 +70,7 @@ class DocsAssertionTest < Minitest::Spec
     module Memo
       module Operation
         class Create < Trailblazer::Operation
-          step ->(ctx, **) { ctx[:record] = DocsAssertionTest::Memo.new(1, "Todo") }
+          step ->(ctx, **) { ctx[:record] = DocsAssertionTest::Memo.new(id: 1, title: "Todo") }
         end
       end
     end

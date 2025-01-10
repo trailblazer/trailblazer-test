@@ -16,6 +16,16 @@ class SuiteTest < Minitest::Spec
         # let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
         # let(:expected_attributes) { {content: "Remember me!", persisted?: true} }
         # let(:key_in_params) { :memo }
+  # it "{#assert_pass} with {:model_at" do
+  #   test = Class.new(Test) do
+  #     Trailblazer::Test::Assertion.module!(self, suite: true)
+
+  #       let(:operation) { Memo::Operation::Create }
+  #       let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
+  #       let(:expected_attributes) { {title: "Note to self", content: "Remember me!"} }
+  #       let(:key_in_params) { :memo }
+  #   end
+  # end
 
   it "#assert_pass" do
 # FIXME: test that assert_* returns {ctx}
@@ -134,7 +144,24 @@ class SuiteTest < Minitest::Spec
 )
         end
 
-          vvvvvvvvv
+        Test_for_ModelAt = describe ":model_at" do
+          let(:operation) do
+            Class.new(Trailblazer::Operation) do
+              include Memo::Operation::Create::Capture
+              step :capture
+              step :model
+
+              def model(ctx, params:, **)
+                ctx[:record] = Memo.new(**params[:memo])
+              end
+            end
+          end
+
+          # 01
+          it do
+            @result = assert_pass({title: "Done"}, {title: "Done"}, model_at: :record)
+          end
+        end
 
         # test_0006_anonymous
         # We accept {:model_at} as a first level kw arg, currently.
@@ -207,6 +234,8 @@ Expected: \"This is slightly different\"
     assert_test_case_passes(test, "08", %({:params=>{:memo=>{:title=>\"Simple memo\", :content=>\"Remember me!\", :tag_list=>\"todo,today\"}}}))
     assert_test_case_passes(test, "09", input)
     assert_test_case_passes(test, "10", input)
+
+    assert_test_case_passes(Test_for_ModelAt, "01", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
 
 
 

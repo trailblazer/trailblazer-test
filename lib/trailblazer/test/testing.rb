@@ -39,9 +39,12 @@ module Trailblazer::Test
           step :parse_tag_list
           step Contract::Persist()
 
-          def capture(ctx, **)
-            ctx[:captured] = CU.inspect(ctx.to_h)
+          module Capture
+            def capture(ctx, **)
+              ctx[:captured] = CU.inspect(ctx.to_h)
+            end
           end
+          include Capture
 
           def parse_tag_list(ctx, **)
             tag_list = ctx["contract.default"].tag_list or return true

@@ -158,39 +158,36 @@ class SuiteTest < Minitest::Spec
           end
 
           # 01
+          # We accept {:model_at} as a first level kw arg, currently.
           it do
             @result = assert_pass({title: "Done"}, {title: "Done"}, model_at: :record)
           end
         end
 
-        # test_0006_anonymous
-        # We accept {:model_at} as a first level kw arg, currently.
-        it do
-          create = Class.new(Trailblazer::Operation) do
-            step :model
-
-            def model(ctx, params:, **)
-              ctx[:song] = Record.new(**params)
-            end
-          end
-
-          assert_pass create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", model_at: :song
-          # assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, {invoke_method: :wtf?, model_at: }, {...} # DISCUSS: this would be an alternative syntax.
-        end
-
-
-        # test_0008_anonymous
+        # 11
         # {#assert_pass?}
         it do
-          out, _ = capture_io do
-            @result = assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
-
-            assert_equal result[:model].title, "Somewhere Far Beyond"
+          stdout, _ = capture_io do
+            @result = assert_pass?({title: "Done"}, {title: "Done"})
           end
 
-          assert_equal out, %(AssertionsTest::Create
+          stdout = stdout.sub(/0x\w+/, "XXX")
+
+          assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
 |-- \e[32mStart.default\e[0m
-|-- \e[32mmodel\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[32mcontract.default.call\e[0m
+|   `-- End.success
+|-- \e[32mparse_tag_list\e[0m
+|-- \e[32mpersist.save\e[0m
 `-- End.success
 )
         end
@@ -234,54 +231,8 @@ Expected: \"This is slightly different\"
     assert_test_case_passes(test, "08", %({:params=>{:memo=>{:title=>\"Simple memo\", :content=>\"Remember me!\", :tag_list=>\"todo,today\"}}}))
     assert_test_case_passes(test, "09", input)
     assert_test_case_passes(test, "10", input)
-
     assert_test_case_passes(Test_for_ModelAt, "01", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
-
-
-
-
-
-    test_1 = test.new(:test_0001_anonymous)
-    failures = test_1.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Property [id] mismatch.
-Expected: 1
-  Actual: nil>)
-
-    test_2 = test.new(:test_0002_anonymous)
-    failures = test_2.()
-    assert_equal failures.size, 0
-
-    test_3 = test.new(:test_0003_anonymous)
-    failures = test_3.()
-    assert_equal failures.size, 0
-    assert_equal test_3.instance_variable_get(:@_m), %([:params, :model])
-
-    test_4 = test.new(:test_0004_anonymous)
-    failures = test_4.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: --- expected
-+++ actual
-@@ -1 +1 @@
--AssertionsTest::Record(keyword_init: true)
-+"Song"
->)
-
-    test_5 = test.new(:test_0005_anonymous)
-    failures = test_5.()
-    assert_equal failures.size, 0
-
-    test_6 = test.new(:test_0006_anonymous)
-    failures = test_6.()
-    assert_equal failures.size, 0
-
-    test_7 = test.new(:test_0007_anonymous)
-    failures = test_7.()
-    assert_equal failures.size, 0
-
-    test_8 = test.new(:test_0008_anonymous)
-    failures = test_8.()
-    assert_equal failures.size, 0
+    assert_test_case_passes(test, "11", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
   end
 
           # include Trailblazer::Test::Assertion

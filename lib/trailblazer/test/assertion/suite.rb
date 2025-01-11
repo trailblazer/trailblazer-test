@@ -20,7 +20,7 @@ module Trailblazer
           Assert.assert_pass(params_fragment, test: self, user_block: block, assertion: assertion, expected_attributes_to_merge: expected_attributes_to_merge, **kws)
         end
 
-        def assert_fail(params_fragment, expected_errors, assertion: AssertFail, **kws, &block)
+        def assert_fail(params_fragment, expected_errors=nil, assertion: AssertFail, **kws, &block)
           Assert.assert_fail(params_fragment, expected_errors, test: self, user_block: block, assertion: assertion, **kws)
         end
 

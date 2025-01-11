@@ -11,27 +11,17 @@ class SuiteTest < Minitest::Spec
     end
   end
 
-        # Trailblazer::Test::Assertion.module!(self, suite: true)
-        # let(:operation) { Trailblazer::Test::Testing::Memo::Operation::Create }
-        # let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
-        # let(:expected_attributes) { {content: "Remember me!", persisted?: true} }
-        # let(:key_in_params) { :memo }
-  # it "{#assert_pass} with {:model_at" do
-  #   test = Class.new(Test) do
-  #     Trailblazer::Test::Assertion.module!(self, suite: true)
-
-  #       let(:operation) { Memo::Operation::Create }
-  #       let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
-  #       let(:expected_attributes) { {title: "Note to self", content: "Remember me!"} }
-  #       let(:key_in_params) { :memo }
-  #   end
+  # UNCOMMENT for quick debugging.
+  # Trailblazer::Test::Assertion.module!(self, suite: true)
+  # let(:operation) { Trailblazer::Test::Testing::Memo::Operation::Create }
+  # let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
+  # let(:expected_attributes) { {content: "Remember me!", persisted?: true} }
+  # let(:key_in_params) { :memo }
+  # it "what" do
+  #   assert_fail({title: nil}, {title: ["is missing"]})
   # end
 
   it "#assert_pass" do
-# FIXME: test that assert_* returns {ctx}
-# assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
-# assert_pass({}, {}, invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf))
-
     test =
       Class.new(Test) do
         Memo = Trailblazer::Test::Testing::Memo
@@ -191,6 +181,48 @@ class SuiteTest < Minitest::Spec
 `-- End.success
 )
         end
+
+        Test_assert_fail = describe "{#assert_fail}" do
+          # 01
+          # validation error
+          it do
+            @result = assert_fail({title: nil, content: nil}, [:title, :content])
+          end
+
+          # 02
+          # test that we merge first argument with default_ctx.
+          it do
+            @result = assert_fail({title: nil, urgency: 1}, [:title])
+          end
+
+          # 03
+          # no second argument necessary.
+          # TODO: implement.
+          it do
+            @result = assert_fail({title: nil})
+          end
+
+          # 04
+          # with explicit error messages.
+          it do
+            @result = assert_fail({title: nil}, {title: ["must be filled"]})
+          end
+
+          # 05
+          # with incorrect error message.
+          it do
+            @result = assert_fail({title: nil}, {title: ["--> this is wrong <--"]})
+          end
+
+          # 06
+          # block style, no automatic contract error checks.
+          it do
+            assert_fail({title: nil}) do |result|
+              @result = result # test this block is executed.
+              assert_equal result[:"contract.default"].errors.messages, {:title=>["must be filled"]}
+            end
+          end
+        end
       end
 
     def assert_test_case_passes(test, number, input)
@@ -233,43 +265,27 @@ Expected: \"This is slightly different\"
     assert_test_case_passes(test, "10", input)
     assert_test_case_passes(Test_for_ModelAt, "01", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
     assert_test_case_passes(test, "11", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
+
+    # assert_fail
+    assert_test_case_passes(Test_assert_fail, "01", %({:params=>{:memo=>{:title=>nil, :content=>nil}}}))
+    assert_test_case_passes(Test_assert_fail, "02", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\", :urgency=>1}}}))
+    assert_test_case_passes(Test_assert_fail, "03", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
+    assert_test_case_passes(Test_assert_fail, "04", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
+    assert_test_case_fails(Test_assert_fail, "05", %{#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
+--- expected
++++ actual
+@@ -1 +1 @@
+-{:title=>[\"--> this is wrong <--\"]}
++{:title=>[\"must be filled\"]}
+>})
+    assert_test_case_passes(Test_assert_fail, "06", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
   end
 
-          # include Trailblazer::Test::Assertion
   it "#assert_fail" do
-        # assert_fail Update, {params: {bla: 1}}, [:title]
-        # assert_fail Update, {params: {bla: 1}} do |result|
-        # end
-
     test =
       Class.new(Test) do
         Trailblazer::Test::Assertion.module!(self)
 
-        # test_0001_anonymous
-        it do
-          assert_fail Update, {params: {title: nil}},
-            # expected:
-            [:title]
-        end
-
-        # test_0002_anonymous
-        it do
-          assert_fail Update, {params: {title: nil}},
-            # expected:
-            {title: ["is missing"]}
-        end
-
-        # test_0003_anonymous
-        it do
-          assert_fail Update, {params: {record: true}}, [:title]
-        end
-
-        # test_0004_anonymous
-        it do
-          assert_fail Update, {params: {title: nil}},
-            # expected:
-            {title: ["is XXX"]} # this is wrong.
-        end
 
         # test_0005_anonymous
         it do

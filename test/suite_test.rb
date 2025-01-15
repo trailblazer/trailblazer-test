@@ -222,6 +222,39 @@ class SuiteTest < Minitest::Spec
               assert_equal result[:"contract.default"].errors.messages, {:title=>["must be filled"]}
             end
           end
+
+          # 07
+          # actually passes.
+          it do
+            @result = assert_fail({}, [:title, :content])
+          end
+
+          # 08
+          # actually passes, block is not executed.
+          it do
+            @result = assert_fail({}, [:title, :content]) do
+              raise "i shouldn't be executed!"
+            end
+          end
+
+          # 09
+          # both expected_errors and block are considered.
+          it do
+            assert_fail({title: nil}, [:title]) do |result|
+              @result = result
+              assert_equal result[:"contract.default"].errors.messages, {:title=>["must be filled"]}
+            end
+          end
+          # 10
+          # only with test # 09: both expected_errors and block are considered.
+          # this test must fail to prove that the built-in errors are asserted: the OP actually doesn't pass,
+          # but the contract errors (literally) fail, so we know they've been run.
+          it do
+            @result = assert_fail({title: nil}, [:not_existing_field]) do |result|
+              raise
+              # this is never executed since the contract errors comparison raises.
+            end
+          end
         end
       end
 
@@ -279,6 +312,15 @@ Expected: \"This is slightly different\"
 +{:title=>[\"must be filled\"]}
 >})
     assert_test_case_passes(Test_assert_fail, "06", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
+    assert_test_case_fails(Test_assert_fail, "07", it_passed_error = %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
+Expected: false
+  Actual: true>))
+    assert_test_case_fails(Test_assert_fail, "08", it_passed_error)
+
+    assert_test_case_passes(Test_assert_fail, "09", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
+    assert_test_case_fails(Test_assert_fail, "10", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
+Expected: [:not_existing_field]
+  Actual: [:title]>))
   end
 
   it "#assert_fail" do
@@ -287,29 +329,7 @@ Expected: \"This is slightly different\"
         Trailblazer::Test::Assertion.module!(self)
 
 
-        # test_0005_anonymous
-        it do
-          assert_fail Update, {params: {title: nil}} do |result|
-            @_m = true
-            assert_equal result[:"contract.default"].errors.messages, {:title=>["is missing"]}
-          end
-        end
 
-        # test_0006_anonymous
-        it do
-          assert_fail Update, {params: {record: true}} do |result| # this actually passes.
-            @_m = true
-          end
-        end
-
-        # test_0007_anonymous
-        # both expected_errors and block are considered.
-        it do
-          assert_fail Update, {params: {title: nil}}, [:title] do |result|
-            assert_equal result[:"contract.default"].errors.messages, {:title=>["is missing"]}
-            @_m = true
-          end
-        end
 
         # test_0008_anonymous
         # expected_errors is wrong

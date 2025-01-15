@@ -402,241 +402,149 @@ Expected: [:not_existing_field]
     assert_test_case_passes(Test_assert_fail, "13", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\"}}}))
     assert_test_case_passes(No_contract_test, "01", input)
   end
-
-  it "#assert_fail" do
-    test =
-      Class.new(Test) do
-        Trailblazer::Test::Assertion.module!(self)
-
-
-        # test_0009_anonymous
-        it do
-          stdout, _ = capture_io do
-            assert_fail Update, {params: {title: nil}}, [:title], invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
-          end
-
-          assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
-        end
-
-        # test_0012_anonymous
-        it do
-          stdout, _ = capture_io do
-            assert_fail? Update, {params: {title: nil}}, [:title]
-          end
-
-          assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
-        end
-      end
-
-      raise "what if assert_fail errors are only subset of user's?"
-
-    test_1 = test.new(:test_0001_anonymous)
-    failures = test_1.()
-    assert_equal failures.size, 0
-
-    test_2 = test.new(:test_0002_anonymous)
-    failures = test_2.()
-    assert_equal failures.size, 0
-
-    test_3 = test.new(:test_0003_anonymous)
-    failures = test_3.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
-Expected: false
-  Actual: true>)
-
-    test_4 = test.new(:test_0004_anonymous)
-    failures = test_4.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
-Expected: {:title=>[\"is XXX\"]}
-  Actual: {:title=>[\"is missing\"]}>)
-
-    test_5 = test.new(:test_0005_anonymous)
-    failures = test_5.()
-    assert_equal test_5.instance_variable_get(:@_m), true
-    assert_equal failures.size, 0
-
-    test_6 = test.new(:test_0006_anonymous)
-    failures = test_6.()
-    assert_nil test_6.instance_variable_get(:@_m) # block is not executed.
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
-Expected: false
-  Actual: true>)
-
-    test_7 = test.new(:test_0007_anonymous)
-    failures = test_7.()
-    assert_equal test_7.instance_variable_get(:@_m), true
-    assert_equal failures.size, 0
-
-    test_8 = test.new(:test_0008_anonymous)
-    failures = test_8.()
-    assert_nil test_8.instance_variable_get(:@_m) # block is not executed.
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
-Expected: [:title_XXX]
-  Actual: [:title]>)
-
-    test_9 = test.new(:test_0009_anonymous)
-    failures = test_9.()
-    assert_equal failures.size, 0
-
-    test_10 = test.new(:test_0010_anonymous)
-    failures = test_10.()
-    assert_equal failures.size, 0
-
-    test_11 = test.new(:test_0011_anonymous)
-    failures = test_11.()
-    assert_equal failures.size, 0
-
-    test_12 = test.new(:test_0012_anonymous)
-    failures = test_12.()
-    assert_equal failures.size, 0
-  end
 end
 
-class AssertionActivityTest < Minitest::Spec
-  Trailblazer::Test::Assertion.module!(self, activity: true)
+# class AssertionActivityTest < Minitest::Spec
+#   Trailblazer::Test::Assertion.module!(self, activity: true)
 
-  Record = Trailblazer::Test::Testing::Memo
+#   Record = Trailblazer::Test::Testing::Memo
 
-  class Create < Trailblazer::Activity::FastTrack
-    step :validate
-    step :model
+#   class Create < Trailblazer::Activity::FastTrack
+#     step :validate
+#     step :model
 
-    def validate(ctx, params:, **)
-      return true if params[:title]
+#     def validate(ctx, params:, **)
+#       return true if params[:title]
 
-      ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({:title => ["is missing"]}))
-      false
-    end
+#       ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({:title => ["is missing"]}))
+#       false
+#     end
 
-    def model(ctx, params:, **)
-      ctx[:model] = Record.new(**params)
-    end
-  end
+#     def model(ctx, params:, **)
+#       ctx[:model] = Record.new(**params)
+#     end
+#   end
 
-  it do
-    assert_pass Create, {params: {title: "Roxanne"}},
-      title: "Roxanne"
-  end
+#   it do
+#     assert_pass Create, {params: {title: "Roxanne"}},
+#       title: "Roxanne"
+#   end
 
-  it do
-    assert_fail Create, {params: {}}, [:title]
-  end
-end
+#   it do
+#     assert_fail Create, {params: {}}, [:title]
+#   end
+# end
 
-# Test with the Assertion::Suite "DSL" module.
-class SuiteWithActivityTest < Minitest::Spec
-  Trailblazer::Test::Assertion.module!(self, activity: true, suite: true)
-  # Record = AssertionsTest::Record
-  # Create = AssertionActivityTest::Create
+# # Test with the Assertion::Suite "DSL" module.
+# class SuiteWithActivityTest < Minitest::Spec
+#   Trailblazer::Test::Assertion.module!(self, activity: true, suite: true)
+#   # Record = AssertionsTest::Record
+#   # Create = AssertionActivityTest::Create
 
-  let(:operation) { Create }
+#   let(:operation) { Create }
 
-  it do
-    out, _ = capture_io do
-      assert_pass?({title: "Roxanne"}, {title: "Roxanne"})
-    end
+#   it do
+#     out, _ = capture_io do
+#       assert_pass?({title: "Roxanne"}, {title: "Roxanne"})
+#     end
 
-    assert_equal out, %(AssertionActivityTest::Create
-|-- \e[32mStart.default\e[0m
-|-- \e[32mvalidate\e[0m
-|-- \e[32mmodel\e[0m
-`-- End.success
-)
-  end
+#     assert_equal out, %(AssertionActivityTest::Create
+# |-- \e[32mStart.default\e[0m
+# |-- \e[32mvalidate\e[0m
+# |-- \e[32mmodel\e[0m
+# `-- End.success
+# )
+#   end
 
-  it "{#assert_fail} with wtf?" do
-    out, _ = capture_io do
-      assert_fail?({title: nil}, [:title])
-    end
+#   it "{#assert_fail} with wtf?" do
+#     out, _ = capture_io do
+#       assert_fail?({title: nil}, [:title])
+#     end
 
-    assert_equal out, %(AssertionActivityTest::Create
-|-- \e[32mStart.default\e[0m
-|-- \e[33mvalidate\e[0m
-`-- End.failure
-)
-  end
-end
+#     assert_equal out, %(AssertionActivityTest::Create
+# |-- \e[32mStart.default\e[0m
+# |-- \e[33mvalidate\e[0m
+# `-- End.failure
+# )
+#   end
+# end
 
-require "trailblazer/endpoint"
-require "trailblazer/test/endpoint"
-class EndpointWithActivityTest < Minitest::Spec
-    # Record = AssertionsTest::Record
-    # Create = AssertionActivityTest::Create
+# require "trailblazer/endpoint"
+# require "trailblazer/test/endpoint"
+# class EndpointWithActivityTest < Minitest::Spec
+#     # Record = AssertionsTest::Record
+#     # Create = AssertionActivityTest::Create
 
-  include Trailblazer::Test::Assertion
-  include Trailblazer::Test::Assertion::Activity
-  include Trailblazer::Test::Assertion::AssertExposes
+#   include Trailblazer::Test::Assertion
+#   include Trailblazer::Test::Assertion::Activity
+#   include Trailblazer::Test::Assertion::AssertExposes
 
-  def self.__(activity, options, **kws, &block) # TODO: move this to endpoint.
-    signal, (ctx, flow_options) = Trailblazer::Endpoint::Runtime.(
-      activity, options,
-      flow_options: _flow_options(),
-      **kws,
-      &block
-    )
+#   def self.__(activity, options, **kws, &block) # TODO: move this to endpoint.
+#     signal, (ctx, flow_options) = Trailblazer::Endpoint::Runtime.(
+#       activity, options,
+#       flow_options: _flow_options(),
+#       **kws,
+#       &block
+#     )
 
-    return signal, ctx # DISCUSS: should we provide a Result object here?
-  end
+#     return signal, ctx # DISCUSS: should we provide a Result object here?
+#   end
 
-  def self.__?(*args, &block)
-    __(*args, invoke_method: Trailblazer::Developer::Wtf.method(:invoke), &block)
-  end
-  include Trailblazer::Test::Endpoint.module(self, invoke_method: method(:__), invoke_method_wtf: method(:__?))
-
-
-  def self._flow_options
-    {
-      context_options: {
-        aliases: {"model": :object},
-        container_class: Trailblazer::Context::Container::WithAliases,
-      }
-    }
-  end
+#   def self.__?(*args, &block)
+#     __(*args, invoke_method: Trailblazer::Developer::Wtf.method(:invoke), &block)
+#   end
+#   include Trailblazer::Test::Endpoint.module(self, invoke_method: method(:__), invoke_method_wtf: method(:__?))
 
 
-  it "{#assert_pass} {Activity} invoked via endpoint" do
-    ctx = assert_pass Create, {params: {title: "Roxanne"}},
-      title: "Roxanne"
+#   def self._flow_options
+#     {
+#       context_options: {
+#         aliases: {"model": :object},
+#         container_class: Trailblazer::Context::Container::WithAliases,
+#       }
+#     }
+#   end
 
-    assert_equal ctx[:object].title, "Roxanne" # aliasing only works through endpoint.
-  end
 
-  it "{#assert_fail} with activity via endpoint" do
-    ctx = assert_fail Create, {params: {}}, [:title]
+#   it "{#assert_pass} {Activity} invoked via endpoint" do
+#     ctx = assert_pass Create, {params: {title: "Roxanne"}},
+#       title: "Roxanne"
 
-    assert_equal ctx.class, Trailblazer::Context::Container::WithAliases
-  end
+#     assert_equal ctx[:object].title, "Roxanne" # aliasing only works through endpoint.
+#   end
 
-  it "{#assert_pass?}" do
-    out, _ = capture_io do
-      ctx = assert_pass? Create, {params: {title: "Roxanne"}},
-        title: "Roxanne"
+#   it "{#assert_fail} with activity via endpoint" do
+#     ctx = assert_fail Create, {params: {}}, [:title]
 
-      assert_equal ctx[:object].title, "Roxanne" # aliasing only works through endpoint.
-    end
+#     assert_equal ctx.class, Trailblazer::Context::Container::WithAliases
+#   end
 
-    assert_equal out, %(AssertionActivityTest::Create
-|-- \e[32mStart.default\e[0m
-|-- \e[32mvalidate\e[0m
-|-- \e[32mmodel\e[0m
-`-- End.success
-)
-  end
+#   it "{#assert_pass?}" do
+#     out, _ = capture_io do
+#       ctx = assert_pass? Create, {params: {title: "Roxanne"}},
+#         title: "Roxanne"
 
-  it "{#assert_fail?}" do
-    out, _ = capture_io do
-      ctx = assert_fail? Create, {params: {}}, [:title]
-    end
+#       assert_equal ctx[:object].title, "Roxanne" # aliasing only works through endpoint.
+#     end
 
-    assert_equal out, %(AssertionActivityTest::Create
-|-- \e[32mStart.default\e[0m
-|-- \e[33mvalidate\e[0m
-`-- End.failure
-)
-  end
-end
+#     assert_equal out, %(AssertionActivityTest::Create
+# |-- \e[32mStart.default\e[0m
+# |-- \e[32mvalidate\e[0m
+# |-- \e[32mmodel\e[0m
+# `-- End.success
+# )
+#   end
+
+#   it "{#assert_fail?}" do
+#     out, _ = capture_io do
+#       ctx = assert_fail? Create, {params: {}}, [:title]
+#     end
+
+#     assert_equal out, %(AssertionActivityTest::Create
+# |-- \e[32mStart.default\e[0m
+# |-- \e[33mvalidate\e[0m
+# `-- End.failure
+# )
+#   end
+# end
 

@@ -197,7 +197,6 @@ class SuiteTest < Minitest::Spec
 
           # 03
           # no second argument necessary.
-          # TODO: implement.
           it do
             @result = assert_fail({title: nil})
           end
@@ -253,6 +252,80 @@ class SuiteTest < Minitest::Spec
             @result = assert_fail({title: nil}, [:not_existing_field]) do |result|
               raise
               # this is never executed since the contract errors comparison raises.
+            end
+          end
+
+          # 11
+          # with incorrect erroring contract field.
+          it do
+            @result = assert_fail({title: nil}, [:not_existing_field])
+          end
+
+          # 12
+          # We accept {:invoke_method} as a first level kw arg, currently.
+          it do
+            stdout, _ = capture_io do
+              @result = assert_fail({title: nil}, [:title], invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf))
+            end
+
+            stdout = stdout.sub(/0x\w+/, "XXX")
+
+            assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[33mcontract.default.call\e[0m
+|   `-- End.failure
+`-- End.failure
+)
+          end
+
+          # 13
+          # {#assert_fail?}
+          it do
+            stdout, _ = capture_io do
+              @result = assert_fail?({title: nil}, [:title])
+            end
+
+            stdout = stdout.sub(/0x\w+/, "XXX")
+
+            assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[33mcontract.default.call\e[0m
+|   `-- End.failure
+`-- End.failure
+)
+          end
+
+          No_contract_test = describe "OP without the concept of {:contract.default}" do
+            let(:operation) do
+              Class.new(Trailblazer::Operation) do
+                include Memo::Operation::Create::Capture
+                step :capture
+                step ->(ctx, **) { false }
+              end
+            end
+
+            # 01
+            # {#assert_fail} can be used wit OP withhout contract errors.
+            it do
+              @result = assert_fail({})
             end
           end
         end
@@ -321,6 +394,13 @@ Expected: false
     assert_test_case_fails(Test_assert_fail, "10", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
 Expected: [:not_existing_field]
   Actual: [:title]>))
+
+    assert_test_case_fails(Test_assert_fail, "11", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
+Expected: [:not_existing_field]
+  Actual: [:title]>))
+    assert_test_case_passes(Test_assert_fail, "12", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\"}}}))
+    assert_test_case_passes(Test_assert_fail, "13", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\"}}}))
+    assert_test_case_passes(No_contract_test, "01", input)
   end
 
   it "#assert_fail" do
@@ -329,16 +409,6 @@ Expected: [:not_existing_field]
         Trailblazer::Test::Assertion.module!(self)
 
 
-
-
-        # test_0008_anonymous
-        # expected_errors is wrong
-        it do
-          assert_fail Update, {params: {title: nil}}, [:title_XXX] do |result|
-            @_m = true
-          end
-        end
-
         # test_0009_anonymous
         it do
           stdout, _ = capture_io do
@@ -346,25 +416,6 @@ Expected: [:not_existing_field]
           end
 
           assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
-        end
-
-        # test_0010_anonymous
-        # {#assert_fail} returns {result}.
-        it do
-          result = assert_fail Update, {params: {title: nil}}, [:title]
-          assert_equal CU.inspect(result[:"contract.default"].errors.messages), %({:title=>[\"is missing\"]})
-        end
-
-        # test_0011_anonymous
-        # {#assert_fail} can be used without contract errors.
-        it do
-          operation = Class.new(Trailblazer::Operation) do
-            step ->(ctx, **) { false }
-          end
-
-          result = assert_fail operation, {params: {title: nil}}
-
-          assert_equal result.keys.inspect, %([:params])
         end
 
         # test_0012_anonymous

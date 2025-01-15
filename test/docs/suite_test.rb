@@ -54,8 +54,9 @@ class DocsSuiteAssertionsTest < Minitest::Spec
 
     #:assert-pass
     it "accepts {tag_list} and converts it to an array" do
-      assert_pass({tag_list: "fridge,todo"},
-        {tag_list: ["fridge", "todo"]}) # what we're expecting on the model.
+      assert_pass(
+        {tag_list: "fridge,todo"}, # input + default_ctx
+        {tag_list: ["fridge", "todo"]}) # what's expected on the model.
     end
     #:assert-pass end
     #~zoom end

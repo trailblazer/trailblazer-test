@@ -27,7 +27,7 @@ class DocsAssertionTest < Minitest::Spec
     #:pass-model-manual
     assert_equal result[:model].title, "Todo"
     assert_equal result[:model].persisted?, true
-    assert_equal result[:model].id > 0
+    assert result[:model].id > 0
     #:pass-model-manual end
 =end
   end

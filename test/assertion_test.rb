@@ -267,7 +267,7 @@ Expected: 1
         # test_0008_anonymous
         # expected_errors is wrong
         it do
-          assert_fail Update, {params: {title: nil}}, [:title_XXX] do |result|
+          assert_fail Update, {params: {title: nil}}, [:title, :XXX] do |result|
             @_m = true
           end
         end
@@ -309,8 +309,6 @@ Expected: 1
           assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
         end
       end
-
-      raise "what if assert_fail errors are only subset of user's?"
 
     test_1 = test.new(:test_0001_anonymous)
     failures = test_1.()
@@ -357,7 +355,7 @@ Expected: false
     assert_nil test_8.instance_variable_get(:@_m) # block is not executed.
     assert_equal failures.size, 1
     assert_equal failures[0].inspect, %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
-Expected: [:title_XXX]
+Expected: [:XXX, :title]
   Actual: [:title]>)
 
     test_9 = test.new(:test_0009_anonymous)

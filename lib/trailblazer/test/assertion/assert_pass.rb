@@ -14,7 +14,7 @@ module Trailblazer
           assert_after_call(ctx, **options) do |ctx|
             test.assert_equal(*arguments_for_assert_pass(signal), error_message_for_assert_pass(signal, ctx, **options))
 
-            test.send(:assert_exposes, model(ctx, **options), expected_model_attributes)
+            test.assert_exposes(model(ctx, **options), expected_model_attributes)
           end
         end
 

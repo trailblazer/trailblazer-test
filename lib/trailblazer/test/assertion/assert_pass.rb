@@ -12,21 +12,20 @@ module Trailblazer
 
         def assert_pass_with_model(signal, ctx, **options)
           assert_after_call(ctx, **options) do |ctx|
-            Passed.call(signal, ctx, **options)
+            Passed.new.call(signal, ctx, **options)
             passed_with?(signal, ctx, **options)
           end
         end
 
-        module Passed
-          module_function
-
+        class Passed
           # Check if the operation terminates on {:success}.
           # @semi-public Used in rspec-trailblazer
           def call(signal, ctx, **options)
             expected_outcome, actual_outcome = arguments_for_assertion(signal)
             error_msg = error_message(signal, ctx, **options) # DISCUSS: compute error message before there was an error?
 
-            assertion(expected_outcome, actual_outcome, error_msg, **options)
+            outcome = assertion(expected_outcome, actual_outcome, error_msg, **options)
+            return outcome, error_msg
           end
 
           # What needs to be compared?

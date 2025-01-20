@@ -22,7 +22,7 @@ module Trailblazer
             if options[:expected_errors]
               # TODO: allow error messages from somewhere else.
               # only test _if_ errors are present, not the content.
-              colored_errors = colored_errors_for(ctx)
+              colored_errors = AssertPass::Errors.colored_errors_for(ctx)
 
               test.assert_equal *arguments_for_assert_contract_errors(signal, ctx, contract_name: :default, **options), "Actual contract errors: #{colored_errors}"
             end

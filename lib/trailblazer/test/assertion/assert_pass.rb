@@ -12,15 +12,41 @@ module Trailblazer
 
         def assert_pass_with_model(signal, ctx, **options)
           assert_after_call(ctx, **options) do |ctx|
-            passed?(signal, ctx, **options)
+            Passed.call(signal, ctx, **options)
             passed_with?(signal, ctx, **options)
           end
         end
 
-        # Check if the operation terminates on {:success}.
-        # @semi-public Used in rspec-trailblazer
-        def passed?(signal, ctx, test:, **options)
-          test.assert_equal(*arguments_for_assert_pass(signal), error_message_for_assert_pass(signal, ctx, **options))
+        module Passed
+          module_function
+
+          # Check if the operation terminates on {:success}.
+          # @semi-public Used in rspec-trailblazer
+          def call(signal, ctx, **options)
+            expected_outcome, actual_outcome = arguments_for_assertion(signal)
+            error_msg = error_message(signal, ctx, **options) # DISCUSS: compute error message before there was an error?
+
+            assertion(expected_outcome, actual_outcome, error_msg, **options)
+          end
+
+          # What needs to be compared?
+          def arguments_for_assertion(signal)
+            return true, Assertion::SUCCESS_TERMINI.include?(signal.to_h[:semantic])
+          end
+
+          def error_message(signal, ctx, operation:, **)
+            colored_errors = Errors.colored_errors_for(ctx)
+
+            %{{#{operation}} failed: #{colored_errors}} # FIXME: only if contract's there!
+          end
+
+          def assertion(expected_outcome, actual_outcome, error_msg, test:, **)
+            test.assert_equal(
+              expected_outcome,
+              actual_outcome,
+              error_msg
+            )
+          end
         end
 
         # @semi-public Used in rspec-trailblazer
@@ -31,20 +57,10 @@ module Trailblazer
           test.assert_exposes(actual_model, expected_model_attributes)
         end
 
-        # What needs to be compared?
-        def arguments_for_assert_pass(signal)
-          return true, Assertion::SUCCESS_TERMINI.include?(signal.to_h[:semantic])
-        end
-
         def model_for(ctx, model_at:, **)
           ctx[model_at]
         end
 
-        def error_message_for_assert_pass(signal, ctx, operation:, **)
-          colored_errors = colored_errors_for(ctx)
-
-          %{{#{operation}} failed: #{colored_errors}} # FIXME: only if contract's there!
-        end
 
         module Utils
           # @private
@@ -55,6 +71,12 @@ module Trailblazer
 
             ctx
           end
+
+
+        end # Utils
+
+        module Errors
+          module_function
 
           def colored_errors_for(ctx)
             # TODO: generic errors object "finding"
@@ -67,7 +89,7 @@ module Trailblazer
 
             colored_errors = %{\e[33m#{errors}\e[0m}
           end
-        end # Utils
+        end
 
         extend Utils
       end

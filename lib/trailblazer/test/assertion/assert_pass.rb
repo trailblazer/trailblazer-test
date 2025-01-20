@@ -13,7 +13,7 @@ module Trailblazer
         def assert_pass_with_model(signal, ctx, **options)
           assert_after_call(ctx, **options) do |ctx|
             Passed.new.call(signal, ctx, **options)
-            passed_with?(signal, ctx, **options)
+            PassedWithAttributes.new.call(signal, ctx, **options)
           end
         end
 
@@ -49,17 +49,23 @@ module Trailblazer
         end
 
         # @semi-public Used in rspec-trailblazer
-        # DISCUSS: should we default options like {:model_at} here?
-        def passed_with?(signal, ctx, model_at: :model, expected_model_attributes: {}, test:, **options)
-          actual_model = model_for(ctx, model_at: model_at)
+        class PassedWithAttributes
+          def call(signal, ctx, **options)
+            model = model_for(ctx, **options)
 
-          test.assert_exposes(actual_model, expected_model_attributes)
+            outcome, _ = assertion(ctx, **options, model: model)
+            outcome
+          end
+
+          # DISCUSS: should we default options like {:model_at} here?
+          def model_for(ctx, model_at: :model, **)
+            ctx[model_at]
+          end
+
+          def assertion(ctx, model:, expected_model_attributes:, test:, **)
+            test.assert_exposes(model, expected_model_attributes)
+          end
         end
-
-        def model_for(ctx, model_at:, **)
-          ctx[model_at]
-        end
-
 
         module Utils
           # @private
@@ -70,8 +76,6 @@ module Trailblazer
 
             ctx
           end
-
-
         end # Utils
 
         module Errors

@@ -40,6 +40,7 @@ module Trailblazer
         module Assert
           module_function
 
+          # @semi-public (for rspec-trailblazer).
           def normalize_for(params_fragment, **kws)
             kws = normalize_kws(**kws)
             ctx = ctx_for_params_fragment(params_fragment, **kws)
@@ -49,9 +50,9 @@ module Trailblazer
 
           #@public
           def assert_pass(params_fragment, deep_merge: true, assertion:, test:, expected_attributes_to_merge:, **kws) # TODO: remove kws.
-            ctx, kws = normalize_for(params_fragment, test: test, **kws)
+            ctx, kws = normalize_for(params_fragment, test: test, **kws) # compute input.
 
-            expected_attributes = expected_attributes_for(expected_attributes_to_merge, **kws)
+            expected_attributes = expected_attributes_for(expected_attributes_to_merge, **kws) # compute "output", expected model attributes.
 
             activity = kws[:operation]  # FIXME.
 
@@ -65,7 +66,7 @@ module Trailblazer
             assertion.(activity, ctx, expected_errors, **kws)
           end
 
-          #@private
+          # @semi-public used in rspec-trailblazer.
           def ctx_for_params_fragment(params_fragment, key_in_params:, default_ctx:, **)
             return params_fragment if params_fragment.kind_of?(Trailblazer::Test::Context)
             # If {:key_in_params} is given, key the {params_fragment} with it, e.g. {params: {transaction: {.. params_fragment ..}}}
@@ -76,31 +77,40 @@ module Trailblazer
 
           # @private
           # Gather all test case configuration. This involves reading all test `let` directives.
-          def normalize_kws(user_block:, test:, operation: test.operation, expected_attributes: test.expected_attributes, contract_name: "default", model_at: :model, invoke: Assertion.method(:invoke_operation), **options)
+          def normalize_kws(user_block:, test:, operation: test.operation, contract_name: "default", invoke: Assertion.method(:invoke_operation), **options)
             kws = {
               operation:            operation,
-              expected_attributes:  expected_attributes,
               test:                 test,
               contract_name:        contract_name,
-              model_at:             model_at,
               user_block:           user_block,
               invoke: invoke,
 
-              **normalize_kws_for_ctx(test: test, **options)
+              **normalize_kws_for_ctx(test: test, **options),
+              **normalize_kws_for_model_assertion(test: test, **options),
             }
 
             return kws
           end
 
-          def normalize_kws_for_ctx(test:, key_in_params: test.key_in_params, default_ctx: test.default_ctx)
+          # @semi-public used in rspec-trailblazer.
+          # Used when building the incoming {ctx}, e.g. in {#run}.
+          def normalize_kws_for_ctx(test:, key_in_params: test.key_in_params, default_ctx: test.default_ctx, **)
             {
               default_ctx:          default_ctx,
               key_in_params:        key_in_params,
             }
           end
 
+          def normalize_kws_for_model_assertion(test:, expected_attributes: test.expected_attributes, model_at: :model, **)
+            {
+              expected_attributes:  expected_attributes,
+              model_at:             model_at,
+            }
+          end
+
           # FIXME: when {deep_merge: true} the result hash contains subclassed AR classes instead of the original ones.
           #        when we got this sorted we can allows deep merging here, too.
+          # @semi-public (for rspec-trailblazer).
           def expected_attributes_for(expected_attributes_to_merge, expected_attributes:, deep_merge: false, **)
             _expected_attributes = merge_for(expected_attributes, expected_attributes_to_merge, deep_merge)
           end

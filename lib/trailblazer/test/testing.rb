@@ -60,6 +60,7 @@ module Trailblazer::Test
       end
     end
 
+    # TODO: 2BRM.
     Song = Struct.new(:band, :title, :duration) do
       def save()
         @save = true

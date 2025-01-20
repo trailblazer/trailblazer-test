@@ -4,18 +4,31 @@ module Trailblazer
       module AssertPass
         module_function
 
-        def call(activity, ctx, invoke:, model_at: :model, test:, user_block:, expected_model_attributes:)
+        def call(activity, ctx, invoke:, **options)
           signal, ctx, _ = invoke.(activity, ctx)
 
-          assert_pass_with_model(signal, ctx, expected_model_attributes: expected_model_attributes, test: test, user_block: user_block, model_at: model_at, operation: activity)
+          assert_pass_with_model(signal, ctx, operation: activity, **options)
         end
 
-        def assert_pass_with_model(signal, ctx, expected_model_attributes: {}, test:, **options)
+        def assert_pass_with_model(signal, ctx, **options)
           assert_after_call(ctx, **options) do |ctx|
-            test.assert_equal(*arguments_for_assert_pass(signal), error_message_for_assert_pass(signal, ctx, **options))
-
-            test.assert_exposes(model(ctx, **options), expected_model_attributes)
+            passed?(signal, ctx, **options)
+            passed_with?(signal, ctx, **options)
           end
+        end
+
+        # Check if the operation terminates on {:success}.
+        # @semi-public Used in rspec-trailblazer
+        def passed?(signal, ctx, test:, **options)
+          test.assert_equal(*arguments_for_assert_pass(signal), error_message_for_assert_pass(signal, ctx, **options))
+        end
+
+        # @semi-public Used in rspec-trailblazer
+        # DISCUSS: should we default options like {:model_at} here?
+        def passed_with?(signal, ctx, model_at: :model, expected_model_attributes: {}, test:, **options)
+          actual_model = model_for(ctx, model_at: model_at)
+
+          test.assert_exposes(actual_model, expected_model_attributes)
         end
 
         # What needs to be compared?
@@ -23,7 +36,7 @@ module Trailblazer
           return true, Assertion::SUCCESS_TERMINI.include?(signal.to_h[:semantic])
         end
 
-        def model(ctx, model_at:, **)
+        def model_for(ctx, model_at:, **)
           ctx[model_at]
         end
 

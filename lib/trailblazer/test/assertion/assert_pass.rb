@@ -53,8 +53,8 @@ module Trailblazer
           def call(signal, ctx, **options)
             model = model_for(ctx, **options)
 
-            outcome, _ = assertion(ctx, **options, model: model)
-            outcome
+            outcome, error_msg = assertion(ctx, **options, model: model)
+            return outcome, error_msg
           end
 
           # DISCUSS: should we default options like {:model_at} here?

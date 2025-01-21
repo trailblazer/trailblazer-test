@@ -331,25 +331,6 @@ class SuiteTest < Minitest::Spec
         end
       end
 
-    def assert_test_case_passes(test, number, input)
-      test_case = test.new(:"test_00#{number}_anonymous")
-      failures, assertions, result = test_case.()
-
-      puts failures if failures.size > 0 # TODO: this is an automatic "debugger" :D
-      assert_equal failures.size, 0
-      # assert_equal assertions, assertion_count
-
-      assert_equal result[:captured], input
-    end
-
-    def assert_test_case_fails(test, number, error_message)
-      test_case = test.new(:"test_00#{number}_anonymous")
-      failures, assertions, _ = test_case.()
-
-      assert_equal failures.size, 1
-      assert_equal failures[0].inspect, error_message
-    end
-
     # assert_pass {}, {}
     assert_test_case_passes(test, "01", input = %({:params=>{:memo=>{:title=>\"Note to self\", :content=>\"Remember me!\"}}}))
     assert_test_case_fails(test, "02", %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} failed: \e[33m{:title=>[\"must be filled\"]}\e[0m.

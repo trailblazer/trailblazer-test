@@ -4,13 +4,6 @@ require "test_helper"
 class SuiteTest < Minitest::Spec
   Record = Struct.new(:id, :persisted?, :title, :genre, keyword_init: true)
 
-  class Test < Minitest::Spec
-    def call
-      run
-      return @failures, @assertions, @result
-    end
-  end
-
   # UNCOMMENT for quick debugging.
   # Trailblazer::Test::Assertion.module!(self, suite: true)
   # let(:operation) { Trailblazer::Test::Testing::Memo::Operation::Create }

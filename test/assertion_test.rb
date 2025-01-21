@@ -3,13 +3,6 @@ require "test_helper"
 class AssertionsTest < Minitest::Spec
   Record = Struct.new(:id, :persisted?, :title, :genre, keyword_init: true)
 
-  class Test < Minitest::Spec
-    def call
-      run
-      @failures
-    end
-  end
-
   class Create < Trailblazer::Operation
     step :model
 
@@ -66,142 +59,155 @@ Expected: 2
   Actual: 1>)
   end
 
-        Trailblazer::Test::Assertion.module!(self)
+# Trailblazer::Test::Assertion.module!(self)
+
   it "#assert_pass" do
-# FIXME: test that assert_* returns {ctx}
 # assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
 
     test =
       Class.new(Test) do
         Trailblazer::Test::Assertion.module!(self)
+        Memo = Trailblazer::Test::Testing::Memo
+        Create = Memo::Operation::Create
 
-        # test_0001_anonymous
+        VALID_INPUT = {params: {memo: {title: "TODO", content: "Stock up beer"}}}
+
+        # 01
+        # fails, expected {content} mismatch.
         it do
-          assert_pass Create, {params: {title: "Somewhere Far Beyond"}},
+          @result = assert_pass Create, VALID_INPUT,
             # expected:
-            id: 1,
-            persisted?: true,
-            title: "Somewhere Far Beyond",
-            genre: nil
+            title: "TODO",
+            content: "" # this is wrong.
         end
 
-        # test_0002_anonymous
+        # 02
+        # passes.
         it do
-          assert_pass Create, {params: {title: "Somewhere Far Beyond"}},
+          @result = assert_pass Create, VALID_INPUT,
             # expected:
-            id: nil,
-            persisted?: nil,
-            title: "Somewhere Far Beyond",
-            genre: nil
+            title: "TODO",
+            content: "Stock up beer"
         end
 
-        # test_0003_anonymous
+        # 03
+        # block, passes.
         it do
-          assert_pass Create, {params: {title: "Somewhere Far Beyond"}} do |result|
-            @_m = result.keys.inspect
+          assert_pass Create, VALID_INPUT do |result|
+            @result = result
 
-            assert_equal result[:model].class, Record
+            assert_equal result[:model].class, Memo
           end
         end
 
-        # test_0004_anonymous
+        # 04
+        # block fails
         it do
-          assert_pass Create, {params: {title: "Somewhere Far Beyond"}} do |result|
-            assert_equal result[:model].class, "Song" # fails
+          assert_pass Create, VALID_INPUT do |result|
+            @result = result
+            assert_equal result[:model].class, "Song" # fails.
           end
         end
 
-        # test_0005_anonymous
+        # 05
         # We accept {:invoke_method} as a first level kw arg, currently.
         it do
           stdout, _ = capture_io do
-            assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
+            @result = assert_pass Create, VALID_INPUT, title: "TODO", invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
           end
 
-          assert_equal stdout, %(AssertionsTest::Create\n|-- \e[32mStart.default\e[0m\n|-- \e[32mmodel\e[0m\n`-- End.success\n)
+          stdout = stdout.sub(/0x\w+/, "XXX")
+
+          assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[32mcontract.default.call\e[0m
+|   `-- End.success
+|-- \e[32mparse_tag_list\e[0m
+|-- \e[32mpersist.save\e[0m
+`-- End.success
+)
         end
 
-        # test_0006_anonymous
+        # 06
         # We accept {:model_at} as a first level kw arg, currently.
         it do
           create = Class.new(Trailblazer::Operation) do
+            include Memo::Operation::Create::Capture
+            step :capture
             step :model
 
             def model(ctx, params:, **)
-              ctx[:song] = Record.new(**params)
+              ctx[:memo] = Memo.new(**params[:memo])
             end
           end
 
-          assert_pass create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond", model_at: :song
+          @result = assert_pass create, VALID_INPUT, title: "TODO", model_at: :memo
           # assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, {invoke_method: :wtf?, model_at: }, {...} # DISCUSS: this would be an alternative syntax.
         end
 
-        # test_0007_anonymous
+        # 07
         # {#assert_pass} returns {result}.
         it do
-          result = assert_pass Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
+          @result = assert_pass Create, VALID_INPUT, title: "TODO"
 
-          assert_equal result[:model].title, "Somewhere Far Beyond"
+          assert_equal @result[:model].title, "TODO"
         end
 
-        # test_0008_anonymous
+        # 08
         # {#assert_pass?}
         it do
-          out, _ = capture_io do
-            result = assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
+          stdout, _ = capture_io do
+            @result = assert_pass? Create, VALID_INPUT, title: "TODO"
 
-            assert_equal result[:model].title, "Somewhere Far Beyond"
+            assert_equal @result[:model].title, "TODO"
           end
 
-          assert_equal out, %(AssertionsTest::Create
+          stdout = stdout.sub(/0x\w+/, "XXX")
+
+          assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
 |-- \e[32mStart.default\e[0m
-|-- \e[32mmodel\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[32mcontract.default.call\e[0m
+|   `-- End.success
+|-- \e[32mparse_tag_list\e[0m
+|-- \e[32mpersist.save\e[0m
 `-- End.success
 )
         end
       end
 
-    test_1 = test.new(:test_0001_anonymous)
-    failures = test_1.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Property [id] mismatch.
-Expected: 1
-  Actual: nil>)
-
-    test_2 = test.new(:test_0002_anonymous)
-    failures = test_2.()
-    assert_equal failures.size, 0
-
-    test_3 = test.new(:test_0003_anonymous)
-    failures = test_3.()
-    assert_equal failures.size, 0
-    assert_equal test_3.instance_variable_get(:@_m), %([:params, :model])
-
-    test_4 = test.new(:test_0004_anonymous)
-    failures = test_4.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: --- expected
+    assert_test_case_fails(test, "01", %(#<Minitest::Assertion: Property [content] mismatch.
+Expected: ""
+  Actual: "Stock up beer">))
+    assert_test_case_passes(test, "02", input = %({:params=>{:memo=>{:title=>\"TODO\", :content=>\"Stock up beer\"}}}))
+    assert_test_case_passes(test, "03", input)
+    assert_test_case_fails(test, "04", %(#<Minitest::Assertion: --- expected
 +++ actual
 @@ -1 +1 @@
--AssertionsTest::Record(keyword_init: true)
+-Trailblazer::Test::Testing::Memo(keyword_init: true)
 +"Song"
->)
-
-    test_5 = test.new(:test_0005_anonymous)
-    failures = test_5.()
-    assert_equal failures.size, 0
-
-    test_6 = test.new(:test_0006_anonymous)
-    failures = test_6.()
-    assert_equal failures.size, 0
-
-    test_7 = test.new(:test_0007_anonymous)
-    failures = test_7.()
-    assert_equal failures.size, 0
-
-    test_8 = test.new(:test_0008_anonymous)
-    failures = test_8.()
-    assert_equal failures.size, 0
+>))
+    assert_test_case_passes(test, "05", input)
+    assert_test_case_passes(test, "06", input)
+    assert_test_case_passes(test, "07", input)
+    assert_test_case_passes(test, "08", input)
   end
 
           # include Trailblazer::Test::Assertion

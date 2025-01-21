@@ -7,13 +7,20 @@ require "minitest/autorun"
 require "trailblazer/operation"
 require "trailblazer/activity/testing"
 require "trailblazer/test"
-require "trailblazer/test/testing" # {Song} and {Song::Operation::Create} etc
+require "trailblazer/test/testing" # {Memo} and {Memo::Operation::Create} etc
 require "trailblazer/core"
 
 Testing   = Trailblazer::Activity::Testing
 CU = Trailblazer::Core::Utils
 
 Minitest::Spec.class_eval do
+  class Test < Minitest::Spec
+    def call
+      run
+      return @failures, @assertions, @result
+    end
+  end
+
   def assert_test_case_passes(test, number, input)
     test_case = test.new(:"test_00#{number}_anonymous")
     failures, assertions, result = test_case.()

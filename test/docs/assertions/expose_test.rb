@@ -8,7 +8,7 @@ class ExposesUnitTest < Minitest::Spec
 
   describe "{Assert.expected_attributes_for}" do
     it "what" do
-      expected = Trailblazer::Test::Assertion::Suite::Assert.expected_attributes_for({title: "Timebomb", class: Object},
+      expected = Trailblazer::Test::Suite::Assert.expected_attributes_for({title: "Timebomb", class: Object},
         expected_attributes: {title: "The Brews", duration: 999},
         deep_merge: false,
       )

@@ -58,54 +58,5 @@ module Trailblazer::Test
         end # Create
       end
     end
-
-    # TODO: 2BRM.
-    Song = Struct.new(:band, :title, :duration) do
-      def save()
-        @save = true
-      end
-
-      def persisted?
-        !! @save
-      end
-    end
-
-    module Song::Contract
-      class Create < Reform::Form
-        property :band
-        property :title
-        property :duration
-
-        require "reform/form/dry"
-        include Reform::Form::Dry
-        validation do
-          params do
-            required(:title).filled
-            optional(:duration).maybe(type?: String)
-            required(:band).filled
-          end
-        end
-        # validates :band, presence: true
-      end
-    end
-
-    module Song::Operation
-      class Create < Trailblazer::Operation
-        step Model(Song, :new)
-        step Contract::Build(constant: Song::Contract::Create)
-        step Contract::Validate(key: :song)
-        step :parse_duration
-        step Contract::Persist()
-
-        def parse_duration(ctx, **)
-          duration = ctx["contract.default"].duration or return true
-
-          m = duration.match(/(\d)\.(\d\d)$/)
-          duration_seconds = m[1].to_i*60 + m[2].to_i
-
-          ctx["contract.default"].duration = duration_seconds
-        end
-      end
-    end
   end
 end

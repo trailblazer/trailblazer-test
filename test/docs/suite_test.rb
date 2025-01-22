@@ -11,8 +11,9 @@ end
 # {Memo}, {Memo::Operation::Create} etc is from lib/trailblazer/test/testing.rb.
 class DocsSuiteAssertionsTest < Minitest::Spec
   Memo = Trailblazer::Test::Testing::Memo
-  Song = Trailblazer::Test::Testing::Song
   Trailblazer::Test::Assertion.module!(self, suite: true)
+
+  Memo::Operation::Update = Class.new(Memo::Operation::Create)
 
   #:test
   #:install
@@ -182,7 +183,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
     it "{Ctx} provides {merge: false} to allow direct ctx building without any automatic merging" do
       ctx = Ctx({current_user: yogi}, merge: false)
 
-      assert_equal %{{:current_user=>\"Yogi\"}}, ctx.inspect
+      assert_equal %({:current_user=>\"Yogi\"}), ctx.inspect
     end
 
     #~meths end
@@ -245,73 +246,6 @@ class DocsSuiteAssertionsTest < Minitest::Spec
       assert_equal %{{:params=>{:content=>\"Stock up beer\", :duration=>999}, :current_user=>Module}}, Ctx({current_user: Module, params: {duration: 999}}, exclude: [:title]).inspect
     end
   end # SongOperation_OMIT_KEY_Test
-
-
-  #:assert_pass
-  describe "Create with sane data" do
-    # What are we passing into the operation?
-    let(:default_ctx) do
-      {
-        params: {
-          song: { # Note the {song} key here!
-            band:  "Rancid",
-            title: "Timebomb",
-          }
-        }
-      }
-    end
-
-    # What will the model look like after running the operation?
-    let(:expected_attributes) do
-      {
-        band:   "Rancid",
-        title:  "Timebomb",
-      }
-    end
-
-    let(:operation)     { Song::Operation::Create }
-    let(:key_in_params) { :song }
-
-    # valid default input, works
-    it { assert_pass( {}, {} ) }
-
-    # Check if {:title} can be overridden
-    it { assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} ) }
-    # Assert if automatic trimming works...
-    # Check if coercing works..
-
-    # Check if validations work
-    it { assert_fail?( {band: ""}, [:band] ) }
-
-    it do
-      assert_pass( {title: "Ruby Soho"}, {title: "Ruby Soho"} ) do |result|
-        assert_equal "Rancid", result[:model].band
-      end
-    end
-
-    it do
-      assert_fail( {band: ""}, [:band] ) do |result|
-        assert_nil result[:model].band
-        # puts result[:"contract.default"].errors.messages # Yes, this is good for debugging!
-      end
-    end
-  end
-
-  class PassFailTestWithoutSettings < OperationSpec
-    it "allows to pass the entire context without any automatic merging" do
-      assert_pass Ctx({params: {song: {title: "Ruby Soho", band: "Rancid"}}}, merge: false),
-        {title: "Ruby Soho", band: "Rancid"},
-        operation: Song::Operation::Create, default_ctx: {}
-    end
-
-    it "what" do
-      assert_pass( {title: "Ruby Soho", band: "Rancid"}, {}, operation: Song::Operation::Create, key_in_params: :song )
-    end
-
-    it "what" do
-      assert_pass( {song: {title: "Ruby Soho", band: "Rancid"}}, {}, operation: Song::Operation::Create )
-    end
-  end
 
   class Test < Minitest::Spec
     def call

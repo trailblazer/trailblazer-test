@@ -1,6 +1,7 @@
 require "test_helper"
 
-
+# Test all assertions with a FastTrack class, not an Operation.
+# TODO: This is currently not documented.
 class AssertionActivityTest < Minitest::Spec
   Trailblazer::Test::Assertion.module!(self, activity: true)
   Memo = Trailblazer::Test::Testing::Memo

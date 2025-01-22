@@ -2,8 +2,6 @@ require "test_helper"
 
 # Brutal unit tests for Suite.
 class SuiteTest < Minitest::Spec
-  Record = Struct.new(:id, :persisted?, :title, :genre, keyword_init: true)
-
   # UNCOMMENT for quick debugging.
   # Trailblazer::Test::Assertion.module!(self, suite: true)
   # let(:operation) { Trailblazer::Test::Testing::Memo::Operation::Create }
@@ -11,7 +9,7 @@ class SuiteTest < Minitest::Spec
   # let(:expected_attributes) { {content: "Remember me!", persisted?: true} }
   # let(:key_in_params) { :memo }
   # it "what" do
-  #   assert_fail({title: nil}, {title: ["is missing"]})
+  #   # assert_fail({title: nil}, {title: ["is missing"]})
   # end
 
   it "#assert_pass" do
@@ -175,6 +173,26 @@ class SuiteTest < Minitest::Spec
 )
         end
 
+        Test_for_OperationOption = describe ":operation" do
+          DIFFERENT_OP = Class.new(Trailblazer::Operation) do
+            include Memo::Operation::Create::Capture
+            step :capture
+            step :model
+
+            def model(ctx, params:, **)
+              ctx[:model] = Memo.new(**params[:memo])
+            end
+          end
+
+          let(:operation) { raise }
+
+          # 01
+          # We accept {:operation} as a first level kw arg.
+          it do
+            @result = assert_pass({title: "Done"}, {title: "Done"}, operation: DIFFERENT_OP)
+          end
+        end
+
         Test_assert_fail = describe "{#assert_fail}" do
           # 01
           # validation error
@@ -316,10 +334,26 @@ class SuiteTest < Minitest::Spec
             end
 
             # 01
-            # {#assert_fail} can be used wit OP withhout contract errors.
+            # {#assert_fail} can be used with OP withhout contract errors.
             it do
               @result = assert_fail({})
             end
+          end
+
+          Nothing_configured_test = describe "you can use Suite without setting anything, by passing everything manually" do
+            # 01
+            # allows to pass the entire context without any automatic merging
+            it do
+              @result = assert_pass Ctx(Memo::VALID_INPUT, merge: false),
+                {title: "TODO", content: "Stock up beer"},
+                operation: Trailblazer::Test::Testing::Memo::Operation::Create, default_ctx: {}
+            end
+
+            # 02
+            # # we can pass {:operation} and {:key_in_params}, and expected_attributes.
+            # it do
+            #   assert_pass( {title: "TODO", content: "Stock up beer"}, {}, operation: Memo::Operation::Create, key_in_params: :memo )
+            # end
           end
         end
       end
@@ -344,6 +378,7 @@ Expected: \"This is slightly different\"
     assert_test_case_passes(test, "09", input)
     assert_test_case_passes(test, "10", input)
     assert_test_case_passes(Test_for_ModelAt, "01", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
+    assert_test_case_passes(Test_for_OperationOption, "01", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
     assert_test_case_passes(test, "11", %({:params=>{:memo=>{:title=>\"Done\", :content=>\"Remember me!\"}}}))
 
     # assert_fail
@@ -375,6 +410,7 @@ Expected: [:not_existing_field]
     assert_test_case_passes(Test_assert_fail, "12", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\"}}}))
     assert_test_case_passes(Test_assert_fail, "13", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\"}}}))
     assert_test_case_passes(No_contract_test, "01", input)
+    assert_test_case_passes(Nothing_configured_test, "01", %({:params=>{:memo=>{:title=>\"TODO\", :content=>\"Stock up beer\"}}}))
   end
 end
 

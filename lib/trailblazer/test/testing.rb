@@ -56,9 +56,6 @@ module Trailblazer::Test
             ctx["contract.default"].tag_list = tags
           end
         end # Create
-
-        class Update < Create
-        end
       end
     end
 

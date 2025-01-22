@@ -1,66 +1,8 @@
 require "test_helper"
 
 class AssertionsTest < Minitest::Spec
-  Record = Struct.new(:id, :persisted?, :title, :genre, keyword_init: true)
-
-  class Create < Trailblazer::Operation
-    step :model
-
-    def model(ctx, params:, **)
-      ctx[:model] = Record.new(**params)
-    end
-  end
-
-  class Update < Trailblazer::Operation
-    step :validate
-
-    def validate(ctx, params:, **)
-      return true if params[:record]
-
-      ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({:title => ["is missing"]}))
-      false
-    end
-  end
-
-  # TODO: should we test the "meat" of these assertions here?
-  it "#assert_exposes" do
-    test =
-      Class.new(Test) do
-        include Trailblazer::Test::Assertion::AssertExposes
-
-        # test_0001_anonymous
-        it do
-          record = Record.new(id: 1, persisted?: true)
-
-          assert_exposes record,
-            id: 1,
-            persisted?: true
-        end
-
-        # test_0002_anonymous
-        it do
-          record = Record.new(id: 1, persisted?: true)
-
-          assert_exposes record,
-            id: 2,
-            persisted?: nil
-        end
-      end
-
-    test_1 = test.new(:test_0001_anonymous)
-    failures = test_1.()
-    assert_equal failures.size, 0
-
-    test_2 = test.new(:test_0002_anonymous)
-    failures = test_2.()
-    assert_equal 1, failures.size
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Property [id] mismatch.
-Expected: 2
-  Actual: 1>)
-  end
-
-# Trailblazer::Test::Assertion.module!(self)
-
+  # UNCOMMENT for quick debugging.
+  # Trailblazer::Test::Assertion.module!(self)
   it "#assert_pass" do
 # assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
 
@@ -401,8 +343,6 @@ end
 
 class AssertionActivityTest < Minitest::Spec
   Trailblazer::Test::Assertion.module!(self, activity: true)
-
-  Record = AssertionsTest::Record
 
   class Create < Trailblazer::Activity::FastTrack
     step :validate

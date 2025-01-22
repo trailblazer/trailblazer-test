@@ -343,37 +343,58 @@ end
 
 class AssertionActivityTest < Minitest::Spec
   Trailblazer::Test::Assertion.module!(self, activity: true)
+  Memo = Trailblazer::Test::Testing::Memo
+  VALID_INPUT = Memo::VALID_INPUT # {params: {memo: {title: "TODO", content: "Stock up beer"}}}
 
+  # DISCUSS: currently, we implicitly test that taskWrap is enabled
+  #          when running the Create activity as Contract macros use tW.
   class Create < Trailblazer::Activity::FastTrack
-    step :validate
-    step :model
-
-    def validate(ctx, params:, **)
-      return true if params[:title]
-
-      ctx[:"contract.default"] = Struct.new(:errors).new(Struct.new(:messages).new({:title => ["is missing"]}))
-      false
-    end
-
-    def model(ctx, params:, **)
-      ctx[:model] = Record.new(**params)
-    end
+    include Memo::Operation::Create::Capture
+    step :capture
+    step Model::Build(Memo, :new)
+    step Contract::Build(constant: Memo::Operation::Create::Form)
+    step Contract::Validate(key: :memo)
+    step Contract::Persist()
   end
 
   it do
-    assert_pass Create, {params: {title: "Roxanne"}},
-      title: "Roxanne"
+    assert_pass Create, VALID_INPUT,
+      title: "TODO"
   end
 
   it do
-    assert_fail Create, {params: {}}, [:title]
+    assert_fail Create, {params: {memo: {}}}, [:title, :content]
+  end
+
+  it "allows tracing" do
+    stdout, _ = capture_io do
+      assert_pass?(Create, VALID_INPUT, **{title: "TODO"})
+    end
+
+    stdout = stdout.sub(/0x\w+/, "XXX")
+
+    assert_equal stdout, %(AssertionActivityTest::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[32mcontract.default.call\e[0m
+|   `-- End.success
+|-- \e[32mpersist.save\e[0m
+`-- End.success
+)
   end
 end
 
 # Test with the Assertion::Suite "DSL" module.
 class SuiteWithActivityTest < Minitest::Spec
   Trailblazer::Test::Assertion.module!(self, activity: true, suite: true)
-  Record = AssertionsTest::Record
   Create = AssertionActivityTest::Create
 
   let(:operation) { Create }
@@ -393,7 +414,7 @@ class SuiteWithActivityTest < Minitest::Spec
 
   it "{#assert_fail} with wtf?" do
     out, _ = capture_io do
-      assert_fail?({title: nil}, [:title])
+      assert_fail?({title: nil}, [:title, :content])
     end
 
     assert_equal out, %(AssertionActivityTest::Create
@@ -407,7 +428,6 @@ end
 require "trailblazer/endpoint"
 require "trailblazer/test/endpoint"
 class EndpointWithActivityTest < Minitest::Spec
-  Record = AssertionsTest::Record
   Create = AssertionActivityTest::Create
 
   include Trailblazer::Test::Assertion

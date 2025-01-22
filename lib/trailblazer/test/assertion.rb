@@ -82,17 +82,23 @@ module Trailblazer
           return signal, ctx
         end
 
+        def self.invoke_activity_with_task_wrap(activity, ctx)
+          signal, (ctx, _) = ::Trailblazer::Activity::TaskWrap.invoke(activity, [ctx, {}]) # call with circuit interface. https://trailblazer.to/2.1/docs/operation/#operation-internals-circuit-interface
+
+          return signal, ctx
+        end
+
         def self.invoke_activity_with_tracing(activity, ctx)
           signal, (ctx, _) = Developer::Wtf.invoke(activity, [ctx, {}])
 
           return signal, ctx
         end
 
-        def assert_pass(*args, invoke: Activity.method(:invoke_activity), **options, &block)
+        def assert_pass(*args, invoke: Activity.method(:invoke_activity_with_task_wrap), **options, &block)
           super(*args, **options, invoke: invoke, &block)
         end
 
-        def assert_fail(*args, invoke: Activity.method(:invoke_activity), **options, &block)
+        def assert_fail(*args, invoke: Activity.method(:invoke_activity_with_task_wrap), **options, &block)
           super(*args, **options, invoke: invoke, &block)
         end
 

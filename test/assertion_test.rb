@@ -70,7 +70,7 @@ Expected: 2
         Memo = Trailblazer::Test::Testing::Memo
         Create = Memo::Operation::Create
 
-        VALID_INPUT = {params: {memo: {title: "TODO", content: "Stock up beer"}}}
+        VALID_INPUT = Memo::VALID_INPUT # {params: {memo: {title: "TODO", content: "Stock up beer"}}}
 
         # 01
         # fails, expected {content} mismatch.
@@ -219,166 +219,183 @@ Expected: ""
     test =
       Class.new(Test) do
         Trailblazer::Test::Assertion.module!(self)
+        Memo = Trailblazer::Test::Testing::Memo
+        Create = Memo::Operation::Create
+        VALID_INPUT = Memo::VALID_INPUT # {params: {memo: {title: "TODO", content: "Stock up beer"}}}
 
-        # test_0001_anonymous
+        # 01
+        # Create fails, we provide [:errors]
         it do
-          assert_fail Update, {params: {title: nil}},
+          @result = assert_fail Create, {params: {memo: {title: nil}}},
             # expected:
-            [:title]
+            [:title, :content]
         end
 
-        # test_0002_anonymous
+        # 02
+        # Create fails, we provide {errors: []}
         it do
-          assert_fail Update, {params: {title: nil}},
+          @result = assert_fail Create, {params: {memo: {title: nil}}},
             # expected:
-            {title: ["is missing"]}
+            {title: ["must be filled"], content: ["must be filled", "size cannot be less than 8"]}
         end
 
-        # test_0003_anonymous
+        # 03
+        # throws, Create actually passes.
         it do
-          assert_fail Update, {params: {record: true}}, [:title]
+          assert_fail Create, VALID_INPUT, [:title]
         end
 
-        # test_0004_anonymous
+        # 04
+        # errors mismatch.
         it do
-          assert_fail Update, {params: {title: nil}},
+          assert_fail Create, {params: {memo: {title: nil}}},
             # expected:
             {title: ["is XXX"]} # this is wrong.
         end
 
-        # test_0005_anonymous
+        # 05
+        # block style
         it do
-          assert_fail Update, {params: {title: nil}} do |result|
-            @_m = true
-            assert_equal result[:"contract.default"].errors.messages, {:title=>["is missing"]}
+          assert_fail Create, {params: {memo: {title: nil}}} do |result|
+            @result = result
+            assert_equal result[:"contract.default"].errors.messages, {title: ["must be filled"], content: ["must be filled", "size cannot be less than 8"]}
           end
         end
 
-        # test_0006_anonymous
+        # 06
+        # actually passes, block not executed
         it do
-          assert_fail Update, {params: {record: true}} do |result| # this actually passes.
-            @_m = true
+          assert_fail Create, VALID_INPUT do |result| # this actually passes.
+            raise result.inspect
           end
         end
 
-        # test_0007_anonymous
+        # 07
         # both expected_errors and block are considered.
         it do
-          assert_fail Update, {params: {title: nil}}, [:title] do |result|
-            assert_equal result[:"contract.default"].errors.messages, {:title=>["is missing"]}
-            @_m = true
+          assert_fail Create, {params: {memo: {title: nil}}}, [:title, :content] do |result|
+            assert_equal result[:"contract.default"].errors.messages, {title: ["must be filled"], content: ["must be filled", "size cannot be less than 8"]}
+            @result = result
           end
         end
 
-        # test_0008_anonymous
-        # expected_errors is wrong
+        # 08
+        # {expected_errors} is wrong, block not executed.
         it do
-          assert_fail Update, {params: {title: nil}}, [:title, :XXX] do |result|
-            @_m = true
+          assert_fail Create, {params: {memo: {title: nil}}}, [:title] do |result|
+            raise result.inspect
           end
         end
 
-        # test_0009_anonymous
+        # 09
+        # expected_errors subset is wrong
+        it do
+          assert_fail Create, {params: {memo: {title: nil}}}, [:title, :XXX] do |result|
+            raise result.inspect
+          end
+        end
+
+        # 10
+        # we allow {:invoke}.
         it do
           stdout, _ = capture_io do
-            assert_fail Update, {params: {title: nil}}, [:title], invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
+            @result = assert_fail Create, {params: {memo: {title: nil}}}, [:title, :content], invoke: Trailblazer::Test::Assertion.method(:invoke_operation_with_wtf)
           end
 
-          assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
+          stdout = stdout.sub(/0x\w+/, "XXX")
+
+          assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[33mcontract.default.call\e[0m
+|   `-- End.failure
+`-- End.failure
+)
         end
 
-        # test_0010_anonymous
+        # 11
         # {#assert_fail} returns {result}.
         it do
-          result = assert_fail Update, {params: {title: nil}}, [:title]
-          assert_equal CU.inspect(result[:"contract.default"].errors.messages), %({:title=>[\"is missing\"]})
+          @result = assert_fail Create, {params: {memo: {title: nil}}}, [:title, :content]
+          assert_equal CU.inspect(@result[:"contract.default"].errors.messages), %({:title=>[\"must be filled\"], :content=>["must be filled", "size cannot be less than 8"]})
         end
 
-        # test_0011_anonymous
+        # 12
         # {#assert_fail} can be used without contract errors.
         it do
           operation = Class.new(Trailblazer::Operation) do
+            include Memo::Operation::Create::Capture
+            step :capture
             step ->(ctx, **) { false }
           end
 
-          result = assert_fail operation, {params: {title: nil}}
+          @result = assert_fail operation, {params: {memo: {title: nil}}}
 
-          assert_equal result.keys.inspect, %([:params])
+          assert_equal @result.keys.inspect, %([:params, :captured])
         end
 
-        # test_0012_anonymous
+        # 13
+        # {#assert_fail?}
         it do
           stdout, _ = capture_io do
-            assert_fail? Update, {params: {title: nil}}, [:title]
+            @result = assert_fail? Create, {params: {memo: {title: nil}}}, [:title, :content]
           end
 
-          assert_equal stdout, %(AssertionsTest::Update\n|-- \e[32mStart.default\e[0m\n|-- \e[33mvalidate\e[0m\n`-- End.failure\n)
+          stdout = stdout.sub(/0x\w+/, "XXX")
+
+          assert_equal stdout, %(Trailblazer::Test::Testing::Memo::Operation::Create
+|-- \e[32mStart.default\e[0m
+|-- \e[32mcapture\e[0m
+|-- model.build
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32m#<Trailblazer::Macro::Model::Find::NoArgument:XXX>\e[0m
+|   `-- End.success
+|-- \e[32mcontract.build\e[0m
+|-- contract.default.validate
+|   |-- \e[32mStart.default\e[0m
+|   |-- \e[32mcontract.default.params_extract\e[0m
+|   |-- \e[33mcontract.default.call\e[0m
+|   `-- End.failure
+`-- End.failure
+)
         end
       end
 
-    test_1 = test.new(:test_0001_anonymous)
-    failures = test_1.()
-    assert_equal failures.size, 0
-
-    test_2 = test.new(:test_0002_anonymous)
-    failures = test_2.()
-    assert_equal failures.size, 0
-
-    test_3 = test.new(:test_0003_anonymous)
-    failures = test_3.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
+    assert_test_case_passes(test, "01", input = %({:params=>{:memo=>{:title=>nil}}}))
+    assert_test_case_passes(test, "02", input)
+    assert_test_case_fails(test, "03", %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
 Expected: false
-  Actual: true>)
-
-    test_4 = test.new(:test_0004_anonymous)
-    failures = test_4.()
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
-Expected: {:title=>[\"is XXX\"]}
-  Actual: {:title=>[\"is missing\"]}>)
-
-    test_5 = test.new(:test_0005_anonymous)
-    failures = test_5.()
-    assert_equal test_5.instance_variable_get(:@_m), true
-    assert_equal failures.size, 0
-
-    test_6 = test.new(:test_0006_anonymous)
-    failures = test_6.()
-    assert_nil test_6.instance_variable_get(:@_m) # block is not executed.
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: {AssertionsTest::Update} didn't fail, it passed.
+  Actual: true>))
+    assert_test_case_fails(test, "04", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
+--- expected
++++ actual
+@@ -1 +1 @@
+-{:title=>[\"is XXX\"]}
++{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}
+>))
+    assert_test_case_passes(test, "05", input)
+    assert_test_case_fails(test, "06", %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
 Expected: false
-  Actual: true>)
-
-    test_7 = test.new(:test_0007_anonymous)
-    failures = test_7.()
-    assert_equal test_7.instance_variable_get(:@_m), true
-    assert_equal failures.size, 0
-
-    test_8 = test.new(:test_0008_anonymous)
-    failures = test_8.()
-    assert_nil test_8.instance_variable_get(:@_m) # block is not executed.
-    assert_equal failures.size, 1
-    assert_equal failures[0].inspect, %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"is missing\"]}\e[0m.
+  Actual: true>))
+    assert_test_case_passes(test, "07", input)
+assert_test_case_fails(test, "08", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
+Expected: [:title]
+  Actual: [:content, :title]>))
+assert_test_case_fails(test, "09", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
 Expected: [:XXX, :title]
-  Actual: [:title]>)
-
-    test_9 = test.new(:test_0009_anonymous)
-    failures = test_9.()
-    assert_equal failures.size, 0
-
-    test_10 = test.new(:test_0010_anonymous)
-    failures = test_10.()
-    assert_equal failures.size, 0
-
-    test_11 = test.new(:test_0011_anonymous)
-    failures = test_11.()
-    assert_equal failures.size, 0
-
-    test_12 = test.new(:test_0012_anonymous)
-    failures = test_12.()
-    assert_equal failures.size, 0
+  Actual: [:content, :title]>))
+    assert_test_case_passes(test, "10", input)
+    assert_test_case_passes(test, "11", input)
+    assert_test_case_passes(test, "12", input)
+    assert_test_case_passes(test, "13", input)
   end
 end
 

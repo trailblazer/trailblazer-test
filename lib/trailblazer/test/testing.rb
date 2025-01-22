@@ -8,6 +8,8 @@ module Trailblazer::Test
   # Test components we need in other gems, too.
   module Testing
     class Memo < Struct.new(:id, :title, :content, :tag_list, :persisted?, :errors, keyword_init: true)
+      VALID_INPUT = {params: {memo: {title: "TODO", content: "Stock up beer"}}}
+
       def save
         self[:persisted?] = true
         self[:id] = 1

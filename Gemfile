@@ -5,4 +5,5 @@ gemspec
 
 # gem "reform-rails", path: "../reform-rails"
 
-gem "trailblazer-endpoint", path: "../trailblazer-endpoint"
+# gem "trailblazer-endpoint", path: "../trailblazer-endpoint"
+gem "trailblazer-endpoint", github: "trailblazer/trailblazer-endpoint"

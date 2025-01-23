@@ -31,8 +31,8 @@ class AssertExposesTest < Minitest::Spec
       end
 
     assert_test_case_passes(test, "01", nil)
-    assert_test_case_fails(test, "02", %(#<Minitest::Assertion: Property [content] mismatch.
+    assert_test_case_fails(test, "02", %(Property [content] mismatch.
 Expected: "this is wrong"
-  Actual: nil>))
+  Actual: nil))
   end
 end

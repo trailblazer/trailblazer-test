@@ -135,17 +135,17 @@ class AssertionsTest < Minitest::Spec
         end
       end
 
-    assert_test_case_fails(test, "01", %(#<Minitest::Assertion: Property [content] mismatch.
+    assert_test_case_fails(test, "01", %(Property [content] mismatch.
 Expected: ""
-  Actual: "Stock up beer">))
+  Actual: "Stock up beer"))
     assert_test_case_passes(test, "02", input = %({:params=>{:memo=>{:title=>\"TODO\", :content=>\"Stock up beer\"}}}))
     assert_test_case_passes(test, "03", input)
-    assert_test_case_fails(test, "04", %(#<Minitest::Assertion: --- expected
+    assert_test_case_fails(test, "04", %(--- expected
 +++ actual
 @@ -1 +1 @@
 -Trailblazer::Test::Testing::Memo(keyword_init: true)
 +"Song"
->))
+))
     assert_test_case_passes(test, "05", input)
     assert_test_case_passes(test, "06", input)
     assert_test_case_passes(test, "07", input)
@@ -313,27 +313,27 @@ Expected: ""
 
     assert_test_case_passes(test, "01", input = %({:params=>{:memo=>{:title=>nil}}}))
     assert_test_case_passes(test, "02", input)
-    assert_test_case_fails(test, "03", %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
+    assert_test_case_fails(test, "03", %({Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
 Expected: false
-  Actual: true>))
-    assert_test_case_fails(test, "04", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
+  Actual: true))
+    assert_test_case_fails(test, "04", %(Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
 --- expected
 +++ actual
 @@ -1 +1 @@
 -{:title=>[\"is XXX\"]}
 +{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}
->))
+))
     assert_test_case_passes(test, "05", input)
-    assert_test_case_fails(test, "06", %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
+    assert_test_case_fails(test, "06", %({Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
 Expected: false
-  Actual: true>))
+  Actual: true))
     assert_test_case_passes(test, "07", input)
-assert_test_case_fails(test, "08", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
+assert_test_case_fails(test, "08", %(Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
 Expected: [:title]
-  Actual: [:content, :title]>))
-assert_test_case_fails(test, "09", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
+  Actual: [:content, :title]))
+assert_test_case_fails(test, "09", %(Actual contract errors: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
 Expected: [:XXX, :title]
-  Actual: [:content, :title]>))
+  Actual: [:content, :title]))
     assert_test_case_passes(test, "10", input)
     assert_test_case_passes(test, "11", input)
     assert_test_case_passes(test, "12", input)

@@ -363,19 +363,19 @@ class SuiteTest < Minitest::Spec
 
     # assert_pass {}, {}
     assert_test_case_passes(test, "01", input = %({:params=>{:memo=>{:title=>\"Note to self\", :content=>\"Remember me!\"}}}))
-    assert_test_case_fails(test, "02", %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} failed: \e[33m{:title=>[\"must be filled\"]}\e[0m.
+    assert_test_case_fails(test, "02", %({Trailblazer::Test::Testing::Memo::Operation::Create} failed: \e[33m{:title=>[\"must be filled\"]}\e[0m.
 Expected: true
-  Actual: false>))
-    assert_test_case_fails(test, "03", %(#<Minitest::Assertion: Property [title] mismatch.
+  Actual: false))
+    assert_test_case_fails(test, "03", %(Property [title] mismatch.
 Expected: \"Note to self\"
-  Actual: \"let's break\">))
-    assert_test_case_fails(test, "04", %(#<Minitest::Assertion: Property [title] mismatch.
+  Actual: \"let's break\"))
+    assert_test_case_fails(test, "04", %(Property [title] mismatch.
 Expected: \"Forgot\"
-  Actual: \"Note to self\">))
+  Actual: \"Note to self\"))
     assert_test_case_passes(test, "05", %({:params=>{:memo=>{:title=>\"Note to self\", :content=>\"don't forget\"}}}))
-    assert_test_case_fails(test, "06", %(#<Minitest::Assertion: Property [content] mismatch.
+    assert_test_case_fails(test, "06", %(Property [content] mismatch.
 Expected: \"This is slightly different\"
-  Actual: \"don't forget\">))
+  Actual: \"don't forget\"))
     assert_test_case_passes(test, "07", input)
     assert_test_case_passes(test, "08", %({:params=>{:memo=>{:title=>\"Simple memo\", :content=>\"Remember me!\", :tag_list=>\"todo,today\"}}}))
     assert_test_case_passes(test, "09", input)
@@ -389,27 +389,27 @@ Expected: \"This is slightly different\"
     assert_test_case_passes(Test_assert_fail, "02", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\", :urgency=>1}}}))
     assert_test_case_passes(Test_assert_fail, "03", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
     assert_test_case_passes(Test_assert_fail, "04", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
-    assert_test_case_fails(Test_assert_fail, "05", %{#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
+    assert_test_case_fails(Test_assert_fail, "05", %{Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
 --- expected
 +++ actual
 @@ -1 +1 @@
 -{:title=>[\"--> this is wrong <--\"]}
 +{:title=>[\"must be filled\"]}
->})
+})
     assert_test_case_passes(Test_assert_fail, "06", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
-    assert_test_case_fails(Test_assert_fail, "07", it_passed_error = %(#<Minitest::Assertion: {Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
+    assert_test_case_fails(Test_assert_fail, "07", it_passed_error = %({Trailblazer::Test::Testing::Memo::Operation::Create} didn't fail, it passed.
 Expected: false
-  Actual: true>))
+  Actual: true))
     assert_test_case_fails(Test_assert_fail, "08", it_passed_error)
 
     assert_test_case_passes(Test_assert_fail, "09", %({:params=>{:memo=>{:title=>nil, :content=>"Remember me!"}}}))
-    assert_test_case_fails(Test_assert_fail, "10", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
+    assert_test_case_fails(Test_assert_fail, "10", %(Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
 Expected: [:not_existing_field]
-  Actual: [:title]>))
+  Actual: [:title]))
 
-    assert_test_case_fails(Test_assert_fail, "11", %(#<Minitest::Assertion: Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
+    assert_test_case_fails(Test_assert_fail, "11", %(Actual contract errors: \e[33m{:title=>[\"must be filled\"]}\e[0m.
 Expected: [:not_existing_field]
-  Actual: [:title]>))
+  Actual: [:title]))
     assert_test_case_passes(Test_assert_fail, "12", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\"}}}))
     assert_test_case_passes(Test_assert_fail, "13", %({:params=>{:memo=>{:title=>nil, :content=>\"Remember me!\"}}}))
     assert_test_case_passes(No_contract_test, "01", input)

@@ -343,10 +343,13 @@ class SuiteTest < Minitest::Spec
           Nothing_configured_test = describe "you can use Suite without setting anything, by passing everything manually" do
             # 01
             # allows to pass the entire context without any automatic merging
+            # provides all class directives (let()) as options, like {:options}
             it do
               @result = assert_pass Ctx(Memo::VALID_INPUT, merge: false),
                 {title: "TODO", content: "Stock up beer"},
-                operation: Trailblazer::Test::Testing::Memo::Operation::Create, default_ctx: {}
+                operation: Trailblazer::Test::Testing::Memo::Operation::Create, default_ctx: {id: 1}
+
+              assert_equal @result[:model].id, 1 # test that {:default_ctx} is used.
             end
 
             # 02

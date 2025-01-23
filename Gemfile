@@ -7,3 +7,4 @@ gemspec
 
 # gem "trailblazer-endpoint", path: "../trailblazer-endpoint"
 gem "trailblazer-endpoint", github: "trailblazer/trailblazer-endpoint"
+gem "ostruct"

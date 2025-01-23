@@ -113,7 +113,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
 
       assert_pass ctx, {}
       #~skip
-      assert_equal %({:params=>{:memo=>{:title=>\"Todo\", :content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"}), ctx.inspect
+      assert_equal CU.inspect(ctx), %({:params=>{:memo=>{:title=>\"Todo\", :content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"})
       #~skip end
     end
     #:ctx-inject end
@@ -143,7 +143,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
           #:ctx-merge-actual end
 =end
       #~skip
-      assert_equal ctx.inspect, %({:params=>{:memo=>{:title=>\"Reminder\", :content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"})
+      assert_equal CU.inspect(ctx), %({:params=>{:memo=>{:title=>\"Reminder\", :content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"})
 
       #~skip end
     end
@@ -155,7 +155,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
 
       assert_fail ctx, [:title]
       #~skip
-      assert_equal %{{:params=>{:memo=>{:content=>\"Stock up beer\"}}}}, ctx.inspect
+      assert_equal CU.inspect(ctx), %{{:params=>{:memo=>{:content=>\"Stock up beer\"}}}}
       #~skip end
     end
     #:ctx-exclude end
@@ -166,7 +166,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
       #=> {:params=>{:memo=>{:content=>"Stock up beer", :tag_list=>"todo"}}}
       #:ctx-exclude-params-merge end
 
-      assert_equal ctx.inspect, %({:params=>{:memo=>{:content=>"Stock up beer", :tag_list=>"todo"}}})
+      assert_equal CU.inspect(ctx), %({:params=>{:memo=>{:content=>"Stock up beer", :tag_list=>"todo"}}})
     end
 
     #:ctx-exclude-merge
@@ -175,7 +175,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
       #=> {:params=>{:memo=>{:content=>"Stock up beer"}},
       #    :current_user=>#<User name="Yogi">}
       #~skip
-      assert_equal ctx.inspect, %({:params=>{:memo=>{:content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"})
+      assert_equal CU.inspect(ctx), %({:params=>{:memo=>{:content=>\"Stock up beer\"}}, :current_user=>\"Yogi\"})
       #~skip end
     end
     #:ctx-exclude-merge end
@@ -183,7 +183,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
     it "{Ctx} provides {merge: false} to allow direct ctx building without any automatic merging" do
       ctx = Ctx({current_user: yogi}, merge: false)
 
-      assert_equal %({:current_user=>\"Yogi\"}), ctx.inspect
+      assert_equal CU.inspect(ctx), %({:current_user=>\"Yogi\"})
     end
 
     #~meths end
@@ -241,9 +241,9 @@ class DocsSuiteAssertionsTest < Minitest::Spec
     end
 
     it "Ctx()" do
-      assert_equal %{{:params=>{:content=>\"Stock up beer\"}}}, Ctx(exclude: [:title]).inspect
-      assert_equal %{{:params=>{:content=>\"Stock up beer\"}, :current_user=>Module}}, Ctx({current_user: Module}, exclude: [:title]).inspect
-      assert_equal %{{:params=>{:content=>\"Stock up beer\", :duration=>999}, :current_user=>Module}}, Ctx({current_user: Module, params: {duration: 999}}, exclude: [:title]).inspect
+      assert_equal CU.inspect(Ctx(exclude: [:title])), %({:params=>{:content=>\"Stock up beer\"}})
+      assert_equal CU.inspect(Ctx({current_user: Module}, exclude: [:title])), %({:params=>{:content=>\"Stock up beer\"}, :current_user=>Module})
+      assert_equal CU.inspect(Ctx({current_user: Module, params: {duration: 999}}, exclude: [:title])), %({:params=>{:content=>\"Stock up beer\", :duration=>999}, :current_user=>Module})
     end
   end # SongOperation_OMIT_KEY_Test
 end

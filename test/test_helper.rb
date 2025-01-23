@@ -37,6 +37,6 @@ Minitest::Spec.class_eval do
     failures, assertions, _ = test_case.()
 
     assert_equal failures.size, 1
-    assert_equal failures[0].to_s, error_message
+    assert_equal CU.inspect(failures[0].to_s), error_message
   end
 end

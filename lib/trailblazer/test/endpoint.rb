@@ -3,7 +3,7 @@ module Trailblazer
     # DISCUSS: this is not really endpoint related, it's more like setting a "global" invocation mechanism.
     module Endpoint
       # DISCUSS: not sure this is the final "technique" to use the global endpoint invoker.
-      def self.module(receiver, invoke_method:, invoke_method_wtf:)
+      def self.module!(receiver, invoke_method:, invoke_method_wtf:)
         receiver.class_eval do
           @@INVOKE_METHOD = invoke_method
           @@INVOKE_METHOD_WTF = invoke_method_wtf

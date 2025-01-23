@@ -107,9 +107,7 @@ class EndpointWithActivityTest < Minitest::Spec
   Create = AssertionActivityTest::Create
   Memo = Trailblazer::Test::Testing::Memo
 
-  include Trailblazer::Test::Assertion
-  include Trailblazer::Test::Assertion::Activity
-  include Trailblazer::Test::Assertion::AssertExposes
+  Trailblazer::Test::Assertion.module!(self, activity: true)
 
   def self.__(activity, options, **kws, &block) # TODO: move this to endpoint.
     signal, (ctx, flow_options) = Trailblazer::Endpoint::Runtime.(
@@ -125,7 +123,7 @@ class EndpointWithActivityTest < Minitest::Spec
   def self.__?(*args, &block)
     __(*args, invoke_method: Trailblazer::Developer::Wtf.method(:invoke), &block)
   end
-  include Trailblazer::Test::Endpoint.module(self, invoke_method: method(:__), invoke_method_wtf: method(:__?))
+  include Trailblazer::Test::Endpoint.module!(self, invoke_method: method(:__), invoke_method_wtf: method(:__?))
 
 
   def self._flow_options

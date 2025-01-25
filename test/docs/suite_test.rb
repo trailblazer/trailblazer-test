@@ -271,3 +271,21 @@ end
   #     #:policy_fail-custom-name end
   #   end
   # end
+
+# Test that the Suite module also works with a Minitest::Test class.
+#:test-suite
+class MemoCreateTest < Minitest::Test
+  Trailblazer::Test::Assertion.module!(self, suite: true, spec: false)
+  #~skip
+  Memo = Trailblazer::Test::Testing::Memo
+  #~skip end
+  def operation; Memo::Operation::Create end
+  def default_ctx; {params: {memo: {title: "Note to self", content: "Remember me!"}}} end
+  def expected_attributes; {title: "Note to self", content: "Remember me!"} end
+  def key_in_params; :memo end
+
+  def test_our_assertions
+    assert_pass({}, {})
+  end
+end
+#:test-suite end

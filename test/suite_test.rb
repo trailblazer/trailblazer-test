@@ -417,6 +417,24 @@ Expected: [:not_existing_field]
   end
 end
 
+# Test that the Suite module also works with a Minitest::Test class.
+# DISCUSS: should we use the above test tactics and test this inside a test with {#assert_test_case_passes} etc?
+class SuiteInNonSpecTest < Minitest::Test
+  Trailblazer::Test::Assertion.module!(self, suite: true, spec: false)
+
+  Memo = Trailblazer::Test::Testing::Memo
+
+  def operation; Memo::Operation::Create end
+  def default_ctx; {params: {memo: {title: "Note to self", content: "Remember me!"}}} end
+  def expected_attributes; {title: "Note to self", content: "Remember me!"} end
+  def key_in_params; :memo end
+
+
+  def test_our_assertions
+    assert_pass({}, {})
+  end
+end
+
 # class AssertionActivityTest < Minitest::Spec
 #   Trailblazer::Test::Assertion.module!(self, activity: true)
 

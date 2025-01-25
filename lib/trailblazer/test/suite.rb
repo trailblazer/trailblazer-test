@@ -5,13 +5,33 @@ module Trailblazer
     # in this module.
     module Suite
       # Defaults so tests run without tweaking (almost).
-      def self.included(includer)
-        includer.let(:operation)            { raise "Trailblazer::Test: `let(:operation) { ... }` is missing" }
-        includer.let(:key_in_params)        { false }
-        includer.let(:expected_attributes)  { {} } # You need to override this in your tests.
-        includer.let(:default_ctx)          { {} }
+      module Spec
+        def self.included(includer)
+          includer.let(:operation)            { raise "Trailblazer::Test: `let(:operation) { ... }` is missing" }
+          includer.let(:key_in_params)        { false }
+          includer.let(:expected_attributes)  { {} } # You need to override this in your tests.
+          includer.let(:default_ctx)          { {} }
+        end
       end
-      # TODO: only do this for Spec.
+
+      # For Minitest::Test, given there are still people using this awkward syntax. :)
+      module Test
+        def operation
+          raise "Trailblazer::Test: `def operation` is missing"
+        end
+
+        def key_in_params
+          false
+        end
+
+        def expected_attributes
+          {}
+        end
+
+        def default_ctx
+          {}
+        end
+      end
 
       # The assertions and helpers included into the actual test.
       def assert_pass(params_fragment, expected_attributes_to_merge={}, assertion: Assertion::AssertPass, **kws, &block)

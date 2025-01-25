@@ -3,17 +3,16 @@ module Trailblazer
     # Top-level entry points for end users.
     # These methods expose the end user syntax, not the logic.
     module Assertion
-      def self.module!(receiver, activity: false, suite: false)
-        modules =
-          if activity && suite
-            [Helper::MockStep, AssertExposes, Suite, Assertion::Activity]
-          elsif activity
-            [Helper::MockStep, AssertExposes, Assertion, Assertion::Activity]
-          elsif suite # operation
-            [Helper::MockStep, AssertExposes, Suite]
-          else
-            [Helper::MockStep, AssertExposes, Assertion]
-          end
+      def self.module!(receiver, activity: false, suite: false, spec: true)
+        modules = [Helper::MockStep, AssertExposes]
+        if suite
+          modules += [Suite, Suite::Spec] if spec
+          modules += [Suite, Suite::Test] if suite && !spec
+        else
+          modules += [Assertion]
+        end
+
+        modules += [Assertion::Activity] if activity
 
         receiver.include(*modules.reverse)
       end

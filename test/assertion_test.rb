@@ -133,6 +133,15 @@ class AssertionsTest < Minitest::Spec
 `-- End.success
 )
         end
+
+        # 09
+        # fails, invalid input.
+        # We still pass an empty hash for expected attributes.
+        it do
+          @result = assert_pass Create, {params: {memo: {}}},
+            # expected:
+            **{} # not considered # FIXME: allow a normal hash, too.
+        end
       end
 
     assert_test_case_fails(test, "01", %(Property [content] mismatch.
@@ -150,6 +159,9 @@ Expected: ""
     assert_test_case_passes(test, "06", input)
     assert_test_case_passes(test, "07", input)
     assert_test_case_passes(test, "08", input)
+    assert_test_case_fails(test, "09", CU.inspect(%({Trailblazer::Test::Testing::Memo::Operation::Create} failed: \e[33m{:title=>[\"must be filled\"], :content=>[\"must be filled\", \"size cannot be less than 8\"]}\e[0m.
+Expected: true
+  Actual: false)))
   end
 
           # include Trailblazer::Test::Assertion

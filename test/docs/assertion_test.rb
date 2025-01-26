@@ -14,6 +14,15 @@ class DocsAssertionTest < Minitest::Spec
   end
   #:pass-pass end
 
+  #:pass-fails
+  it "fails with invalid params but gives you a helpful error" do
+    skip "run this test when you want an error message"
+    input = {params: {memo: {}}}
+
+    assert_pass Memo::Operation::Create, input
+  end
+  #:pass-fails end
+
   it "passes with correct params" do
     input = {params: {memo: {title: "Todo", content: "Buy beer"}}}
     #:pass-model

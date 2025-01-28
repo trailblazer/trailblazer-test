@@ -3,6 +3,10 @@ require "trailblazer/test/version"
 module Trailblazer
   module Test
     # Your code goes here...
+
+    def self.module!(*args, **options, &block)
+      Assertion.module!(*args, **options, &block)
+    end
   end
 end
 

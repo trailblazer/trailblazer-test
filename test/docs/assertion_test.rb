@@ -2,7 +2,7 @@ require "test_helper"
 
 # Document {Assertion#asserr_pass} and friends.
 class DocsAssertionTest < Minitest::Spec
-  Trailblazer::Test::Assertion.module!(self)
+  Trailblazer::Test.module!(self)
 
   Memo = Trailblazer::Test::Testing::Memo
 
@@ -74,7 +74,7 @@ class DocsAssertionTest < Minitest::Spec
   end
 
   class ModelAtTest < Minitest::Spec
-    Trailblazer::Test::Assertion.module!(self)
+    Trailblazer::Test.module!(self)
 
     module Memo
       module Operation

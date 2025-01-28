@@ -4,14 +4,14 @@ require "test_helper"
 # ...
 
 class OperationSpec < Minitest::Spec
-  Trailblazer::Test::Assertion.module!(self, suite: true)
+  Trailblazer::Test.module!(self, suite: true)
 end
 #:operation-spec end
 
 # {Memo}, {Memo::Operation::Create} etc is from lib/trailblazer/test/testing.rb.
 class DocsSuiteAssertionsTest < Minitest::Spec
   Memo = Trailblazer::Test::Testing::Memo
-  Trailblazer::Test::Assertion.module!(self, suite: true)
+  Trailblazer::Test.module!(self, suite: true)
 
   Memo::Operation::Update = Class.new(Memo::Operation::Create)
 
@@ -19,7 +19,7 @@ class DocsSuiteAssertionsTest < Minitest::Spec
   #:install
   class MemoOperationTest < Minitest::Spec  # test/memo/operation_test.rb
     #~zoom
-    Trailblazer::Test::Assertion.module!(self, suite: true)
+    Trailblazer::Test.module!(self, suite: true)
   #:install end
 
     # The default ctx passed into the tested operation.
@@ -275,7 +275,7 @@ end
 # Test that the Suite module also works with a Minitest::Test class.
 #:test-suite
 class MemoCreateTest < Minitest::Test
-  Trailblazer::Test::Assertion.module!(self, suite: true, spec: false)
+  Trailblazer::Test.module!(self, suite: true, spec: false)
   #~skip
   Memo = Trailblazer::Test::Testing::Memo
   #~skip end

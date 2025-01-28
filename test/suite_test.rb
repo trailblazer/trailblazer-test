@@ -3,7 +3,7 @@ require "test_helper"
 # Brutal unit tests for Suite.
 class SuiteTest < Minitest::Spec
   # UNCOMMENT for quick debugging.
-  # Trailblazer::Test::Assertion.module!(self, suite: true)
+  # Trailblazer::Test.module!(self, suite: true)
   # let(:operation) { Trailblazer::Test::Testing::Memo::Operation::Create }
   # let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
   # let(:expected_attributes) { {content: "Remember me!", persisted?: true} }
@@ -21,7 +21,7 @@ class SuiteTest < Minitest::Spec
         # 2. Test result's arity by running assert_pass with a failing OP.
         # 3. test different manual input vs different expected_attributes to see if all attributes are tested.
 
-        Trailblazer::Test::Assertion.module!(self, suite: true)
+        Trailblazer::Test.module!(self, suite: true)
 
         let(:operation) { Memo::Operation::Create }
         let(:default_ctx) { {params: {memo: {title: "Note to self", content: "Remember me!"}}} }
@@ -420,7 +420,7 @@ end
 # Test that the Suite module also works with a Minitest::Test class.
 # DISCUSS: should we use the above test tactics and test this inside a test with {#assert_test_case_passes} etc?
 class SuiteInNonSpecTest < Minitest::Test
-  Trailblazer::Test::Assertion.module!(self, suite: true, spec: false)
+  Trailblazer::Test.module!(self, suite: true, spec: false)
 
   Memo = Trailblazer::Test::Testing::Memo
 
@@ -436,7 +436,7 @@ class SuiteInNonSpecTest < Minitest::Test
 end
 
 # class AssertionActivityTest < Minitest::Spec
-#   Trailblazer::Test::Assertion.module!(self, activity: true)
+#   Trailblazer::Test.module!(self, activity: true)
 
 #   Record = Trailblazer::Test::Testing::Memo
 
@@ -468,7 +468,7 @@ end
 
 # # Test with the Assertion::Suite "DSL" module.
 # class SuiteWithActivityTest < Minitest::Spec
-#   Trailblazer::Test::Assertion.module!(self, activity: true, suite: true)
+#   Trailblazer::Test.module!(self, activity: true, suite: true)
 #   # Record = AssertionsTest::Record
 #   # Create = AssertionActivityTest::Create
 

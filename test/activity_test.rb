@@ -3,7 +3,7 @@ require "test_helper"
 # Test all assertions with a FastTrack class, not an Operation.
 # TODO: This is currently not documented.
 class AssertionActivityTest < Minitest::Spec
-  Trailblazer::Test::Assertion.module!(self, activity: true)
+  Trailblazer::Test.module!(self, activity: true)
   Memo = Trailblazer::Test::Testing::Memo
   VALID_INPUT = Memo::VALID_INPUT # {params: {memo: {title: "TODO", content: "Stock up beer"}}}
   WTF_SUCCESS = %(AssertionActivityTest::Create
@@ -73,7 +73,7 @@ end
 
 # Test with the Assertion::Suite "DSL" module.
 class SuiteWithActivityTest < Minitest::Spec
-  Trailblazer::Test::Assertion.module!(self, activity: true, suite: true)
+  Trailblazer::Test.module!(self, activity: true, suite: true)
   Create = AssertionActivityTest::Create
 
   let(:operation) { Create }
@@ -107,7 +107,7 @@ class EndpointWithActivityTest < Minitest::Spec
   Create = AssertionActivityTest::Create
   Memo = Trailblazer::Test::Testing::Memo
 
-  Trailblazer::Test::Assertion.module!(self, activity: true)
+  Trailblazer::Test.module!(self, activity: true)
 
   def self.__(activity, options, **kws, &block) # TODO: move this to endpoint.
     signal, (ctx, flow_options) = Trailblazer::Endpoint::Runtime.(

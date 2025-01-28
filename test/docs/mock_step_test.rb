@@ -1,7 +1,7 @@
 require "test_helper"
 
 class MockStepTest < Minitest::Spec
-  Trailblazer::Test::Assertion.module!(self)
+  Trailblazer::Test.module!(self)
 
   Memo = Module.new
 

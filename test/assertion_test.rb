@@ -2,13 +2,13 @@ require "test_helper"
 
 class AssertionsTest < Minitest::Spec
   # UNCOMMENT for quick debugging.
-  # Trailblazer::Test::Assertion.module!(self)
+  # Trailblazer::Test.module!(self)
   it "#assert_pass" do
 # assert_pass? Create, {params: {title: "Somewhere Far Beyond"}}, title: "Somewhere Far Beyond"
 
     test =
       Class.new(Test) do
-        Trailblazer::Test::Assertion.module!(self)
+        Trailblazer::Test.module!(self)
         Memo = Trailblazer::Test::Testing::Memo
         Create = Memo::Operation::Create
 
@@ -172,7 +172,7 @@ Expected: true
 
     test =
       Class.new(Test) do
-        Trailblazer::Test::Assertion.module!(self)
+        Trailblazer::Test.module!(self)
         Memo = Trailblazer::Test::Testing::Memo
         Create = Memo::Operation::Create
         VALID_INPUT = Memo::VALID_INPUT # {params: {memo: {title: "TODO", content: "Stock up beer"}}}

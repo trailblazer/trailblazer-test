@@ -1,3 +1,7 @@
+# 1.0.0
+
+* Releasing the first stable version.
+
 # 0.1.1
 
 * Added `mock_step` helper to mock activity's or nested activity's step

@@ -8,9 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Nick Sutterer"]
   spec.email         = ["apotonick@gmail.com"]
 
-  spec.summary       = "Assertions, matchers, and helpers to test Trailblazer code."
-  spec.description   = "Assertions, matchers, and helpers to test Trailblazer code."
-  spec.homepage      = "http://trailblazer.to"
+  spec.summary       = "Assertions and helpers to test Trailblazer operations."
+  spec.description   = "Assertions and helpers to test Trailblazer operations."
+  spec.homepage      = "https://trailblazer.to/2.1/doccs/test"
+  spec.license       = "LGPL-3.0"
+
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})

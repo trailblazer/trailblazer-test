@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "Assertions and helpers to test Trailblazer operations."
   spec.description   = "Assertions and helpers to test Trailblazer operations."
-  spec.homepage      = "https://trailblazer.to/2.1/doccs/test"
+  spec.homepage      = "https://trailblazer.to/2.1/docs/test/index.html"
   spec.license       = "LGPL-3.0"
 
 
